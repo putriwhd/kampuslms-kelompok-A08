@@ -16,12 +16,11 @@ Berkas `public/index.php` ini sebagai pintu masuk laravel ketika membuka http we
 *jawaban*
 
 #### Berikut ini adalah hasil dari perubahan teks pada `routes/web.php`
-
-![alt text](image.png) 
+ 
 
 disini saya merubah di bagian selamat menjadi halo adel
 
-![alt text](<Screenshot 2026-09-03 003238.png>)
+![alt text](<Screenshot 2026-09-03 114656.png>)
 
 kemudian saya jalankan seperti ini yang kemudian menampilkan url tersebut.
 
