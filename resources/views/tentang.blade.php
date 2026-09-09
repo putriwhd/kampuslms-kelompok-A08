@@ -10,7 +10,7 @@
 
         <p>
             Nama Kelompok:
-            <strong>Kelompok XX</strong>
+            <strong>A-08</strong>
         </p>
 
         <table class="about-table">

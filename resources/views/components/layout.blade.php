@@ -6,6 +6,8 @@
 
     <title>{{ $title ?? 'KampusLMS' }}</title>
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
         :root {
             --pink-dark: #b76e79;
@@ -557,103 +559,102 @@
         ========================= */
 
         /* =========================
-   DETAIL MATA KULIAH
-========================= */
+           DETAIL MATA KULIAH
+        ========================= */
 
-.course-detail-card {
-    max-width: 900px;
+        .course-detail-card {
+            max-width: 900px;
 
-    margin: 0 auto;
+            margin: 0 auto;
 
-    padding: 30px;
+            padding: 30px;
 
-    background: var(--white);
+            background: var(--white);
 
-    border: 1px solid var(--border);
+            border: 1px solid var(--border);
 
-    border-radius: var(--radius);
+            border-radius: var(--radius);
 
-    box-shadow: var(--shadow);
-}
+            box-shadow: var(--shadow);
+        }
 
-.course-detail-card h1 {
-    margin: 0 0 6px;
+        .course-detail-card h1 {
+            margin: 0 0 6px;
 
-    color: var(--pink-dark);
+            color: var(--pink-dark);
 
-    font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
 
-    font-size: 30px;
-}
+            font-size: 30px;
+        }
 
-.course-subtitle {
-    margin: 0 0 25px;
+        .course-subtitle {
+            margin: 0 0 25px;
 
-    color: var(--muted);
+            color: var(--muted);
 
-    font-size: 15px;
-}
+            font-size: 15px;
+        }
 
+        /* =========================
+           TABEL DETAIL MATA KULIAH
+        ========================= */
 
-/* =========================
-   TABEL DETAIL MATA KULIAH
-========================= */
+        .course-detail-table {
+            width: 100%;
 
-.course-detail-table {
-    width: 100%;
+            border-collapse: collapse;
 
-    border-collapse: collapse;
+            background: var(--white);
 
-    background: var(--white);
+            border: 1px solid var(--border);
 
-    border: 1px solid var(--border);
+            border-radius: 10px;
 
-    border-radius: 10px;
+            overflow: hidden;
+        }
 
-    overflow: hidden;
-}
+        .course-detail-table th,
+        .course-detail-table td {
+            padding: 16px 18px;
 
-.course-detail-table th,
-.course-detail-table td {
-    padding: 16px 18px;
+            text-align: left;
 
-    text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
 
-    border-bottom: 1px solid var(--border);
-}
+        .course-detail-table th {
+            width: 200px;
 
-.course-detail-table th {
-    width: 200px;
+            background: var(--pink-soft);
 
-    background: var(--pink-soft);
+            color: var(--pink-dark);
 
-    color: var(--pink-dark);
+            font-size: 13px;
 
-    font-size: 13px;
+            font-weight: 700;
+        }
 
-    font-weight: 700;
-}
+        .course-detail-table td {
+            color: var(--text);
 
-.course-detail-table td {
-    color: var(--text);
+            font-size: 14px;
 
-    font-size: 14px;
+            line-height: 1.6;
+        }
 
-    line-height: 1.6;
-}
+        .course-detail-table tr:last-child th,
+        .course-detail-table tr:last-child td {
+            border-bottom: none;
+        }
 
-.course-detail-table tr:last-child th,
-.course-detail-table tr:last-child td {
-    border-bottom: none;
-}
-
-.course-detail-table tr:hover th,
-.course-detail-table tr:hover td {
-    background: #fff7f8;
-}
+        .course-detail-table tr:hover th,
+        .course-detail-table tr:hover td {
+            background: #fff7f8;
+        }
 
         /* =========================
            BACK LINK
@@ -851,17 +852,18 @@
             .dashboard-card,
             .content-card,
             .course-detail-card {
-               padding: 22px;
+                padding: 22px;
             }
+
             .course-detail-table th,
             .course-detail-table td {
-             padding: 12px;
+                padding: 12px;
             }
 
             .course-detail-table th {
-            width: 130px;
+                width: 130px;
             }
-            
+
             .detail-list {
                 grid-template-columns: 1fr;
 

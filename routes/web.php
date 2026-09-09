@@ -38,6 +38,7 @@ Route::view('/tentang', 'tentang')->name('tentang');
 | index dulu baru show, sebagai kebiasaan yang benar (lihat Bagian 2.1:
 | "Urutan menentukan").
 */
+
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
