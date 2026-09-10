@@ -11,5 +11,5 @@ Jawaban : Berkas view yang dikembalikan adalah `tentang.blade.php` yang berada d
 Jawaban : Layout yang membungkusanya adalah `<x-layout>` yang terletak pada berkas `resources/views/components/.layout.blade.php` 
 
 ## 5. Jalankan `php artisan route:list --path=tentang`. Cocok dengan analisis Anda?
-Jawaban : ![alt text](image.png)
+Jawaban : ![alt text](<Screenshot 2026-09-02 194925.png>)
 Iya, rute `/tentang` dibuat menggunakan Route::view, rute ini menggunakan methode GET dan langsung mengarahkan pengguna ke view `tentang` tanpa controller. Perintah `php artisan route:list --path=tentang`menampilkan `GET` pada `tentang` yang mengarahkan ke aksi `tentang`
