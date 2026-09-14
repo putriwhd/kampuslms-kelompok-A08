@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+<x-layout>
+=======
  <x-layout>
+>>>>>>> 29371875b2befd733b6ba2494aaa2552776fc8b0
 
     <x-slot:title>
         Tentang
@@ -7,6 +11,10 @@
     <div class="content-card">
 
         <h1>Tentang Kelompok</h1>
+        <p>
+            Halaman ini dapat dilihat oleh semua peran. Peran yang sedang dipilih:
+            <strong>{{ ucfirst(in_array(request('as'), ['mahasiswa', 'dosen', 'admin'], true) ? request('as') : 'mahasiswa') }}</strong>.
+        </p>
 
         <p>
             Nama Kelompok:
