@@ -5,72 +5,104 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
     public function index(Request $request)
     {
-        // 1. Ambil role simulasi dari URL (?as=...), default ke 'mahasiswa'
-        $role = $request->query('as', 'mahasiswa');
+        $role = $this->selectedRole($request);
 
         $courses = Course::with('lecturer')->latest()->paginate(10);
 
-        // 2. Kirim $role ke view bersama $courses
         return view('courses.index', compact('courses', 'role'));
     }
 
     public function create(Request $request)
     {
-        $role = $request->query('as', 'mahasiswa');
-        $lecturers = User::where('role', 'dosen')->get();
+        $role = $this->selectedRole($request);
 
-        return view('courses.create', compact('lecturers', 'role'));
+        return view('courses.create', compact('role'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'code' => 'required|string|unique:courses,code',
-            'title' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255|required_without:title',
+            'title' => 'nullable|string|max:255|required_without:name',
             'description' => 'nullable|string',
-            'lecturer_id' => 'required|exists:users,id',
+            'sks' => 'nullable|integer|min:1|max:255',
+            'status' => 'nullable|in:draft,active,archived',
+            'lecturer' => 'required|string|max:255',
         ]);
 
-        Course::create($validated);
+        $lecturer = $this->findOrCreateLecturer($validated['lecturer']);
 
-        // Kembalikan ke index dengan tetap mempertahankan status role
-        return redirect()->route('courses.index', ['as' => $request->query('as', 'admin')])
+        Course::create([
+            'code' => $validated['code'],
+            'name' => $validated['name'] ?? $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'sks' => $validated['sks'] ?? 3,
+            'lecturer_id' => $lecturer->id,
+            'status' => $validated['status'] ?? 'active',
+        ]);
+
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
             ->with('success', 'Mata kuliah berhasil ditambahkan.');
     }
 
     public function show(Request $request, Course $course)
     {
-        $role = $request->query('as', 'mahasiswa');
-        $course->load(['lecturer', 'students', 'materials', 'assignments']);
+        $role = $this->selectedRole($request);
+
+        $course->load([
+            'lecturer',
+            'students',
+            'materials',
+            'assignments'
+        ]);
 
         return view('courses.show', compact('course', 'role'));
     }
 
     public function edit(Request $request, Course $course)
     {
-        $role = $request->query('as', 'mahasiswa');
-        $lecturers = User::where('role', 'dosen')->get();
+        $role = $this->selectedRole($request);
 
-        return view('courses.edit', compact('course', 'lecturers', 'role'));
+        return view('courses.edit', compact('course', 'role'));
     }
 
     public function update(Request $request, Course $course)
     {
         $validated = $request->validate([
             'code' => 'required|string|unique:courses,code,' . $course->id,
-            'title' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255|required_without:title',
+            'title' => 'nullable|string|max:255|required_without:name',
             'description' => 'nullable|string',
-            'lecturer_id' => 'required|exists:users,id',
+            'sks' => 'nullable|integer|min:1|max:255',
+            'status' => 'nullable|in:draft,active,archived',
+            'lecturer' => 'required|string|max:255',
         ]);
 
-        $course->update($validated);
+        $lecturer = $this->findOrCreateLecturer($validated['lecturer']);
 
-        return redirect()->route('courses.index', ['as' => $request->query('as', 'admin')])
+        $course->update([
+            'code' => $validated['code'],
+            'name' => $validated['name'] ?? $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'sks' => $validated['sks'] ?? 3,
+            'lecturer_id' => $lecturer->id,
+            'status' => $validated['status'] ?? 'active',
+        ]);
+
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
             ->with('success', 'Mata kuliah berhasil diperbarui.');
     }
 
@@ -78,7 +110,50 @@ class CourseController extends Controller
     {
         $course->delete();
 
-        return redirect()->route('courses.index', ['as' => $request->query('as', 'admin')])
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
             ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
+
+    private function selectedRole(Request $request): string
+    {
+        return in_array(
+            $request->query('as'),
+            ['mahasiswa', 'dosen', 'admin'],
+            true
+        )
+            ? $request->query('as')
+            : 'mahasiswa';
+    }
+
+    private function findOrCreateLecturer(string $name): User
+    {
+        $lecturer = User::where('role', 'dosen')
+            ->where('name', $name)
+            ->first();
+
+        if ($lecturer) {
+            return $lecturer;
+        }
+
+        $baseEmail = Str::slug($name, '.') ?: 'dosen';
+        $email = $baseEmail . '@kampuslms.test';
+        $suffix = 1;
+
+        while (User::where('email', $email)->exists()) {
+            $email = $baseEmail . $suffix . '@kampuslms.test';
+            $suffix++;
+        }
+
+        $lecturer = new User();
+        $lecturer->name = $name;
+        $lecturer->email = $email;
+        $lecturer->password = 'password';
+        $lecturer->role = 'dosen';
+        $lecturer->save();
+
+        return $lecturer;
     }
 }

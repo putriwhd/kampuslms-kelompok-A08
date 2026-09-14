@@ -11,6 +11,10 @@
     <div class="content-card">
 
         <h1>Tentang Kelompok</h1>
+        <p>
+            Halaman ini dapat dilihat oleh semua peran. Peran yang sedang dipilih:
+            <strong>{{ ucfirst(in_array(request('as'), ['mahasiswa', 'dosen', 'admin'], true) ? request('as') : 'mahasiswa') }}</strong>.
+        </p>
 
         <p>
             Nama Kelompok:

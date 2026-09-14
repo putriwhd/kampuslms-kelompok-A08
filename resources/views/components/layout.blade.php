@@ -10,20 +10,20 @@
 
     <style>
         :root {
-            --pink-dark: #b76e79;
-            --pink: #d98c98;
-            --pink-light: #f8dfe3;
-            --pink-soft: #fdf1f3;
+            --blue-dark: #4f6f9f;
+            --blue: #7fa6d8;
+            --blue-light: #dceafa;
+            --blue-soft: #f3f7fc;
 
-            --cream: #fffaf9;
             --white: #ffffff;
+            --cream: #fbfdff;
 
-            --text: #4a3b3d;
-            --muted: #8a777a;
+            --text: #34445a;
+            --muted: #718096;
 
-            --border: #efd5d9;
+            --border: #d8e4f2;
 
-            --shadow: 0 8px 25px rgba(183, 110, 121, 0.10);
+            --shadow: 0 8px 25px rgba(79, 111, 159, 0.10);
 
             --radius: 14px;
             --transition: 0.25s ease;
@@ -70,14 +70,14 @@
             top: 0;
             z-index: 1000;
 
-            background: rgba(255, 250, 249, 0.97);
+            background: rgba(255, 255, 255, 0.97);
 
             backdrop-filter: blur(10px);
 
             border-bottom: 1px solid var(--border);
 
             box-shadow:
-                0 3px 15px rgba(183, 110, 121, 0.07);
+                0 3px 15px rgba(79, 111, 159, 0.07);
         }
 
         .nav-container {
@@ -103,7 +103,7 @@
             align-items: center;
             gap: 10px;
 
-            color: var(--pink-dark);
+            color: var(--blue-dark);
 
             text-decoration: none;
 
@@ -123,8 +123,8 @@
 
             border-radius: 11px;
 
-            background: var(--pink-light);
-            color: var(--pink-dark);
+            background: var(--blue-light);
+            color: var(--blue-dark);
 
             font-size: 18px;
             font-weight: 800;
@@ -171,17 +171,17 @@
         }
 
         .site-nav a:hover {
-            color: var(--pink-dark);
+            color: var(--blue-dark);
 
-            background: var(--pink-soft);
+            background: var(--blue-soft);
 
             transform: translateY(-1px);
         }
 
         .site-nav a.is-active {
-            color: var(--pink-dark);
+            color: var(--blue-dark);
 
-            background: var(--pink-light);
+            background: var(--blue-light);
 
             font-weight: 600;
         }
@@ -197,7 +197,7 @@
 
             height: 2px;
 
-            background: var(--pink);
+            background: var(--blue);
 
             border-radius: 10px;
         }
@@ -228,6 +228,42 @@
         }
 
         /* =========================
+           ROLE SELECTOR
+        ========================= */
+
+        .role-selector-form {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .role-select {
+            padding: 8px 12px;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            color: var(--blue-dark);
+
+            background-color: var(--blue-soft);
+
+            border: 1px solid var(--border);
+
+            border-radius: 9px;
+
+            outline: none;
+            cursor: pointer;
+
+            transition: all var(--transition);
+        }
+
+        .role-select:hover,
+        .role-select:focus {
+            background-color: var(--blue-light);
+            border-color: var(--blue);
+        }
+
+        /* =========================
            MOBILE MENU
         ========================= */
 
@@ -238,7 +274,7 @@
 
             background: transparent;
 
-            color: var(--pink-dark);
+            color: var(--blue-dark);
 
             cursor: pointer;
 
@@ -283,7 +319,7 @@
         .site-footer {
             margin-top: auto;
 
-            background: var(--pink-soft);
+            background: var(--blue-soft);
 
             border-top: 1px solid var(--border);
         }
@@ -306,7 +342,7 @@
         }
 
         .footer-brand {
-            color: var(--pink-dark);
+            color: var(--blue-dark);
 
             font-family:
                 Georgia,
@@ -344,7 +380,7 @@
 
             border-radius: 50%;
 
-            background: var(--pink);
+            background: var(--blue);
 
             color: white;
 
@@ -366,7 +402,7 @@
                 transform var(--transition);
 
             box-shadow:
-                0 6px 20px rgba(183, 110, 121, 0.20);
+                0 6px 20px rgba(79, 111, 159, 0.20);
         }
 
         .scroll-top.show {
@@ -378,7 +414,7 @@
         }
 
         .scroll-top:hover {
-            background: var(--pink-dark);
+            background: var(--blue-dark);
 
             transform: translateY(-3px);
         }
@@ -420,7 +456,7 @@
                 border-top: 1px solid var(--border);
 
                 box-shadow:
-                    0 10px 25px rgba(183, 110, 121, 0.12);
+                    0 10px 25px rgba(79, 111, 159, 0.12);
             }
 
             .site-nav.open {
@@ -460,6 +496,14 @@
 
 <body>
 
+    @php
+        $availableRoles = ['mahasiswa', 'dosen', 'admin'];
+
+        $selectedRole = in_array(request('as'), $availableRoles, true)
+            ? request('as')
+            : 'mahasiswa';
+    @endphp
+
     {{-- HEADER --}}
     <header class="site-header">
 
@@ -486,32 +530,66 @@
             <nav class="site-nav" id="siteNav">
 
                 <a
-                    href="{{ route('dashboard', ['as' => request('as', 'mahasiswa')]) }}"
+                    href="{{ route('dashboard', ['as' => $selectedRole]) }}"
                     class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}"
                 >
                     🏠 Dashboard
                 </a>
 
                 <a
-                    href="{{ route('courses.index', ['as' => request('as', 'mahasiswa')]) }}"
+                    href="{{ route('courses.index', ['as' => $selectedRole]) }}"
                     class="{{ request()->routeIs('courses.*') ? 'is-active' : '' }}"
                 >
                     📚 Mata Kuliah
                 </a>
 
                 <a
-                    href="{{ route('tentang', ['as' => request('as', 'mahasiswa')]) }}"
+                    href="{{ route('tentang', ['as' => $selectedRole]) }}"
                     class="{{ request()->routeIs('tentang') ? 'is-active' : '' }}"
                 >
                     ℹ️ Tentang
                 </a>
 
+                @if ($selectedRole === 'admin')
+                    <a
+                        href="{{ route('users.index', ['as' => $selectedRole]) }}"
+                        class="{{ request()->routeIs('users.*') ? 'is-active' : '' }}"
+                    >
+                        👥 Pengguna
+                    </a>
+                @endif
+
                 {{-- DROPDOWN SIMULASI ROLE --}}
-                <form action="{{ url()->current() }}" method="GET" class="role-selector-form">
-                    <select name="as" class="role-select" onchange="this.form.submit()">
-                        <option value="mahasiswa" {{ request('as', 'mahasiswa') == 'mahasiswa' ? 'selected' : '' }}>👤 Role: Mahasiswa</option>
-                        <option value="dosen" {{ request('as') == 'dosen' ? 'selected' : '' }}>👨‍🏫 Role: Dosen</option>
-                        <option value="admin" {{ request('as') == 'admin' ? 'selected' : '' }}>🛠️ Role: Admin</option>
+                <form
+                    action="{{ route('dashboard') }}"
+                    method="GET"
+                    class="role-selector-form"
+                >
+                    <select
+                        name="as"
+                        class="role-select"
+                        onchange="this.form.submit()"
+                    >
+                        <option
+                            value="mahasiswa"
+                            {{ $selectedRole === 'mahasiswa' ? 'selected' : '' }}
+                        >
+                            👤 Role: Mahasiswa
+                        </option>
+
+                        <option
+                            value="dosen"
+                            {{ $selectedRole === 'dosen' ? 'selected' : '' }}
+                        >
+                            👨‍🏫 Role: Dosen
+                        </option>
+
+                        <option
+                            value="admin"
+                            {{ $selectedRole === 'admin' ? 'selected' : '' }}
+                        >
+                            🛠️ Role: Admin
+                        </option>
                     </select>
                 </form>
 
@@ -531,47 +609,92 @@
         <div class="footer-container">
             <div>
                 <div class="footer-brand">KampusLMS</div>
-                <small>Sistem Informasi Pembelajaran Kampus</small>
+
+                <small>
+                    Sistem Informasi Pembelajaran Kampus
+                </small>
             </div>
             <small>&copy; {{ date('Y') }} KampusLMS</small>
         </div>
     </footer>
 
     {{-- SCROLL TO TOP --}}
-    <button type="button" class="scroll-top" id="scrollTop" aria-label="Kembali ke atas">
+    <button
+        type="button"
+        class="scroll-top"
+        id="scrollTop"
+        aria-label="Kembali ke atas"
+    >
         ↑
     </button>
 
     <script>
+
         // MOBILE MENU
         const menuToggle = document.getElementById('menuToggle');
         const siteNav = document.getElementById('siteNav');
 
         if (menuToggle && siteNav) {
+
             menuToggle.addEventListener('click', function () {
+
                 const isOpen = siteNav.classList.toggle('open');
-                menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                menuToggle.setAttribute(
+                    'aria-expanded',
+                    isOpen ? 'true' : 'false'
+                );
+
                 menuToggle.innerHTML = isOpen ? '✕' : '☰';
+
             });
 
             siteNav.querySelectorAll('a').forEach(function (link) {
+
                 link.addEventListener('click', function () {
+
                     siteNav.classList.remove('open');
-                    menuToggle.setAttribute('aria-expanded', 'false');
+
+                    menuToggle.setAttribute(
+                        'aria-expanded',
+                        'false'
+                    );
+
                     menuToggle.innerHTML = '☰';
+
                 });
+
             });
+
         }
+
 
         // SCROLL TO TOP
         const scrollTop = document.getElementById('scrollTop');
+
         if (scrollTop) {
+
             window.addEventListener('scroll', function () {
+
                 if (window.scrollY > 300) {
+
                     scrollTop.classList.add('show');
+
                 } else {
+
                     scrollTop.classList.remove('show');
+
                 }
+
+            });
+
+            scrollTop.addEventListener('click', function () {
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+
             });
 
             scrollTop.addEventListener('click', function () {

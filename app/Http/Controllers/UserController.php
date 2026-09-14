@@ -11,6 +11,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::latest()->paginate(10);
+
         return view('users.index', compact('users'));
     }
 
@@ -30,16 +31,21 @@ class UserController extends Controller
         ]);
 
         $user = new User();
+
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->nim_nip = $validated['nim_nip'] ?? null;
         $user->password = Hash::make($validated['password']);
-        
-        // Penetapan eksplisit (aman dari Mass Assignment Vulnerability)
+
+        // Role ditetapkan secara eksplisit,
+        // bukan melalui mass assignment.
         $user->role = $validated['role'];
+
         $user->save();
 
-        return redirect()->route('users.index')->with('success', 'Pengguna berhasil ditambahkan.');
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
     public function show(User $user)
@@ -70,15 +76,28 @@ class UserController extends Controller
             $user->password = Hash::make($validated['password']);
         }
 
+        // Role tetap ditetapkan secara eksplisit.
         $user->role = $validated['role'];
+
         $user->save();
 
-        return redirect()->route('users.index')->with('success', 'Pengguna berhasil diperbarui.');
+        return redirect()
+            ->route('users.index')
+            ->with('success', 'Pengguna berhasil diperbarui.');
     }
 
-    public function destroy(User $user)
+    public function destroy(Request $request, User $user)
     {
+        if ($user->taughtCourses()->exists()) {
+            return redirect()
+                ->route('users.index', ['as' => $request->query('as', 'admin')])
+                ->with('error', 'Pengguna tidak dapat dihapus karena masih menjadi Dosen pada satu atau lebih mata kuliah.');
+        }
+
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Pengguna berhasil dihapus.');
+
+        return redirect()
+            ->route('users.index', ['as' => $request->query('as', 'admin')])
+            ->with('success', 'Pengguna berhasil dihapus.');
     }
 }

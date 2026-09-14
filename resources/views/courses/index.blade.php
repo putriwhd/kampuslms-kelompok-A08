@@ -4,17 +4,25 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2>Daftar Mata Kuliah</h2>
 
-        {{-- Tombol Tambah HANYA muncul jika role = admin --}}
-        @if($role === 'admin')
-            <a href="{{ route('courses.create', ['as' => $role]) }}" 
+        @if ($role === 'admin')
+            <a href="{{ route('courses.create', ['as' => $role]) }}"
                style="background: #2563eb; color: white; padding: 10px 16px; border-radius: 6px; text-decoration: none;">
                 + Tambah Mata Kuliah
             </a>
         @endif
     </div>
 
-    {{-- Pesan Sukses setelah Create/Update/Delete --}}
-    @if(session('success'))
+    <p style="margin-bottom: 20px;">
+        @if ($role === 'admin')
+            Sebagai Admin, Anda dapat mengelola data mata kuliah.
+        @elseif ($role === 'dosen')
+            Sebagai Dosen, Anda dapat melihat daftar mata kuliah.
+        @else
+            Sebagai Mahasiswa, Anda dapat melihat daftar mata kuliah yang tersedia.
+        @endif
+    </p>
+
+    @if (session('success'))
         <div style="background: #dcfce7; color: #15803d; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
             {{ session('success') }}
         </div>
@@ -30,22 +38,21 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($courses as $course)
+            @forelse ($courses as $course)
                 <tr>
                     <td>{{ $course->code }}</td>
-                    <td>{{ $course->name }}</td>
+                    <td>{{ $course->name ?? $course->title }}</td>
                     <td>{{ $course->lecturer->name ?? '-' }}</td>
                     <td>
-                        {{-- READ: Detail (Bisa diakses semua role) --}}
                         <a href="{{ route('courses.show', [$course->id, 'as' => $role]) }}">Lihat</a>
 
-                        {{-- EDIT & DELETE: Hanya untuk Admin --}}
-                        @if($role === 'admin')
-                            | <a href="{{ route('courses.edit', [$course->id, 'as' => $role]) }}">Edit</a>
-
-                            | <form action="{{ route('courses.destroy', [$course->id, 'as' => $role]) }}" 
-                                    method="POST" style="display: inline;" 
-                                    onsubmit="return confirm('Yakin ingin menghapus?')">
+                        @if ($role === 'admin')
+                            |
+                            <a href="{{ route('courses.edit', [$course->id, 'as' => $role]) }}">Edit</a>
+                            |
+                            <form action="{{ route('courses.destroy', [$course->id, 'as' => $role]) }}"
+                                  method="POST" style="display: inline;"
+                                  onsubmit="return confirm('Yakin ingin menghapus?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" style="color: red; background: none; border: none; cursor: pointer;">
@@ -63,7 +70,6 @@
             @endforelse
         </tbody>
     </table>
-</x-layout>
 
             </thead>
 
@@ -110,7 +116,8 @@
 
         </table>
 
+
+    <div style="margin-top: 20px;">
+        {{ $courses->appends(['as' => $role])->links() }}
     </div>
-
-</x-layout> 
-
+</x-layout>
