@@ -1,17 +1,34 @@
-<x-layout title="Dashboard">
+{{-- 
+    Dashboard masih murni statis (Minggu 1-2 belum ada login/role),
+    jadi wajar dipanggil langsung lewat Route::view() tanpa controller.
+--}}
 
-    <h1>Dashboard KampusLMS</h1>
+<x-layout>
 
-    <p>
-        Selamat datang di KampusLMS.
-    </p>
+    <x-slot:title>
+        Dashboard
+    </x-slot:title>
 
-    <p>
-        Sistem pembelajaran untuk mahasiswa dan dosen.
-    </p>
 
-    <a href="{{ route('courses.index') }}">
-        Lihat Mata Kuliah
-    </a>
+    <div class="page-header">
+
+        <h1 class="page-title">
+            Dashboard KampusLMS
+        </h1>
+
+        <p class="page-lead">
+            Selamat datang di KampusLMS.
+            Silakan buka menu
+            <a
+                href="{{ route('courses.index') }}"
+                class="interactive-link"
+            >
+                "Mata Kuliah"
+            </a>
+            untuk melihat daftar mata kuliah.
+        </p>
+
+    </div>
+
 
 </x-layout>

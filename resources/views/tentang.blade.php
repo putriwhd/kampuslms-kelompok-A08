@@ -1,23 +1,58 @@
-<x-layout title="Tentang">
+ <x-layout>
 
-    <h1>Tentang KampusLMS</h1>
+    <x-slot:title>
+        Tentang
+    </x-slot:title>
 
-    <p>
-        KampusLMS merupakan sistem informasi pembelajaran
-        yang digunakan untuk membantu proses akademik.
-    </p>
+    <div class="content-card">
 
-    <h3>Kelompok</h3>
+        <h1>Tentang Kelompok</h1>
 
-    <ul>
-        <li>Anggota 1</li>
-        <li>Anggota 2</li>
-        <li>Anggota 3</li>
-        <li>Anggota 4</li>
-    </ul>
+        <p>
+            Nama Kelompok:
+            <strong>A-08</strong>
+        </p>
 
-    <a href="{{ route('dashboard') }}">
-        ← Kembali ke Dashboard
-    </a>
+        <table class="about-table">
+
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Nama Anggota</th>
+                    <th>NIM</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                <tr>
+                    <td>1</td>
+                    <td>Putri Nurwahid</td>
+                    <td>10241063</td>
+                </tr>
+
+                <tr>
+                    <td>2</td>
+                    <td>Sarah Adelia W</td>
+                    <td>10241065</td>
+                </tr>
+
+                <tr>
+                    <td>3</td>
+                    <td>Siti Fatimah</td>
+                    <td>10241067</td>
+                </tr>
+
+                <tr>
+                    <td>4</td>
+                    <td>Syarifah Nazwa Aulia H 4</td>
+                    <td>10241069</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
 
 </x-layout>
