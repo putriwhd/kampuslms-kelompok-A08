@@ -12,7 +12,7 @@ Berkas `public/index.php` ini sebagai pintu masuk laravel ketika membuka http we
 
 - untuk yang mengurus exception ada di bagian `withExceptions()` yang bertugas sebagai penanganan error yang terjadi dalam laravel tersebut.
 
-3. ### Buka routes/web.php. Temukan route yang menghasilkan halaman selamat datang. ubah teksnya, muat ulang browser,pastikan berubah.
+ ### 3. Buka routes/web.php. Temukan route yang menghasilkan halaman selamat datang. ubah teksnya, muat ulang browser,pastikan berubah.
 *jawaban*
 
 #### Berikut ini adalah hasil dari perubahan teks pada `routes/web.php`
@@ -20,7 +20,7 @@ Berkas `public/index.php` ini sebagai pintu masuk laravel ketika membuka http we
 
 disini saya merubah di bagian selamat menjadi halo adel
 
-![alt text](<Screenshot 2026-09-03 114656.png>)
+![alt text](<Screenshot 2026-09-03 010642.png>)
 
 kemudian saya jalankan seperti ini yang kemudian menampilkan url tersebut.
 
@@ -31,5 +31,4 @@ dan kenapa error karena routing menerima request dari browser tetapi ketika rout
 
 ### 4. Jalankan php artisan route:list. Cocokkan keluarannya dengan isi routes/web.php
 *jawaban*
-
-![alt text](image-1.png) 
+![alt text](<Screenshot 2026-09-03 010642-1.png>)
