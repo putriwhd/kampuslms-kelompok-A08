@@ -33,9 +33,15 @@
                 @forelse ($courses as $item)
 
                     <tr>
+<<<<<<< HEAD
                       <td>{{ $item['kode'] }}</td>
 
                         <td>{{!!$item['nama']}}</td>
+=======
+                        <td>{{ $item['kode'] }}</td>
+
+                        <td>{{ $item['nama'] }}</td>
+>>>>>>> 29371875b2befd733b6ba2494aaa2552776fc8b0
 
                         <td>{{ $item['sks'] }}</td>
 

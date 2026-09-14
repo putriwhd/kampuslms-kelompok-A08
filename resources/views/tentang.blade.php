@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 <x-layout>
+=======
+ <x-layout>
+>>>>>>> 29371875b2befd733b6ba2494aaa2552776fc8b0
 
     <x-slot:title>
         Tentang
