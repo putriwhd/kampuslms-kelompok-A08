@@ -4,6 +4,17 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+
+
+Route::view('/', 'dashboard')->name('dashboard');
+
+
+Route::view('/tentang', 'tentang')->name('tentang');
+
+
+Route::get('/courses/craete', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+
 /*
 |--------------------------------------------------------------------------
 | Route — cakupan Minggu 1 & 2 SAJA
@@ -26,19 +37,7 @@ Route::view('/', 'dashboard')->name('dashboard');
 // Route::view(), tidak perlu controller.
 Route::view('/tentang', 'tentang')->name('tentang');
 
-/*
-|--------------------------------------------------------------------------
-| Modul Mata Kuliah (courses)
-|--------------------------------------------------------------------------
-| Nama route & path folder view ('courses') mengikuti persis contoh di
-| modul Minggu 2 (Bagian 2.1 & 2.2), supaya konsisten dengan materi.
-|
-| Urutan route di bawah SUDAH benar: '/courses' (index) didaftarkan
-| sebelum '/courses/{course}' tidak jadi masalah di sini karena
-| 'create' tidak dipakai pada tahap ini -- tapi urutan tetap ditulis
-| index dulu baru show, sebagai kebiasaan yang benar (lihat Bagian 2.1:
-| "Urutan menentukan").
-*/
+
 
 
 /*
@@ -60,3 +59,7 @@ Route::view('/tentang', 'tentang')->name('tentang');
 // Resource Routes (Mendukung CRUD Lengkap & Simulasi Role)
 Route::resource('users', UserController::class);
 Route::resource('courses', CourseController::class);
+
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+

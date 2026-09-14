@@ -49,6 +49,7 @@ class User extends Authenticatable
         ];
     }
 
+
     /**
      * Relasi ke mata kuliah yang diampu (sebagai Dosen)
      */
@@ -82,4 +83,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(Grade::class, 'graded_by');
     }
+
 }
