@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Models\Course;
+use App\Models\User;
 use App\Models\Material;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +20,16 @@ class MaterialFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'course_id' => Course::factory(),
+            'uploaded_by' => User::factory()->dosen(),
+            'title' => fake()->sentence(4),
+            'description' => fake()->paragraph(),
+            'type' => 'file',
+            'file_path' => 'materials/'.fake()->uuid().'.pdf',
+            'original_name' => fake()->word().'.pdf',
+            'file_size' => fake()->numberBetween(1024, 5000000),
+            'mime_type' => 'application/pdf',
+            'external_url' => null,
         ];
     }
 }

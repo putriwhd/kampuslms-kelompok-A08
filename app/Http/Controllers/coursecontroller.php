@@ -2,84 +2,158 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\View\View;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use App\Models\Course;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class CourseController extends Controller
 {
-    /**
-     * Data mata kuliah masih berupa array statis, BUKAN Eloquent Model,
-     * karena Minggu 3 (migrasi + database) belum dikerjakan. Ditaruh
-     * sebagai method terpisah (bukan ditulis ulang di index() dan
-     * show()) supaya kedua method memakai satu sumber data yang sama.
-     *
-     * Key array (1, 2, 3) SENGAJA dipakai sebagai pengganti sementara
-     * "id", supaya show() bisa mencari data tanpa query database.
-     */
-    private function data(): array
+    public function index(Request $request)
     {
-        return [
-            1 => [
-                'id' => 1,
-                'kode' => 'IF101',
-                'nama' => 'Algoritma dan Pemrograman',
-                'sks' => 3,
-                'dosen' => 'Henokh Lugo Hariyanto',
-                'deskripsi' => 'Pengantar dasar algoritma, struktur kontrol, dan implementasi program sederhana.',
-            ],
-            2 => [
-                'id' => 2,
-                'kode' => 'IF204',
-                'nama' => 'Administrasi Basis Data',
-                'sks' => 3,
-                'dosen' => 'Siti Aminah',
-                'deskripsi' => 'Perancangan, instalasi, dan pengelolaan basis data relasional.',
-            ],
-            3 => [
-                'id' => 3,
-                'kode' => 'IF305',
-                'nama' => 'Keamanan Informasi',
-                'sks' => 2,
-                'dosen' => 'Budi Santoso',
-                'deskripsi' => 'Konsep keamanan sistem informasi, audit, dan manajemen risiko.',
-            ],
-        ];
+        $role = $this->selectedRole($request);
+
+        $courses = Course::with('lecturer')->latest()->paginate(10);
+
+        return view('courses.index', compact('courses', 'role'));
     }
 
-    /**
-     * GET /courses
-     * Menyerahkan seluruh daftar mata kuliah ke view. Controller ini
-     * SENGAJA tidak melakukan apa-apa selain "minta data lalu serahkan
-     * ke view" (lihat Bagian 2.1 modul: "Controller: penerima tamu,
-     * bukan koki").
-     */
-    public function index(): View
+    public function create(Request $request)
     {
-        $courses = $this->data();
+        $role = $this->selectedRole($request);
 
-        return view('courses.index', compact('courses'));
+        return view('courses.create', compact('role'));
     }
 
-    /**
-     * GET /courses/{course}
-     * $course di sini adalah STRING dari URL (mis. "1"), bukan Model
-     * hasil route model binding -- karena belum ada Eloquent Model
-     * di Minggu 1-2. Dicocokkan manual ke array data().
-     */
-    public function show(string $course): View
+    public function store(Request $request)
     {
-        $courses = $this->data();
-        $course = $courses[(int) $course] ?? null;
+        $validated = $request->validate([
+            'code' => 'required|string|unique:courses,code',
+            'name' => 'nullable|string|max:255|required_without:title',
+            'title' => 'nullable|string|max:255|required_without:name',
+            'description' => 'nullable|string',
+            'sks' => 'nullable|integer|min:1|max:255',
+            'status' => 'nullable|in:draft,active,archived',
+            'lecturer' => 'required|string|max:255',
+        ]);
 
-        // 404 dilempar manual di sini. Perilakunya SENGAJA disamakan
-        // dengan yang nanti dihasilkan otomatis oleh route model
-        // binding Eloquent di Minggu 3, supaya saat controller ini
-        // di-upgrade ke database, cara Blade menampilkan halaman
-        // "tidak ditemukan" tidak perlu berubah.
-        if (! $course) {
-            throw new NotFoundHttpException('Mata kuliah tidak ditemukan.');
+        $lecturer = $this->findOrCreateLecturer($validated['lecturer']);
+
+        Course::create([
+            'code' => $validated['code'],
+            'name' => $validated['name'] ?? $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'sks' => $validated['sks'] ?? 3,
+            'lecturer_id' => $lecturer->id,
+            'status' => $validated['status'] ?? 'active',
+        ]);
+
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
+            ->with('success', 'Mata kuliah berhasil ditambahkan.');
+    }
+
+    public function show(Request $request, Course $course)
+    {
+        $role = $this->selectedRole($request);
+
+        $course->load([
+            'lecturer',
+            'students',
+            'materials',
+            'assignments'
+        ]);
+
+        return view('courses.show', compact('course', 'role'));
+    }
+
+    public function edit(Request $request, Course $course)
+    {
+        $role = $this->selectedRole($request);
+
+        return view('courses.edit', compact('course', 'role'));
+    }
+
+    public function update(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'code' => 'required|string|unique:courses,code,' . $course->id,
+            'name' => 'nullable|string|max:255|required_without:title',
+            'title' => 'nullable|string|max:255|required_without:name',
+            'description' => 'nullable|string',
+            'sks' => 'nullable|integer|min:1|max:255',
+            'status' => 'nullable|in:draft,active,archived',
+            'lecturer' => 'required|string|max:255',
+        ]);
+
+        $lecturer = $this->findOrCreateLecturer($validated['lecturer']);
+
+        $course->update([
+            'code' => $validated['code'],
+            'name' => $validated['name'] ?? $validated['title'],
+            'description' => $validated['description'] ?? '',
+            'sks' => $validated['sks'] ?? 3,
+            'lecturer_id' => $lecturer->id,
+            'status' => $validated['status'] ?? 'active',
+        ]);
+
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
+            ->with('success', 'Mata kuliah berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, Course $course)
+    {
+        $course->delete();
+
+        return redirect()
+            ->route('courses.index', [
+                'as' => $request->query('as', 'admin')
+            ])
+            ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
+
+    private function selectedRole(Request $request): string
+    {
+        return in_array(
+            $request->query('as'),
+            ['mahasiswa', 'dosen', 'admin'],
+            true
+        )
+            ? $request->query('as')
+            : 'mahasiswa';
+    }
+
+    private function findOrCreateLecturer(string $name): User
+    {
+        $lecturer = User::where('role', 'dosen')
+            ->where('name', $name)
+            ->first();
+
+        if ($lecturer) {
+            return $lecturer;
         }
 
-        return view('courses.show', compact('course'));
+        $baseEmail = Str::slug($name, '.') ?: 'dosen';
+        $email = $baseEmail . '@kampuslms.test';
+        $suffix = 1;
+
+        while (User::where('email', $email)->exists()) {
+            $email = $baseEmail . $suffix . '@kampuslms.test';
+            $suffix++;
+        }
+
+        $lecturer = new User();
+        $lecturer->name = $name;
+        $lecturer->email = $email;
+        $lecturer->password = 'password';
+        $lecturer->role = 'dosen';
+        $lecturer->save();
+
+        return $lecturer;
     }
 }
