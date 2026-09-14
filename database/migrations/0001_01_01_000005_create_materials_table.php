@@ -11,9 +11,15 @@ return new class extends Migration
         Schema::create('materials', function (Blueprint $table) {
             $table->id();
             $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('uploaded_by')->constrained('users')->restrictOnDelete();
             $table->string('title');
-            $table->text('content')->nullable();
+            $table->text('description');
+            $table->enum('type', ['file', 'link']);
             $table->string('file_path')->nullable();
+            $table->string('original_name')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
+            $table->string('mime_type')->nullable();
+            $table->string('external_url')->nullable();
             $table->timestamps();
 
             $table->index('course_id');

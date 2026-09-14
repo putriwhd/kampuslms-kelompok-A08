@@ -12,8 +12,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('assignment_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->text('content')->nullable();
-            $table->string('file_path')->nullable();
+            $table->string('file_path');
+            $table->string('original_name');
+            $table->unsignedBigInteger('file_size');
+            $table->text('note')->nullable();
+            $table->dateTime('submitted_at');
+            $table->boolean('is_late')->default(false);
             $table->timestamps();
 
             $table->unique(['assignment_id', 'user_id']);

@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('grades', function (Blueprint $table) {
             $table->id();
             $table->foreignId('submission_id')->unique()->constrained()->cascadeOnDelete();
-            $table->foreignId('graded_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('graded_by')->constrained('users')->restrictOnDelete();
             $table->decimal('score', 5, 2);
             $table->text('feedback')->nullable();
+            $table->dateTime('graded_at');
             $table->timestamps();
         });
     }
