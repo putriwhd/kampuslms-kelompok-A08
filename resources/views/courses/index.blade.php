@@ -62,6 +62,7 @@
                         @endif
                     </td>
                 </tr>
+
             @empty
                 <tr>
                     <td colspan="4" style="text-align: center;">Belum ada data mata kuliah.</td>
@@ -69,6 +70,52 @@
             @endforelse
         </tbody>
     </table>
+
+            </thead>
+
+            <tbody>
+
+                @forelse ($courses as $item)
+
+                    <tr>
+
+                      <td>{{ $item['kode'] }}</td>
+
+                        <td>{{!!$item['nama']}}</td>
+
+                        <td>{{ $item['kode'] }}</td>
+
+                        <td>{{ $item['nama'] }}</td>
+
+
+                        <td>{{ $item['sks'] }}</td>
+
+                        <td>{{ $item['dosen'] }}</td>
+
+                        <td>
+                            <a
+                                href="{{ route('courses.show', $item['id']) }}"
+                                class="link-action"
+                            >
+                                Lihat Detail →
+                            </a>
+                        </td>
+                    </tr>
+
+                @empty
+
+                    <tr>
+                        <td colspan="5">
+                            Belum ada mata kuliah.
+                        </td>
+                    </tr>
+
+                @endforelse
+
+            </tbody>
+
+        </table>
+
 
     <div style="margin-top: 20px;">
         {{ $courses->appends(['as' => $role])->links() }}
