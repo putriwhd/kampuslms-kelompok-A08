@@ -137,7 +137,7 @@
         }
 
         /* =========================
-           NAVIGATION
+           NAVIGATION & ROLE SELECTOR
         ========================= */
 
         .site-nav {
@@ -202,6 +202,31 @@
             border-radius: 10px;
         }
 
+        /* Styling Dropdown Role */
+        .role-selector-form {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .role-select {
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--pink-dark);
+            background-color: var(--pink-soft);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .role-select:hover, .role-select:focus {
+            background-color: var(--pink-light);
+            border-color: var(--pink);
+        }
+
         /* =========================
            MOBILE MENU
         ========================= */
@@ -249,441 +274,6 @@
                 opacity: 1;
                 transform: translateY(0);
             }
-        }
-
-        /* =========================
-           PAGE HEADER
-        ========================= */
-
-        .page-header {
-            margin-bottom: 30px;
-        }
-
-        .page-title {
-            margin: 0 0 8px;
-
-            color: var(--pink-dark);
-
-            font-family:
-                Georgia,
-                "Times New Roman",
-                serif;
-
-            font-size: clamp(30px, 5vw, 40px);
-
-            line-height: 1.2;
-        }
-
-        .page-lead {
-            margin: 0;
-
-            color: var(--muted);
-
-            font-size: 16px;
-        }
-
-        /* =========================
-           DASHBOARD
-        ========================= */
-
-        .dashboard-card {
-            padding: 35px;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-
-            border-radius: var(--radius);
-
-            box-shadow: var(--shadow);
-
-            transition:
-                transform var(--transition),
-                box-shadow var(--transition);
-        }
-
-        .dashboard-card:hover {
-            transform: translateY(-2px);
-
-            box-shadow:
-                0 12px 30px rgba(183, 110, 121, 0.13);
-        }
-
-        .dashboard-card h2 {
-            margin: 0 0 10px;
-
-            color: var(--pink-dark);
-
-            font-family:
-                Georgia,
-                "Times New Roman",
-                serif;
-
-            font-size: 25px;
-        }
-
-        .dashboard-card p {
-            margin: 0 0 15px;
-
-            color: var(--muted);
-
-            font-size: 15px;
-        }
-
-        /* =========================
-           LINK MATA KULIAH
-        ========================= */
-
-        .interactive-link {
-            color: var(--pink-dark);
-
-            font-weight: 700;
-
-            text-decoration: none;
-
-            border-bottom: 2px solid var(--pink-light);
-
-            transition:
-                color var(--transition),
-                border-color var(--transition);
-        }
-
-        .interactive-link:hover {
-            color: var(--pink);
-
-            border-color: var(--pink);
-
-            cursor: pointer;
-        }
-
-        /* =========================
-           CONTENT CARD
-        ========================= */
-
-        .content-card {
-            padding: 30px;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-
-            border-radius: var(--radius);
-
-            box-shadow: var(--shadow);
-
-            transition:
-                transform var(--transition),
-                box-shadow var(--transition);
-        }
-
-        .content-card:hover {
-            transform: translateY(-2px);
-
-            box-shadow:
-                0 12px 30px rgba(183, 110, 121, 0.13);
-        }
-
-        .content-card h2 {
-            margin-top: 0;
-
-            color: var(--pink-dark);
-
-            font-family:
-                Georgia,
-                "Times New Roman",
-                serif;
-        }
-
-        /* =========================
-           TABEL TENTANG
-        ========================= */
-
-        .about-table-wrapper {
-            width: 100%;
-
-            overflow-x: auto;
-
-            margin-top: 25px;
-
-            border: 1px solid var(--border);
-
-            border-radius: 12px;
-
-            overflow: hidden;
-        }
-
-        .about-table {
-            width: 100%;
-
-            border-collapse: collapse;
-
-            background: var(--white);
-        }
-
-        .about-table th {
-            width: 30%;
-
-            padding: 16px 18px;
-
-            text-align: left;
-
-            vertical-align: top;
-
-            background: var(--pink-soft);
-
-            color: var(--pink-dark);
-
-            font-size: 13px;
-
-            font-weight: 700;
-
-            border-bottom: 1px solid var(--border);
-        }
-
-        .about-table td {
-            padding: 16px 18px;
-
-            color: var(--text);
-
-            font-size: 14px;
-
-            border-bottom: 1px solid var(--border);
-        }
-
-        .about-table tr:last-child th,
-        .about-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .about-table tr:hover th,
-        .about-table tr:hover td {
-            background: #fff7f8;
-        }
-
-        /* =========================
-           TABLE MATA KULIAH
-        ========================= */
-
-        .table-wrapper {
-            width: 100%;
-
-            overflow-x: auto;
-
-            margin-top: 25px;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-
-            border-radius: var(--radius);
-
-            box-shadow: var(--shadow);
-        }
-
-        .course-table {
-            width: 100%;
-
-            min-width: 650px;
-
-            border-collapse: collapse;
-        }
-
-        .course-table th {
-            padding: 14px 16px;
-
-            text-align: left;
-
-            background: var(--pink-soft);
-
-            color: var(--pink-dark);
-
-            font-size: 12px;
-
-            font-weight: 700;
-
-            text-transform: uppercase;
-
-            letter-spacing: 0.05em;
-
-            border-bottom: 2px solid var(--pink-light);
-        }
-
-        .course-table td {
-            padding: 16px;
-
-            font-size: 14px;
-
-            border-bottom: 1px solid var(--border);
-
-            transition: background var(--transition);
-        }
-
-        .course-table tbody tr:hover td {
-            background: #fff6f7;
-        }
-
-        .course-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        /* =========================
-           LINK ACTION
-        ========================= */
-
-        .link-action {
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 5px;
-
-            color: var(--pink-dark);
-
-            font-weight: 600;
-
-            text-decoration: none;
-
-            transition:
-                color var(--transition),
-                gap var(--transition);
-        }
-
-        .link-action:hover {
-            color: var(--pink);
-
-            gap: 9px;
-        }
-
-        /* =========================
-           DETAIL
-        ========================= */
-
-        /* =========================
-           DETAIL MATA KULIAH
-        ========================= */
-
-        .course-detail-card {
-            max-width: 900px;
-
-            margin: 0 auto;
-
-            padding: 30px;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-
-            border-radius: var(--radius);
-
-            box-shadow: var(--shadow);
-        }
-
-        .course-detail-card h1 {
-            margin: 0 0 6px;
-
-            color: var(--pink-dark);
-
-            font-family:
-                Georgia,
-                "Times New Roman",
-                serif;
-
-            font-size: 30px;
-        }
-
-        .course-subtitle {
-            margin: 0 0 25px;
-
-            color: var(--muted);
-
-            font-size: 15px;
-        }
-
-        /* =========================
-           TABEL DETAIL MATA KULIAH
-        ========================= */
-
-        .course-detail-table {
-            width: 100%;
-
-            border-collapse: collapse;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-
-            border-radius: 10px;
-
-            overflow: hidden;
-        }
-
-        .course-detail-table th,
-        .course-detail-table td {
-            padding: 16px 18px;
-
-            text-align: left;
-
-            border-bottom: 1px solid var(--border);
-        }
-
-        .course-detail-table th {
-            width: 200px;
-
-            background: var(--pink-soft);
-
-            color: var(--pink-dark);
-
-            font-size: 13px;
-
-            font-weight: 700;
-        }
-
-        .course-detail-table td {
-            color: var(--text);
-
-            font-size: 14px;
-
-            line-height: 1.6;
-        }
-
-        .course-detail-table tr:last-child th,
-        .course-detail-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .course-detail-table tr:hover th,
-        .course-detail-table tr:hover td {
-            background: #fff7f8;
-        }
-
-        /* =========================
-           BACK LINK
-        ========================= */
-
-        .back-link {
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 6px;
-
-            margin-top: 28px;
-
-            color: var(--pink-dark);
-
-            font-weight: 600;
-
-            text-decoration: none;
-
-            transition:
-                color var(--transition),
-                gap var(--transition);
-        }
-
-        .back-link:hover {
-            color: var(--pink);
-
-            gap: 10px;
         }
 
         /* =========================
@@ -841,41 +431,22 @@
                 width: 100%;
             }
 
+            .role-selector-form {
+                margin-left: 0;
+                margin-top: 8px;
+                width: 100%;
+            }
+
+            .role-select {
+                width: 100%;
+            }
+
             .site-nav a.is-active::after {
                 display: none;
             }
 
             .site-main {
                 padding: 35px 16px 50px;
-            }
-
-            .dashboard-card,
-            .content-card,
-            .course-detail-card {
-                padding: 22px;
-            }
-
-            .course-detail-table th,
-            .course-detail-table td {
-                padding: 12px;
-            }
-
-            .course-detail-table th {
-                width: 130px;
-            }
-
-            .detail-list {
-                grid-template-columns: 1fr;
-
-                row-gap: 5px;
-            }
-
-            .detail-list dt {
-                margin-top: 12px;
-            }
-
-            .about-table th {
-                width: 35%;
             }
 
             .footer-container {
@@ -889,30 +460,16 @@
 
 <body>
 
-    {{-- =========================
-         HEADER
-    ========================= --}}
-
+    {{-- HEADER --}}
     <header class="site-header">
 
         <div class="nav-container">
 
             {{-- LOGO --}}
-            <a
-                href="{{ route('dashboard') }}"
-                class="brand"
-            >
-
-                <span class="brand-icon">
-                    K
-                </span>
-
-                <span>
-                    KampusLMS
-                </span>
-
+            <a href="{{ route('dashboard') }}" class="brand">
+                <span class="brand-icon">K</span>
+                <span>KampusLMS</span>
             </a>
-
 
             {{-- MOBILE BUTTON --}}
             <button
@@ -925,33 +482,38 @@
                 ☰
             </button>
 
-
             {{-- NAVIGATION --}}
-            <nav
-                class="site-nav"
-                id="siteNav"
-            >
+            <nav class="site-nav" id="siteNav">
 
                 <a
-                    href="{{ route('dashboard') }}"
+                    href="{{ route('dashboard', ['as' => request('as', 'mahasiswa')]) }}"
                     class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}"
                 >
                     🏠 Dashboard
                 </a>
 
                 <a
-                    href="{{ route('courses.index') }}"
+                    href="{{ route('courses.index', ['as' => request('as', 'mahasiswa')]) }}"
                     class="{{ request()->routeIs('courses.*') ? 'is-active' : '' }}"
                 >
                     📚 Mata Kuliah
                 </a>
 
                 <a
-                    href="{{ route('tentang') }}"
+                    href="{{ route('tentang', ['as' => request('as', 'mahasiswa')]) }}"
                     class="{{ request()->routeIs('tentang') ? 'is-active' : '' }}"
                 >
                     ℹ️ Tentang
                 </a>
+
+                {{-- DROPDOWN SIMULASI ROLE --}}
+                <form action="{{ url()->current() }}" method="GET" class="role-selector-form">
+                    <select name="as" class="role-select" onchange="this.form.submit()">
+                        <option value="mahasiswa" {{ request('as', 'mahasiswa') == 'mahasiswa' ? 'selected' : '' }}>👤 Role: Mahasiswa</option>
+                        <option value="dosen" {{ request('as') == 'dosen' ? 'selected' : '' }}>👨‍🏫 Role: Dosen</option>
+                        <option value="admin" {{ request('as') == 'admin' ? 'selected' : '' }}>🛠️ Role: Admin</option>
+                    </select>
+                </form>
 
             </nav>
 
@@ -959,160 +521,63 @@
 
     </header>
 
-
-    {{-- =========================
-         ISI HALAMAN
-    ========================= --}}
-
+    {{-- ISI HALAMAN --}}
     <main class="site-main">
-
         {{ $slot }}
-
     </main>
 
-
-    {{-- =========================
-         FOOTER
-    ========================= --}}
-
+    {{-- FOOTER --}}
     <footer class="site-footer">
-
         <div class="footer-container">
-
             <div>
-
-                <div class="footer-brand">
-                    KampusLMS
-                </div>
-
-                <small>
-                    Sistem Informasi Pembelajaran Kampus
-                </small>
-
+                <div class="footer-brand">KampusLMS</div>
+                <small>Sistem Informasi Pembelajaran Kampus</small>
             </div>
-
-            <small>
-                &copy; {{ date('Y') }} KampusLMS
-            </small>
-
+            <small>&copy; {{ date('Y') }} KampusLMS</small>
         </div>
-
     </footer>
 
-
-    {{-- =========================
-         SCROLL TO TOP
-    ========================= --}}
-
-    <button
-        type="button"
-        class="scroll-top"
-        id="scrollTop"
-        aria-label="Kembali ke atas"
-    >
+    {{-- SCROLL TO TOP --}}
+    <button type="button" class="scroll-top" id="scrollTop" aria-label="Kembali ke atas">
         ↑
     </button>
 
-
     <script>
-
-        // =========================
         // MOBILE MENU
-        // =========================
-
-        const menuToggle =
-            document.getElementById('menuToggle');
-
-        const siteNav =
-            document.getElementById('siteNav');
+        const menuToggle = document.getElementById('menuToggle');
+        const siteNav = document.getElementById('siteNav');
 
         if (menuToggle && siteNav) {
+            menuToggle.addEventListener('click', function () {
+                const isOpen = siteNav.classList.toggle('open');
+                menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                menuToggle.innerHTML = isOpen ? '✕' : '☰';
+            });
 
-            menuToggle.addEventListener(
-                'click',
-                function () {
-
-                    const isOpen =
-                        siteNav.classList.toggle('open');
-
-                    menuToggle.setAttribute(
-                        'aria-expanded',
-                        isOpen ? 'true' : 'false'
-                    );
-
-                    menuToggle.innerHTML =
-                        isOpen ? '✕' : '☰';
-
-                }
-            );
-
-
-            siteNav
-                .querySelectorAll('a')
-                .forEach(function (link) {
-
-                    link.addEventListener(
-                        'click',
-                        function () {
-
-                            siteNav.classList.remove('open');
-
-                            menuToggle.setAttribute(
-                                'aria-expanded',
-                                'false'
-                            );
-
-                            menuToggle.innerHTML = '☰';
-
-                        }
-                    );
-
+            siteNav.querySelectorAll('a').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    siteNav.classList.remove('open');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                    menuToggle.innerHTML = '☰';
                 });
-
+            });
         }
 
-
-        // =========================
         // SCROLL TO TOP
-        // =========================
-
-        const scrollTop =
-            document.getElementById('scrollTop');
-
+        const scrollTop = document.getElementById('scrollTop');
         if (scrollTop) {
-
-            window.addEventListener(
-                'scroll',
-                function () {
-
-                    if (window.scrollY > 300) {
-
-                        scrollTop.classList.add('show');
-
-                    } else {
-
-                        scrollTop.classList.remove('show');
-
-                    }
-
+            window.addEventListener('scroll', function () {
+                if (window.scrollY > 300) {
+                    scrollTop.classList.add('show');
+                } else {
+                    scrollTop.classList.remove('show');
                 }
-            );
+            });
 
-
-            scrollTop.addEventListener(
-                'click',
-                function () {
-
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-
-                }
-            );
-
+            scrollTop.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         }
-
     </script>
 
 </body>

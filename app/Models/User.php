@@ -6,6 +6,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
 {
@@ -20,6 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'nim_nip',
         'password',
     ];
 
@@ -44,5 +47,39 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Relasi ke mata kuliah yang diampu (sebagai Dosen)
+     */
+    public function taughtCourses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'lecturer_id');
+    }
+
+    /**
+     * Relasi ke mata kuliah yang diikuti (sebagai Mahasiswa)
+     */
+    public function courses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class)
+                    ->withPivot('enrolled_at')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Relasi ke tugas yang dikumpulkan
+     */
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    /**
+     * Relasi ke nilai yang diberikan (sebagai Penilai/Dosen)
+     */
+    public function gradesGiven(): HasMany
+    {
+        return $this->hasMany(Grade::class, 'graded_by');
     }
 }

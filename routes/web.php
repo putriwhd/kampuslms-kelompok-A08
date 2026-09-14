@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -39,8 +40,6 @@ Route::view('/tentang', 'tentang')->name('tentang');
 | "Urutan menentukan").
 */
 
-Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
-Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -53,3 +52,11 @@ Route::get('/courses/{course}', [CourseController::class, 'show'])->name('course
 | Menambahkannya sekarang berarti mendahului materi dan tidak sesuai
 | instruksi soal.
 */
+
+// Halaman Statis
+Route::view('/', 'dashboard')->name('dashboard');
+Route::view('/tentang', 'tentang')->name('tentang');
+
+// Resource Routes (Mendukung CRUD Lengkap & Simulasi Role)
+Route::resource('users', UserController::class);
+Route::resource('courses', CourseController::class);
