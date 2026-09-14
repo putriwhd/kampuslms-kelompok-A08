@@ -202,6 +202,31 @@
             border-radius: 10px;
         }
 
+        /* Styling Dropdown Role */
+        .role-selector-form {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .role-select {
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--pink-dark);
+            background-color: var(--pink-soft);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            outline: none;
+            cursor: pointer;
+            transition: all var(--transition);
+        }
+
+        .role-select:hover, .role-select:focus {
+            background-color: var(--pink-light);
+            border-color: var(--pink);
+        }
+
         /* =========================
            ROLE SELECTOR
         ========================= */
@@ -581,9 +606,7 @@
 
     {{-- FOOTER --}}
     <footer class="site-footer">
-
         <div class="footer-container">
-
             <div>
                 <div class="footer-brand">KampusLMS</div>
 
@@ -591,13 +614,8 @@
                     Sistem Informasi Pembelajaran Kampus
                 </small>
             </div>
-
-            <small>
-                &copy; {{ date('Y') }} KampusLMS
-            </small>
-
+            <small>&copy; {{ date('Y') }} KampusLMS</small>
         </div>
-
     </footer>
 
     {{-- SCROLL TO TOP --}}
@@ -679,8 +697,10 @@
 
             });
 
+            scrollTop.addEventListener('click', function () {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         }
-
     </script>
 
 </body>
