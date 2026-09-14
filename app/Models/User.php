@@ -48,7 +48,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
-   
+    }
 
     /**
      * Relasi ke mata kuliah yang diampu (sebagai Dosen)
@@ -83,5 +83,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Grade::class, 'graded_by');
     }
-
 }
