@@ -1,0 +1,349 @@
+[33mcommit 24ef010587f7ff3a1eddc1880a44bf64a101fd40[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mputri_63[m[33m, [m[1;31morigin/putri_63[m[33m)[m
+Author: putri <10241063@student.itk.ac.id>
+Date:   Thu Sep 10 14:44:51 2026 +0800
+
+    folder mingguan
+
+[1mdiff --git a/docs/Minggu-01-Fatim/1.1.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.1.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.1.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.1.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/1.2.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.2.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.2.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.2.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/1.3.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.3.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.3.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.3.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/1.4.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.4.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.4.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.4.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/1.5.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.5.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.5.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.5.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/1.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/1.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/1.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/2.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/2.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/2.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/2.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/3.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/3.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/3.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/3.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/4.png b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/4.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/4.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/4.png[m
+[1mdiff --git a/docs/Minggu-01-Fatim/minggu-01-Fatim.md b/docs/minggu-01-kelompokA08/Minggu-01-Fatim/minggu-01-Fatim.md[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-01-Fatim/minggu-01-Fatim.md[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-Fatim/minggu-01-Fatim.md[m
+[1mdiff --git a/docs/minggu-01/image-1.png b/docs/minggu-01-kelompokA08/Minggu-01-putri/image-1.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/minggu-01/image-1.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-putri/image-1.png[m
+[1mdiff --git a/docs/minggu-01/image-2.png b/docs/minggu-01-kelompokA08/Minggu-01-putri/image-2.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/minggu-01/image-2.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-putri/image-2.png[m
+[1mdiff --git a/docs/minggu-01/image.png b/docs/minggu-01-kelompokA08/Minggu-01-putri/image.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/minggu-01/image.png[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-putri/image.png[m
+[1mdiff --git a/docs/minggu-01/minggu-01-putri.md b/docs/minggu-01-kelompokA08/Minggu-01-putri/minggu-01-putri.md[m
+[1msimilarity index 100%[m
+[1mrename from docs/minggu-01/minggu-01-putri.md[m
+[1mrename to docs/minggu-01-kelompokA08/Minggu-01-putri/minggu-01-putri.md[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.1.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.1.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.1.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.1.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.2.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.2.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.2.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.2.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.3.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.3.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.3.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.3.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.4.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.4.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.4.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.4.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.5.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.5.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.5.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.5.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.6.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.6.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.6.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.6.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.7.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.7.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.7.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.7.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.8.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.8.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.8.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.8.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/1.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/1.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/1.png[m
+[1mdiff --git a/docs/Minggu-02-Fatim/Minggu_02_Fatim.md b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/Minggu_02_Fatim.md[m
+[1msimilarity index 100%[m
+[1mrename from docs/Minggu-02-Fatim/Minggu_02_Fatim.md[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/Minggu_02_Fatim.md[m
+[1mdiff --git a/docs/minggu-02/image.png b/docs/minggu-02-kelompokA08/Minggu-02-Fatim/image.png[m
+[1msimilarity index 100%[m
+[1mrename from docs/minggu-02/image.png[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-Fatim/image.png[m
+[1mdiff --git a/docs/minggu-02-kelompokA08/Minggu-02-putri/Screenshot 2026-09-02 194925.png b/docs/minggu-02-kelompokA08/Minggu-02-putri/Screenshot 2026-09-02 194925.png[m
+[1mnew file mode 100644[m
+[1mindex 0000000..fa4aee4[m
+Binary files /dev/null and b/docs/minggu-02-kelompokA08/Minggu-02-putri/Screenshot 2026-09-02 194925.png differ
+[1mdiff --git a/docs/minggu-02/minggu-02-putri.md b/docs/minggu-02-kelompokA08/Minggu-02-putri/minggu-02-putri.md[m
+[1msimilarity index 95%[m
+[1mrename from docs/minggu-02/minggu-02-putri.md[m
+[1mrename to docs/minggu-02-kelompokA08/Minggu-02-putri/minggu-02-putri.md[m
+[1mindex 1b94bc2..69ded99 100644[m
+[1m--- a/docs/minggu-02/minggu-02-putri.md[m
+[1m+++ b/docs/minggu-02-kelompokA08/Minggu-02-putri/minggu-02-putri.md[m
+[36m@@ -11,5 +11,5 @@[m [m## 4. Layout apa yang membungkusnya?[m
+ Jawaban : Layout yang membungkusanya adalah `<x-layout>` yang terletak pada berkas `resources/views/components/.layout.blade.php` [m
+ [m
+ ## 5. Jalankan `php artisan route:list --path=tentang`. Cocok dengan analisis Anda?[m
+[31m-Jawaban : ![alt text](image.png)[m
+[32m+[m[32mJawaban : ![alt text](<Screenshot 2026-09-02 194925.png>)[m
+ Iya, rute `/tentang` dibuat menggunakan Route::view, rute ini menggunakan methode GET dan langsung mengarahkan pengguna ke view `tentang` tanpa controller. Perintah `php artisan route:list --path=tentang`menampilkan `GET` pada `tentang` yang mengarahkan ke aksi `tentang`[m
+\ No newline at end of file[m
+[1mdiff --git a/package-lock.json b/package-lock.json[m
+[1mindex 34837b7..968685a 100644[m
+[1m--- a/package-lock.json[m
+[1m+++ b/package-lock.json[m
+[36m@@ -513,9 +513,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -617,9 +614,6 @@[m
+                 "arm"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -634,9 +628,6 @@[m
+                 "arm"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -651,9 +642,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -668,9 +656,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -685,9 +670,6 @@[m
+                 "loong64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -702,9 +684,6 @@[m
+                 "loong64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -719,9 +698,6 @@[m
+                 "ppc64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -736,9 +712,6 @@[m
+                 "ppc64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -753,9 +726,6 @@[m
+                 "riscv64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -770,9 +740,6 @@[m
+                 "riscv64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -787,9 +754,6 @@[m
+                 "s390x"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -804,9 +768,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -821,9 +782,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1047,9 +1005,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1067,9 +1022,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1087,9 +1039,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1107,9 +1056,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MIT",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1955,9 +1901,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MPL-2.0",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -1979,9 +1922,6 @@[m
+                 "arm64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MPL-2.0",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -2003,9 +1943,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "glibc"[m
+[31m-            ],[m
+             "license": "MPL-2.0",[m
+             "optional": true,[m
+             "os": [[m
+[36m@@ -2027,9 +1964,6 @@[m
+                 "x64"[m
+             ],[m
+             "dev": true,[m
+[31m-            "libc": [[m
+[31m-                "musl"[m
+[31m-            ],[m
+             "license": "MPL-2.0",[m
+             "optional": true,[m
+             "os": [[m

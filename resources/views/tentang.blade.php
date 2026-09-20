@@ -1,4 +1,12 @@
+<<<<<<< HEAD
 <x-layout>
+=======
+<<<<<<< HEAD
+<x-layout>
+=======
+ <x-layout>
+>>>>>>> 29371875b2befd733b6ba2494aaa2552776fc8b0
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
     <x-slot:title>
         Tentang
@@ -14,6 +22,14 @@
         </div>
     </div>
 
+<<<<<<< HEAD
+=======
+        <h1>Tentang Kelompok</h1>
+        <p>
+            Halaman ini dapat dilihat oleh semua peran. Peran yang sedang dipilih:
+            <strong>{{ ucfirst(in_array(request('as'), ['mahasiswa', 'dosen', 'admin'], true) ? request('as') : 'mahasiswa') }}</strong>.
+        </p>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
     {{-- INFORMASI KELOMPOK --}}
     <div class="about-card">

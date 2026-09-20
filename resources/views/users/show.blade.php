@@ -1,6 +1,7 @@
 <x-layout>
     <x-slot:title>Detail Pengguna</x-slot:title>
 
+<<<<<<< HEAD
     <div class="user-detail-header">
         <div>
             <h1>Detail Pengguna</h1>
@@ -22,21 +23,34 @@
         </div>
 
         <table class="user-detail-table">
+=======
+    <div class="content-card">
+        <h1>Detail Pengguna</h1>
+
+        <table class="course-detail-table">
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             <tbody>
                 <tr>
                     <th>Nama</th>
                     <td>{{ $user->name }}</td>
                 </tr>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 <tr>
                     <th>Email</th>
                     <td>{{ $user->email }}</td>
                 </tr>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 <tr>
                     <th>NIM/NIP</th>
                     <td>{{ $user->nim_nip ?? '-' }}</td>
                 </tr>
+<<<<<<< HEAD
 
                 <tr>
                     <th>Role</th>
@@ -52,10 +66,20 @@
                     <td>
                         {{ $user->created_at?->format('d M Y H:i') ?? '-' }}
                     </td>
+=======
+                <tr>
+                    <th>Role</th>
+                    <td>{{ ucfirst($user->role) }}</td>
+                </tr>
+                <tr>
+                    <th>Terdaftar</th>
+                    <td>{{ $user->created_at?->format('d M Y H:i') ?? '-' }}</td>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
             </tbody>
         </table>
 
+<<<<<<< HEAD
         <div class="user-detail-footer">
             <a href="{{ route('users.index', ['as' => request('as', 'admin')]) }}"
                class="back-button">
@@ -228,3 +252,12 @@
         }
     </style>
 </x-layout>
+=======
+        <div style="margin-top: 20px;">
+            <a href="{{ route('users.index', ['as' => request('as', 'admin')]) }}">&larr; Kembali</a>
+            |
+            <a href="{{ route('users.edit', [$user, 'as' => request('as', 'admin')]) }}">Edit</a>
+        </div>
+    </div>
+</x-layout>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637

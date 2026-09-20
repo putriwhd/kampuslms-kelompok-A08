@@ -25,6 +25,7 @@
             "
         >
 
+<<<<<<< HEAD
             <h1
                 style="
                     margin: 0 0 6px 0;
@@ -35,6 +36,9 @@
             >
                 {{ $course->name }}
             </h1>
+=======
+            <h1>{{ $course->name }}</h1>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
             <p
                 style="
@@ -61,6 +65,7 @@
             <tbody>
 
                 <tr>
+<<<<<<< HEAD
                     <th
                         style="
                             width: 200px;
@@ -110,10 +115,30 @@
                     >
                         {{ $course->lecturer->name ?? '-' }}
                     </td>
+=======
+                    <th>Kode</th>
+                    <td>{{ $course->code }}</td>
+                </tr>
+
+                <tr>
+                    <th>Dosen Pengampu</th>
+                    <td>{{ $course->lecturer->name ?? '-' }}</td>
+                </tr>
+
+                <tr>
+                    <th>SKS</th>
+                    <td>{{ $course->sks }}</td>
+                </tr>
+
+                <tr>
+                    <th>Status</th>
+                    <td>{{ $course->status }}</td>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
 
 
                 <tr>
+<<<<<<< HEAD
                     <th
                         style="
                             padding: 17px 24px;
@@ -200,6 +225,10 @@
                     >
                         {{ $course->description ?? '-' }}
                     </td>
+=======
+                    <th>Deskripsi</th>
+                    <td>{{ $course->description ?? '-' }}</td>
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
 
             </tbody>
@@ -218,6 +247,7 @@
 
             <a
                 href="{{ route('courses.index', ['as' => $role ?? request('as', 'mahasiswa')]) }}"
+<<<<<<< HEAD
                 style="
                     display: inline-block;
                     padding: 9px 15px;
@@ -228,6 +258,9 @@
                     font-size: 13px;
                     font-weight: 600;
                 "
+=======
+                class="back-link"
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             >
                 &larr; Kembali ke Daftar Mata Kuliah
             </a>

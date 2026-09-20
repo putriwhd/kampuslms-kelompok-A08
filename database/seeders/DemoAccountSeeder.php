@@ -2,10 +2,15 @@
 
 namespace Database\Seeders;
 
+<<<<<<< HEAD
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+=======
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
 class DemoAccountSeeder extends Seeder
 {
@@ -14,6 +19,7 @@ class DemoAccountSeeder extends Seeder
      */
     public function run(): void
     {
+<<<<<<< HEAD
         $accounts = [
             [
                 'name' => 'Administrator KampusLMS',
@@ -44,5 +50,8 @@ class DemoAccountSeeder extends Seeder
             $user->role = $account['role'];
             $user->save();
         }
+=======
+        //
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
     }
 }

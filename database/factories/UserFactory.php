@@ -43,9 +43,12 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+<<<<<<< HEAD
 <<<<<<< Updated upstream
 }
 =======
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
     public function admin(): static
     {
@@ -62,4 +65,7 @@ class UserFactory extends Factory
         return $this->state(['role' => 'mahasiswa']);
     }
 }
+<<<<<<< HEAD
 >>>>>>> Stashed changes
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
