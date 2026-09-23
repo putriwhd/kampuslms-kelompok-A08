@@ -26,7 +26,7 @@ Pada DevTools bagian Application, Cookies, nama cookie session Laravel biasanya 
 
 BREAK
 1. Hapus @csrf dari form, lalu kirim
-![alt text](image.png)
+ ![alt text](<break 4 no 1.png>)
 
 2. Ganti $request->validated() menjadi $request->all(), lalu kirim field liar lewat curl
 Pengujian menunjukkan bahwa penggunaan $request->all() membuka kembali risiko mass assignment karena seluruh data dari request diberikan ke proses penyimpanan. Perbaikannya adalah hanya menggunakan data yang sudah lolos validasi
@@ -38,7 +38,7 @@ Hasil percobaan membuktikan bahwa fungsi F`ormRequest` (Validation Layer) bukan 
 
 4. Hapus validasi in:... pada status, kirim status=superadmin
 Hasil percobaan Status Jebol  dengan status  "superadmin" berhasil lolos melewati validasi dan resmi tersimpan ke dalam database. Penyebab utamanya Validasi in:Active,Draft,Archive di StoreCourseRequest.php dihapus dan Tipe data kolom status di migrasi database dilonggarkan menjadi string sehingga di FormRequest, pengguna bisa memasukkan nilai status liar/invalid yang berpotensi merusak logika bisnis aplikasi. 
-![alt text](<break 4 no 4.jpeg>)
+![alt text](<break 4 no 4.jpeg>) output 
 
 5. Hapus ->withQueryString(), lakukan pencarian lalu klik halaman 2
 Jika sebelumnya ketika menambahkan parameter seperti &search=Dosen atau &role=Mahasiswa di URL, begitu kamu menekan tombol Next atau tombol angka halaman 2, parameter tersebut hilang begitu saja dan hanya menyisakan ?as=admin&page=2. Dan Tanpa method withQueryString(), tautan pagination yang digenerate oleh Laravel tidak akan mempertahankan kondisi pencarian/filter pengguna. Hal ini memaksa halaman kembali menampilkan seluruh data umum tanpa filter setiap kali pengguna berpindah halaman.
