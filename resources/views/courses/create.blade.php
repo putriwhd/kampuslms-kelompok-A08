@@ -1,7 +1,6 @@
 <x-layout>
     <x-slot:title>Tambah Mata Kuliah</x-slot:title>
 
-<<<<<<< HEAD
     <div class="course-create-header">
         <h1>Tambah Mata Kuliah</h1>
         <p>Tambahkan informasi mata kuliah baru ke dalam KampusLMS.</p>
@@ -19,126 +18,99 @@
             method="POST"
             class="course-create-form"
         >
-            @csrf
+          @csrf
 
-            {{-- Kode Mata Kuliah --}}
+            {{-- 1. Kode Mata Kuliah --}}
             <div class="form-group">
                 <label for="code">Kode Mata Kuliah</label>
-
                 <input
                     id="code"
                     name="code"
                     type="text"
-                    value="{{ old('code') }}"
-                    required
+                      value="{{ old('code') }}"
+                      required
+                    
                 >
-
                 @error('code')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- Nama Mata Kuliah --}}
+            {{-- 2. Nama Mata Kuliah --}}
             <div class="form-group">
                 <label for="name">Nama Mata Kuliah</label>
-
                 <input
                     id="name"
                     name="name"
                     type="text"
-                    value="{{ old('name', old('title')) }}"
-                    required
-                >
-
+                      value="{{ old('name') }}"
+                      required
+                    >
                 @error('name')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- Dosen Pengampu --}}
+            {{-- 3. Dosen Pengampu (Input Teks) --}}
             <div class="form-group">
                 <label for="lecturer">Dosen Pengampu</label>
-
-                <input
-                    id="lecturer"
-                    name="lecturer"
-                    type="text"
+                <input 
+                    type="text" 
+                    id="lecturer" 
+                    name="lecturer" 
                     value="{{ old('lecturer') }}"
                     placeholder="Masukkan nama dosen"
                     required
                 >
-
                 @error('lecturer')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- Deskripsi --}}
+            {{-- 4. Deskripsi --}}
             <div class="form-group">
                 <label for="description">Deskripsi</label>
-
                 <textarea
                     id="description"
                     name="description"
                     rows="5"
-                    required
-                >{{ old('description') }}</textarea>
-
+                 >{{ old('description') }}></textarea>
                 @error('description')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- SKS --}}
+            {{-- 5. SKS --}}
             <div class="form-group">
                 <label for="sks">SKS</label>
-
                 <input
                     id="sks"
                     name="sks"
                     type="number"
                     min="1"
-                    max="255"
+                    max="6"
                     value="{{ old('sks', 3) }}"
                     required
                 >
-
                 @error('sks')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- Status --}}
+            {{-- 6. Status Mata Kuliah --}}
             <div class="form-group">
                 <label for="status">Status Mata Kuliah</label>
-
-                <select
-                    id="status"
-                    name="status"
-                    required
-                >
-                    <option
-                        value="active"
-                        @selected(old('status', 'active') === 'active')
-                    >
-                        Active
+                <select id="status" name="status" required>
+                    <option value="Active" @selected(old('status', 'Active') === 'Active')>
+                        Aktif
                     </option>
-
-                    <option
-                        value="draft"
-                        @selected(old('status') === 'draft')
-                    >
-                        Draft
+                    <option value="Draft" @selected(old('status') === 'Draft')>
+                        Draf
                     </option>
-
-                    <option
-                        value="archived"
-                        @selected(old('status') === 'archived')
-                    >
-                        Archive
+                    <option value="Archive" @selected(old('status') === 'Archive')>
+                        Arsip
                     </option>
                 </select>
-
                 @error('status')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
@@ -146,7 +118,6 @@
 
             {{-- BUTTON --}}
             <div class="form-actions">
-
                 <a
                     href="{{ route('courses.index', ['as' => $role]) }}"
                     class="cancel-button"
@@ -160,15 +131,12 @@
                 >
                     Simpan Mata Kuliah
                 </button>
-
             </div>
 
         </form>
     </div>
 
-
     <style>
-
         .course-create-header {
             margin-bottom: 28px;
         }
@@ -313,7 +281,6 @@
         }
 
         @media (max-width: 700px) {
-
             .course-create-form {
                 padding: 18px;
             }
@@ -326,63 +293,6 @@
             .save-button {
                 width: 100%;
             }
-
         }
-
     </style>
-
 </x-layout>
-=======
-    <div class="content-card">
-        <h1>Tambah Mata Kuliah</h1>
-
-        <form action="{{ route('courses.store', ['as' => $role]) }}" method="POST">
-            @csrf
-
-            <p>
-                <label for="code">Kode Mata Kuliah</label><br>
-                <input id="code" name="code" type="text" value="{{ old('code') }}" required>
-                @error('code')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <p>
-                <label for="name">Nama Mata Kuliah</label><br>
-                <input id="name" name="name" type="text" value="{{ old('name', old('title')) }}" required>
-                @error('name')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <p>
-                <label for="description">Deskripsi</label><br>
-                <textarea id="description" name="description" rows="4" required>{{ old('description') }}</textarea>
-                @error('description')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <p>
-                <label for="sks">SKS</label><br>
-                <input id="sks" name="sks" type="number" min="1" max="255" value="{{ old('sks', 3) }}" required>
-                @error('sks')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <p>
-                <label for="status">Status</label><br>
-                <select id="status" name="status" required>
-                    @foreach(['draft' => 'Draft', 'active' => 'Aktif', 'archived' => 'Arsip'] as $value => $label)
-                        <option value="{{ $value }}" @selected(old('status', 'active') === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-                @error('status')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <p>
-                <label for="lecturer">Dosen Pengampu</label><br>
-                <input id="lecturer" name="lecturer" type="text" value="{{ old('lecturer') }}"
-                       placeholder="Masukkan nama dosen" required>
-                @error('lecturer')<br><small style="color: #b91c1c;">{{ $message }}</small>@enderror
-            </p>
-
-            <button type="submit">Simpan</button>
-            <a href="{{ route('courses.index', ['as' => $role]) }}">Batal</a>
-        </form>
-    </div>
-</x-layout>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
