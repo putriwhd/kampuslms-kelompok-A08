@@ -204,12 +204,10 @@
 
     </div>
 
-
-    {{-- PAGINATION --}}
-    <div class="pagination">
-        {{ $courses->appends(['as' => $role])->links() }}
-    </div>
-
+{{-- PAGINATION --}}
+<div class="pagination">
+  {{ $courses->withQueryString()->links() }}
+</div>
 
     {{-- STYLE --}}
     <style>
