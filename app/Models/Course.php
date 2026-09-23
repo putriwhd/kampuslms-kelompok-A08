@@ -14,10 +14,19 @@ class Course extends Model
 
     protected $fillable = [
         'code',
-        'title',
+        'name',
         'description',
+        'sks',
         'lecturer_id',
+        'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'sks' => 'integer',
+        ];
+    }
 
     public function lecturer(): BelongsTo
     {

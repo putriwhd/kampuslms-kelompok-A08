@@ -26,7 +26,9 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'nim_nip' => fake()->unique()->numerify('##########'),
             'email_verified_at' => now(),
+            'role' => 'mahasiswa',
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
@@ -41,4 +43,29 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+<<<<<<< HEAD
+<<<<<<< Updated upstream
 }
+=======
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
+
+    public function admin(): static
+    {
+        return $this->state(['role' => 'admin']);
+    }
+
+    public function dosen(): static
+    {
+        return $this->state(['role' => 'dosen']);
+    }
+
+    public function mahasiswa(): static
+    {
+        return $this->state(['role' => 'mahasiswa']);
+    }
+}
+<<<<<<< HEAD
+>>>>>>> Stashed changes
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637

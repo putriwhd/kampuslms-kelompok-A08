@@ -14,9 +14,22 @@ class Submission extends Model
     protected $fillable = [
         'assignment_id',
         'user_id',
-        'content',
         'file_path',
+        'original_name',
+        'file_size',
+        'note',
+        'submitted_at',
+        'is_late',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'file_size' => 'integer',
+            'submitted_at' => 'datetime',
+            'is_late' => 'boolean',
+        ];
+    }
 
     public function assignment(): BelongsTo
     {

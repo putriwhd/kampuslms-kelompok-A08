@@ -14,21 +14,32 @@ class Assignment extends Model
 
     protected $fillable = [
         'course_id',
+        'created_by',
         'title',
-        'description',
+        'instructions',
         'due_at',
+        'max_score',
+        'allow_late',
+        'status',
     ];
 
     protected function casts(): array
     {
         return [
             'due_at' => 'datetime',
+            'max_score' => 'integer',
+            'allow_late' => 'boolean',
         ];
     }
 
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function submissions(): HasMany

@@ -8,11 +8,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+<<<<<<< HEAD
+use App\Models\Course;
+=======
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -50,12 +55,18 @@ class User extends Authenticatable
     }
 
     /**
+<<<<<<< HEAD
+     * Relasi User dengan Course yang diajarkan.
+=======
      * Relasi ke mata kuliah yang diampu (sebagai Dosen)
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
      */
     public function taughtCourses(): HasMany
     {
         return $this->hasMany(Course::class, 'lecturer_id');
     }
+<<<<<<< HEAD
+=======
 
     /**
      * Relasi ke mata kuliah yang diikuti (sebagai Mahasiswa)
@@ -82,4 +93,5 @@ class User extends Authenticatable
     {
         return $this->hasMany(Grade::class, 'graded_by');
     }
+>>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 }
