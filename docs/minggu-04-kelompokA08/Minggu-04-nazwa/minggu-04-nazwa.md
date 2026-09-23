@@ -24,4 +24,31 @@ old('sks') mengambil nilai SKS yang sebelumnya dimasukkan pada form. Nilai terse
 jawaban : 
 Pada DevTools bagian Application, Cookies, nama cookie session Laravel biasanya adalah laravel_session. Cookie tersebut digunakan Laravel untuk mengenali session pengguna.
 
+BREAK
+1. Hapus @csrf dari form, lalu kirim
+![alt text](image.png)
 
+2. Ganti $request->validated() menjadi $request->all(), lalu kirim field liar lewat curl
+Pengujian menunjukkan bahwa penggunaan $request->all() membuka kembali risiko mass assignment karena seluruh data dari request diberikan ke proses penyimpanan. Perbaikannya adalah hanya menggunakan data yang sudah lolos validasi
+![alt text](<break 4 no 2.jpeg>)
+
+3. Hapus validasi exists:users,id pada lecturer_id, kirim lecturer_id=99999
+Hasil percobaan membuktikan bahwa fungsi F`ormRequest` (Validation Layer) bukan hanya untuk merapikan input pengguna, melainkan berfungsi sebagai Garda Depan (First Line of Defense) untuk mencegah data yang tidak valid/tidak lengkap menyentuh database.Tanpa adanya validasi di FormRequest, kesalahan input akan langsung menghantam skema database dan menyebabkan aplikasi crash (Error 500) alih-alih memberikan pesan peringatan yang rapi kepada pengguna.Jika skema database di panduan mensyaratkan kolom tersebut nullable, data tanpa dosen memang akan lolos dan menjadi data yatim (data tanpa relasi/penanggung jawab yang jelas).
+![alt text](<break 4 no 3.jpeg>)
+
+4. Hapus validasi in:... pada status, kirim status=superadmin
+Hasil percobaan Status Jebol  dengan status  "superadmin" berhasil lolos melewati validasi dan resmi tersimpan ke dalam database. Penyebab utamanya Validasi in:Active,Draft,Archive di StoreCourseRequest.php dihapus dan Tipe data kolom status di migrasi database dilonggarkan menjadi string sehingga di FormRequest, pengguna bisa memasukkan nilai status liar/invalid yang berpotensi merusak logika bisnis aplikasi. 
+![alt text](<break 4 no 4.jpeg>)
+
+5. Hapus ->withQueryString(), lakukan pencarian lalu klik halaman 2
+Jika sebelumnya ketika menambahkan parameter seperti &search=Dosen atau &role=Mahasiswa di URL, begitu kamu menekan tombol Next atau tombol angka halaman 2, parameter tersebut hilang begitu saja dan hanya menyisakan ?as=admin&page=2. Dan Tanpa method withQueryString(), tautan pagination yang digenerate oleh Laravel tidak akan mempertahankan kondisi pencarian/filter pengguna. Hal ini memaksa halaman kembali menampilkan seluruh data umum tanpa filter setiap kali pengguna berpindah halaman.
+![alt text](<break 4 no 5.jpeg>)
+
+6. Ganti return redirect() menjadi return view() pada store, lalu tekan F5 setelah simpan
+Skenario Menggunakan return view() (Bug Terbukti):
+
+Browser tetap berada pada metode HTTP POST. Saat pengguna tidak sengaja menekan F5, browser akan mengeksekusi ulang pengiriman form. Hal ini menyebabkan data ganda tersimpan (jika tidak ada batasan unique), atau server mengalami crash / Error 500 (karena memicu duplicate entry / constraint violation seperti pada gambar).Skenario Menggunakan return redirect()`Setelah proses simpan data `POST selesai, server langsung mengalihkan browser ke metode HTTP GET via redirect(). Jika pengguna menekan F5, yang di-refresh hanyalah tampilan data (GET), sehingga aman dari eksekusi simpan ulang.
+![alt text](<break 4 no 6.jpeg>)
+
+7. Hapus old(...) dari semua input, lalu kirim form dengan satu kesalahan
+Saat atribut required di HTML dihapus, validasi diserahkan sepenuhnya ke backend Laravel. Ketika validasi gagal (misalnya karena code wajib diisi), pengguna dilempar balik ke form`dan tanpa `old(), semua inputan panjang yang sudah diketik tadi langsung hangus/bersih.
