@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,17 +15,12 @@
             --blue: #7fa6d8;
             --blue-light: #dceafa;
             --blue-soft: #f3f7fc;
-
             --white: #ffffff;
             --cream: #fbfdff;
-
             --text: #34445a;
             --muted: #718096;
-
             --border: #d8e4f2;
-
             --shadow: 0 8px 25px rgba(79, 111, 159, 0.10);
-
             --radius: 14px;
             --transition: 0.25s ease;
         }
@@ -40,19 +36,15 @@
         body {
             margin: 0;
             min-height: 100vh;
-
             background: var(--cream);
             color: var(--text);
-
             font-family:
                 -apple-system,
                 BlinkMacSystemFont,
                 "Segoe UI",
                 Arial,
                 sans-serif;
-
             line-height: 1.6;
-
             display: flex;
             flex-direction: column;
         }
@@ -61,54 +53,38 @@
             color: inherit;
         }
 
-        /* =========================
-           HEADER
-        ========================= */
+        /* HEADER */
 
         .site-header {
             position: sticky;
             top: 0;
             z-index: 1000;
-
             background: rgba(255, 255, 255, 0.97);
-
             backdrop-filter: blur(10px);
-
             border-bottom: 1px solid var(--border);
-
-            box-shadow:
-                0 3px 15px rgba(79, 111, 159, 0.07);
+            box-shadow: 0 3px 15px rgba(79, 111, 159, 0.07);
         }
 
         .nav-container {
             width: 100%;
             max-width: 1100px;
-
             min-height: 70px;
-
             margin: 0 auto;
             padding: 0 24px;
-
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
 
-        /* =========================
-           LOGO
-        ========================= */
+        /* LOGO */
 
         .brand {
             display: flex;
             align-items: center;
             gap: 10px;
-
             color: var(--blue-dark);
-
             text-decoration: none;
-
             font-family: Georgia, "Times New Roman", serif;
-
             font-size: 21px;
             font-weight: 700;
         }
@@ -116,19 +92,14 @@
         .brand-icon {
             width: 38px;
             height: 38px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             border-radius: 11px;
-
             background: var(--blue-light);
             color: var(--blue-dark);
-
             font-size: 18px;
             font-weight: 800;
-
             transition: transform var(--transition);
         }
 
@@ -136,9 +107,7 @@
             transform: rotate(-5deg) scale(1.05);
         }
 
-        /* =========================
-           NAVIGATION & ROLE SELECTOR
-        ========================= */
+        /* NAVIGATION */
 
         .site-nav {
             display: flex;
@@ -148,22 +117,15 @@
 
         .site-nav a {
             position: relative;
-
             display: flex;
             align-items: center;
             gap: 7px;
-
             padding: 10px 15px;
-
             color: var(--muted);
-
             text-decoration: none;
-
             font-size: 14px;
             font-weight: 500;
-
             border-radius: 9px;
-
             transition:
                 background var(--transition),
                 color var(--transition),
@@ -172,37 +134,29 @@
 
         .site-nav a:hover {
             color: var(--blue-dark);
-
             background: var(--blue-soft);
-
             transform: translateY(-1px);
         }
 
         .site-nav a.is-active {
             color: var(--blue-dark);
-
             background: var(--blue-light);
-
             font-weight: 600;
         }
 
         .site-nav a.is-active::after {
             content: "";
-
             position: absolute;
-
             left: 15px;
             right: 15px;
             bottom: 3px;
-
             height: 2px;
-
             background: var(--blue);
-
             border-radius: 10px;
         }
 
-        /* Styling Dropdown Role */
+        /* ROLE SELECTOR */
+
         .role-selector-form {
             display: inline-flex;
             align-items: center;
@@ -213,47 +167,12 @@
             padding: 8px 12px;
             font-size: 13px;
             font-weight: 600;
-            color: var(--pink-dark);
-            background-color: var(--pink-soft);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            outline: none;
-            cursor: pointer;
-            transition: all var(--transition);
-        }
-
-        .role-select:hover, .role-select:focus {
-            background-color: var(--pink-light);
-            border-color: var(--pink);
-        }
-
-        /* =========================
-           ROLE SELECTOR
-        ========================= */
-
-        .role-selector-form {
-            display: inline-flex;
-            align-items: center;
-            margin-left: 10px;
-        }
-
-        .role-select {
-            padding: 8px 12px;
-
-            font-size: 13px;
-            font-weight: 600;
-
             color: var(--blue-dark);
-
             background-color: var(--blue-soft);
-
             border: 1px solid var(--border);
-
             border-radius: 9px;
-
             outline: none;
             cursor: pointer;
-
             transition: all var(--transition);
         }
 
@@ -263,76 +182,26 @@
             border-color: var(--blue);
         }
 
-        /* =========================
-           ROLE SELECTOR
-        ========================= */
-
-        .role-selector-form {
-            display: inline-flex;
-            align-items: center;
-            margin-left: 10px;
-        }
-
-        .role-select {
-            padding: 8px 12px;
-
-            font-size: 13px;
-            font-weight: 600;
-
-            color: var(--blue-dark);
-
-            background-color: var(--blue-soft);
-
-            border: 1px solid var(--border);
-
-            border-radius: 9px;
-
-            outline: none;
-            cursor: pointer;
-
-            transition: all var(--transition);
-        }
-
-        .role-select:hover,
-        .role-select:focus {
-            background-color: var(--blue-light);
-            border-color: var(--blue);
-        }
-
-        /* =========================
-           MOBILE MENU
-        ========================= */
+        /* MOBILE MENU */
 
         .menu-toggle {
             display: none;
-
             border: none;
-
             background: transparent;
-
             color: var(--blue-dark);
-
             cursor: pointer;
-
             font-size: 24px;
-
             padding: 6px;
         }
 
-        /* =========================
-           MAIN
-        ========================= */
+        /* MAIN */
 
         .site-main {
             width: 100%;
             max-width: 1100px;
-
             min-height: calc(100vh - 140px);
-
             margin: 0 auto;
-
             padding: 45px 24px 70px;
-
             animation: pageFade 0.35s ease;
         }
 
@@ -348,122 +217,80 @@
             }
         }
 
-        /* =========================
-           FOOTER
-        ========================= */
+        /* FOOTER */
 
         .site-footer {
             margin-top: auto;
-
             background: var(--blue-soft);
-
             border-top: 1px solid var(--border);
         }
 
         .footer-container {
             width: 100%;
             max-width: 1100px;
-
             margin: 0 auto;
-
             padding: 24px;
-
             display: flex;
-
             align-items: center;
-
             justify-content: space-between;
-
             gap: 20px;
         }
 
         .footer-brand {
             color: var(--blue-dark);
-
-            font-family:
-                Georgia,
-                "Times New Roman",
-                serif;
-
+            font-family: Georgia, "Times New Roman", serif;
             font-weight: 700;
         }
 
         .site-footer small {
             color: var(--muted);
-
             font-size: 12px;
         }
 
-        /* =========================
-           SCROLL TOP
-        ========================= */
+        /* SCROLL TOP */
 
         .scroll-top {
             position: fixed;
-
             right: 22px;
             bottom: 22px;
-
             width: 42px;
             height: 42px;
-
             display: flex;
-
             align-items: center;
             justify-content: center;
-
             border: none;
-
             border-radius: 50%;
-
             background: var(--blue);
-
             color: white;
-
             cursor: pointer;
-
             font-size: 18px;
-
             font-weight: 700;
-
             opacity: 0;
-
             visibility: hidden;
-
             transform: translateY(10px);
-
             transition:
                 opacity var(--transition),
                 visibility var(--transition),
                 transform var(--transition);
-
-            box-shadow:
-                0 6px 20px rgba(79, 111, 159, 0.20);
+            box-shadow: 0 6px 20px rgba(79, 111, 159, 0.20);
         }
 
         .scroll-top.show {
             opacity: 1;
-
             visibility: visible;
-
             transform: translateY(0);
         }
 
         .scroll-top:hover {
             background: var(--blue-dark);
-
             transform: translateY(-3px);
         }
 
-        /* =========================
-           RESPONSIVE
-        ========================= */
+        /* RESPONSIVE */
 
         @media (max-width: 700px) {
-
             .nav-container {
                 min-height: 64px;
-
                 padding: 0 16px;
             }
 
@@ -473,26 +300,16 @@
 
             .site-nav {
                 position: absolute;
-
                 top: 64px;
-
                 left: 0;
                 right: 0;
-
                 display: none;
-
                 flex-direction: column;
-
                 align-items: stretch;
-
                 padding: 12px 16px 16px;
-
                 background: var(--white);
-
                 border-top: 1px solid var(--border);
-
-                box-shadow:
-                    0 10px 25px rgba(79, 111, 159, 0.12);
+                box-shadow: 0 10px 25px rgba(79, 111, 159, 0.12);
             }
 
             .site-nav.open {
@@ -523,7 +340,6 @@
 
             .footer-container {
                 flex-direction: column;
-
                 align-items: flex-start;
             }
         }
@@ -542,7 +358,6 @@
 
     {{-- HEADER --}}
     <header class="site-header">
-
         <div class="nav-container">
 
             {{-- LOGO --}}
@@ -573,8 +388,8 @@
                 </a>
 
                 <a
-                    href="{{ route('courses.index', ['as' => $selectedRole]) }}"
-                    class="{{ request()->routeIs('courses.*') ? 'is-active' : '' }}"
+                    href="{{ route($selectedRole . '.courses.index') }}"
+                    class="{{ request()->routeIs($selectedRole . '.courses.*') ? 'is-active' : '' }}"
                 >
                     📚 Mata Kuliah
                 </a>
@@ -588,8 +403,8 @@
 
                 @if ($selectedRole === 'admin')
                     <a
-                        href="{{ route('users.index', ['as' => $selectedRole]) }}"
-                        class="{{ request()->routeIs('users.*') ? 'is-active' : '' }}"
+                        href="{{ route('admin.users.index') }}"
+                        class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}"
                     >
                         👥 Pengguna
                     </a>
@@ -630,9 +445,7 @@
                 </form>
 
             </nav>
-
         </div>
-
     </header>
 
     {{-- ISI HALAMAN --}}
@@ -643,14 +456,21 @@
     {{-- FOOTER --}}
     <footer class="site-footer">
         <div class="footer-container">
+
             <div>
-                <div class="footer-brand">KampusLMS</div>
+                <div class="footer-brand">
+                    KampusLMS
+                </div>
 
                 <small>
                     Sistem Informasi Pembelajaran Kampus
                 </small>
             </div>
-            <small>&copy; {{ date('Y') }} KampusLMS</small>
+
+            <small>
+                &copy; {{ date('Y') }} KampusLMS
+            </small>
+
         </div>
     </footer>
 
@@ -665,15 +485,12 @@
     </button>
 
     <script>
-
         // MOBILE MENU
         const menuToggle = document.getElementById('menuToggle');
         const siteNav = document.getElementById('siteNav');
 
         if (menuToggle && siteNav) {
-
             menuToggle.addEventListener('click', function () {
-
                 const isOpen = siteNav.classList.toggle('open');
 
                 menuToggle.setAttribute(
@@ -682,13 +499,10 @@
                 );
 
                 menuToggle.innerHTML = isOpen ? '✕' : '☰';
-
             });
 
             siteNav.querySelectorAll('a').forEach(function (link) {
-
                 link.addEventListener('click', function () {
-
                     siteNav.classList.remove('open');
 
                     menuToggle.setAttribute(
@@ -697,47 +511,31 @@
                     );
 
                     menuToggle.innerHTML = '☰';
-
                 });
-
             });
-
         }
-
 
         // SCROLL TO TOP
         const scrollTop = document.getElementById('scrollTop');
 
         if (scrollTop) {
-
             window.addEventListener('scroll', function () {
-
                 if (window.scrollY > 300) {
-
                     scrollTop.classList.add('show');
-
                 } else {
-
                     scrollTop.classList.remove('show');
-
                 }
-
             });
 
             scrollTop.addEventListener('click', function () {
-
                 window.scrollTo({
                     top: 0,
                     behavior: 'smooth'
                 });
-
-            });
-
-            scrollTop.addEventListener('click', function () {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
         }
     </script>
 
 </body>
+
 </html>

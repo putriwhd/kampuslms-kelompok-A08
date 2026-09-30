@@ -1,15 +1,14 @@
-
-
 <?php
 
+use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-<<<<<<< HEAD
 /*
 |--------------------------------------------------------------------------
-| Halaman Statis
+| Halaman Umum
 |--------------------------------------------------------------------------
 */
 
@@ -20,55 +19,80 @@ Route::view('/tentang', 'tentang')->name('tentang');
 
 /*
 |--------------------------------------------------------------------------
-| Resource Routes
-|--------------------------------------------------------------------------
-| Mata Kuliah dan Pengguna menggunakan CRUD lengkap
-| sesuai kebutuhan Minggu 3.
+| Admin
 |--------------------------------------------------------------------------
 */
 
-Route::resource('users', UserController::class);
+Route::middleware(['role:admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
 
-Route::resource('courses', CourseController::class);
-=======
+        Route::resource('users', UserController::class);
 
+        Route::resource('courses', CourseController::class);
 
-Route::view('/', 'dashboard')->name('dashboard');
+        Route::scopeBindings()->group(function () {
 
+            Route::resource('courses.materials', MaterialController::class)
+                ->shallow();
 
-Route::view('/tentang', 'tentang')->name('tentang');
+            Route::resource('courses.assignments', AssignmentController::class)
+                ->shallow();
 
-
-Route::get('/courses/craete', [CourseController::class, 'index'])->name('courses.index');
-Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
-
-/*
-|--------------------------------------------------------------------------
-| Halaman Statis
-|--------------------------------------------------------------------------
-*/
-
-Route::view('/', 'dashboard')->name('dashboard');
-
-Route::view('/tentang', 'tentang')->name('tentang');
-
+        });
+    });
 
 
 /*
 |--------------------------------------------------------------------------
-| Resource Routes
-|--------------------------------------------------------------------------
-| Mata Kuliah dan Pengguna menggunakan CRUD lengkap
-| sesuai kebutuhan Minggu 3.
+| Dosen
 |--------------------------------------------------------------------------
 */
 
-Route::resource('users', UserController::class);
+Route::middleware(['role:dosen'])
+    ->prefix('dosen')
+    ->name('dosen.')
+    ->group(function () {
 
-Route::resource('courses', CourseController::class);
+        Route::resource('courses', CourseController::class)
+            ->only(['index', 'show']);
+
+        Route::scopeBindings()->group(function () {
+
+            Route::resource('courses.materials', MaterialController::class)
+                ->shallow();
+
+            Route::resource('courses.assignments', AssignmentController::class)
+                ->shallow();
+
+        });
+    });
 
 
-Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
-Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+/*
+|--------------------------------------------------------------------------
+| Mahasiswa
+|--------------------------------------------------------------------------
+*/
 
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
+Route::middleware(['role:mahasiswa'])
+    ->prefix('mahasiswa')
+    ->name('mahasiswa.')
+    ->group(function () {
+
+        Route::resource('courses', CourseController::class)
+            ->only(['index', 'show']);
+
+        Route::scopeBindings()->group(function () {
+
+            Route::resource('courses.materials', MaterialController::class)
+                ->only(['index', 'show'])
+                ->shallow();
+
+            Route::resource('courses.assignments', AssignmentController::class)
+                ->only(['index', 'show'])
+                ->shallow();
+
+        });
+    });

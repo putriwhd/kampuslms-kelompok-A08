@@ -1,9 +1,11 @@
+```blade
 <x-layout>
+
     <x-slot:title>Daftar Mata Kuliah</x-slot:title>
 
-<<<<<<< HEAD
     {{-- HEADER --}}
     <div class="course-header">
+
         <div>
             <h1>Daftar Mata Kuliah</h1>
 
@@ -19,99 +21,33 @@
         </div>
 
         @if ($role === 'admin')
-            <a href="{{ route('courses.create', ['as' => $role]) }}" class="btn-add">
+            <a
+                href="{{ route($role . '.courses.create') }}"
+                class="btn-add"
+            >
                 <span>+</span>
                 Tambah Mata Kuliah
-=======
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2>Daftar Mata Kuliah</h2>
-
-        @if ($role === 'admin')
-            <a href="{{ route('courses.create', ['as' => $role]) }}"
-               style="background: #2563eb; color: white; padding: 10px 16px; border-radius: 6px; text-decoration: none;">
-                + Tambah Mata Kuliah
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             </a>
         @endif
+
     </div>
 
-<<<<<<< HEAD
 
     {{-- PESAN BERHASIL --}}
     @if (session('success'))
         <div class="alert-success">
             <span>✓</span>
-=======
-    <p style="margin-bottom: 20px;">
-        @if ($role === 'admin')
-            Sebagai Admin, Anda dapat mengelola data mata kuliah.
-        @elseif ($role === 'dosen')
-            Sebagai Dosen, Anda dapat melihat daftar mata kuliah.
-        @else
-            Sebagai Mahasiswa, Anda dapat melihat daftar mata kuliah yang tersedia.
-        @endif
-    </p>
-
-    @if (session('success'))
-        <div style="background: #dcfce7; color: #15803d; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             {{ session('success') }}
         </div>
     @endif
 
-<<<<<<< HEAD
-=======
-    <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-        <thead>
-            <tr style="background: #f3f4f6;">
-                <th>Kode</th>
-                <th>Nama Mata Kuliah</th>
-                <th>Dosen Pengampu</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($courses as $course)
-                <tr>
-                    <td>{{ $course->code }}</td>
-                    <td>{{ $course->name ?? $course->title }}</td>
-                    <td>{{ $course->lecturer->name ?? '-' }}</td>
-                    <td>
-                        <a href="{{ route('courses.show', [$course->id, 'as' => $role]) }}">Lihat</a>
-
-                        @if ($role === 'admin')
-                            |
-                            <a href="{{ route('courses.edit', [$course->id, 'as' => $role]) }}">Edit</a>
-                            |
-                            <form action="{{ route('courses.destroy', [$course->id, 'as' => $role]) }}"
-                                  method="POST" style="display: inline;"
-                                  onsubmit="return confirm('Yakin ingin menghapus?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" style="color: red; background: none; border: none; cursor: pointer;">
-                                    Hapus
-                                </button>
-                            </form>
-                        @endif
-                    </td>
-                </tr>
-
-            @empty
-                <tr>
-                    <td colspan="4" style="text-align: center;">Belum ada data mata kuliah.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-            </thead>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
     {{-- CARD TABEL --}}
     <div class="course-card">
 
         {{-- CARD HEADER --}}
         <div class="course-card-header">
+
             <div>
                 <h2>Data Mata Kuliah</h2>
                 <p>Daftar mata kuliah yang tersedia di KampusLMS.</p>
@@ -120,45 +56,22 @@
             <div class="course-count">
                 {{ $courses->total() }} Mata Kuliah
             </div>
+
         </div>
 
 
         {{-- TABLE --}}
         <div class="table-container">
+
             <table class="course-table">
 
                 <thead>
                     <tr>
-<<<<<<< HEAD
                         <th width="15%">Kode</th>
                         <th width="27%">Nama Mata Kuliah</th>
                         <th width="23%">Dosen Pengampu</th>
                         <th width="15%" class="text-center">Status</th>
                         <th width="190px" class="text-center">Aksi</th>
-=======
-
-                      <td>{{ $item['kode'] }}</td>
-
-                        <td>{{!!$item['nama']}}</td>
-
-                        <td>{{ $item['kode'] }}</td>
-
-                        <td>{{ $item['nama'] }}</td>
-
-
-                        <td>{{ $item['sks'] }}</td>
-
-                        <td>{{ $item['dosen'] }}</td>
-
-                        <td>
-                            <a
-                                href="{{ route('courses.show', $item['id']) }}"
-                                class="link-action"
-                            >
-                                Lihat Detail →
-                            </a>
-                        </td>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                     </tr>
                 </thead>
 
@@ -179,7 +92,7 @@
                             {{-- NAMA --}}
                             <td>
                                 <a
-                                    href="{{ route('courses.show', [$course->id, 'as' => $role]) }}"
+                                    href="{{ route($role . '.courses.show', $course) }}"
                                     class="course-name"
                                 >
                                     {{ $course->name ?? $course->title }}
@@ -233,29 +146,34 @@
 
                             {{-- AKSI --}}
                             <td>
+
                                 <div class="action-buttons">
 
+                                    {{-- LIHAT --}}
                                     <a
-                                        href="{{ route('courses.show', [$course->id, 'as' => $role]) }}"
+                                        href="{{ route($role . '.courses.show', $course) }}"
                                         class="btn-view"
                                     >
                                         Lihat
                                     </a>
 
+
+                                    {{-- EDIT & HAPUS KHUSUS ADMIN --}}
                                     @if ($role === 'admin')
 
                                         <a
-                                            href="{{ route('courses.edit', [$course->id, 'as' => $role]) }}"
+                                            href="{{ route($role . '.courses.edit', $course) }}"
                                             class="btn-edit"
                                         >
                                             Edit
                                         </a>
 
                                         <form
-                                            action="{{ route('courses.destroy', [$course->id, 'as' => $role]) }}"
+                                            action="{{ route($role . '.courses.destroy', $course) }}"
                                             method="POST"
                                             onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?')"
                                         >
+
                                             @csrf
                                             @method('DELETE')
 
@@ -265,11 +183,13 @@
                                             >
                                                 Hapus
                                             </button>
+
                                         </form>
 
                                     @endif
 
                                 </div>
+
                             </td>
 
                         </tr>
@@ -277,9 +197,12 @@
                     @empty
 
                         <tr>
+
                             <td colspan="5" class="empty-data">
 
-                                <div class="empty-icon">📚</div>
+                                <div class="empty-icon">
+                                    📚
+                                </div>
 
                                 <strong>
                                     Belum ada data mata kuliah
@@ -290,6 +213,7 @@
                                 </p>
 
                             </td>
+
                         </tr>
 
                     @endforelse
@@ -297,14 +221,15 @@
                 </tbody>
 
             </table>
+
         </div>
 
+    </div>
 
-<<<<<<< HEAD
 
     {{-- PAGINATION --}}
     <div class="pagination">
-        {{ $courses->appends(['as' => $role])->links() }}
+        {{ $courses->withQueryString()->links() }}
     </div>
 
 
@@ -347,20 +272,14 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-
             padding: 10px 16px;
-
             background: var(--blue);
             color: var(--white);
-
             border-radius: 8px;
             text-decoration: none;
-
             font-size: 13px;
             font-weight: 600;
-
             white-space: nowrap;
-
             transition: var(--transition);
         }
 
@@ -384,16 +303,12 @@
             display: flex;
             align-items: center;
             gap: 10px;
-
             margin-bottom: 20px;
             padding: 12px 16px;
-
             background: #f0fdf4;
             color: #15803d;
-
             border: 1px solid #bbf7d0;
             border-radius: 8px;
-
             font-size: 14px;
         }
 
@@ -408,12 +323,9 @@
 
         .course-card {
             overflow: hidden;
-
             background: var(--white);
-
             border: 1px solid var(--border);
             border-radius: var(--radius);
-
             box-shadow: var(--shadow);
         }
 
@@ -426,42 +338,31 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-
             gap: 20px;
-
             padding: 20px 24px;
-
             border-bottom: 1px solid var(--border);
         }
 
         .course-card-header h2 {
             margin: 0 0 5px;
-
             color: var(--blue-dark);
-
             font-size: 18px;
             font-weight: 700;
         }
 
         .course-card-header p {
             margin: 0;
-
             color: var(--muted);
-
             font-size: 13px;
         }
 
         .course-count {
             padding: 6px 11px;
-
             background: var(--blue-soft);
             color: var(--blue-dark);
-
             border-radius: 6px;
-
             font-size: 12px;
             font-weight: 600;
-
             white-space: nowrap;
         }
 
@@ -477,14 +378,9 @@
 
         .course-table {
             width: 100%;
-
             border-collapse: collapse;
-
             font-size: 14px;
         }
-
-
-        /* HEADER TABLE */
 
         .course-table thead {
             background: var(--blue-soft);
@@ -492,16 +388,11 @@
 
         .course-table th {
             padding: 13px 20px;
-
             color: var(--blue-dark);
-
             font-size: 12px;
             font-weight: 700;
-
             text-align: left;
-
             border-bottom: 1px solid var(--border);
-
             white-space: nowrap;
         }
 
@@ -509,16 +400,10 @@
             text-align: center;
         }
 
-
-        /* ISI TABLE */
-
         .course-table td {
             padding: 15px 20px;
-
             color: var(--text);
-
             border-bottom: 1px solid var(--border);
-
             vertical-align: middle;
         }
 
@@ -541,14 +426,10 @@
 
         .course-code {
             display: inline-block;
-
             padding: 5px 9px;
-
             background: var(--blue-soft);
             color: var(--blue-dark);
-
             border-radius: 5px;
-
             font-size: 12px;
             font-weight: 700;
         }
@@ -560,11 +441,8 @@
 
         .course-name {
             color: var(--blue-dark);
-
             font-weight: 600;
-
             text-decoration: none;
-
             transition: var(--transition);
         }
 
@@ -590,45 +468,28 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
             min-width: 70px;
-
             padding: 5px 10px;
-
             border-radius: 6px;
-
             font-size: 11px;
             font-weight: 700;
-
             white-space: nowrap;
         }
-
-
-        /* ACTIVE */
 
         .status-active {
             background: #dcfce7;
             color: #15803d;
         }
 
-
-        /* DRAFT */
-
         .status-draft {
             background: #fef3c7;
             color: #b45309;
         }
 
-
-        /* ARCHIVE */
-
         .status-archive {
             background: #e5e7eb;
             color: #4b5563;
         }
-
-
-        /* STATUS LAIN */
 
         .status-unknown {
             background: #f1f5f9;
@@ -644,7 +505,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-
             gap: 6px;
         }
 
@@ -658,25 +518,15 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-
             min-width: 50px;
-
             padding: 6px 10px;
-
             border-radius: 6px;
-
             font-size: 12px;
             font-weight: 600;
-
             text-decoration: none;
-
             cursor: pointer;
-
             transition: var(--transition);
         }
-
-
-        /* LIHAT */
 
         .btn-view {
             background: var(--blue-soft);
@@ -687,9 +537,6 @@
             background: var(--blue-light);
         }
 
-
-        /* EDIT */
-
         .btn-edit {
             background: #f1f5f9;
             color: #475569;
@@ -699,13 +546,9 @@
             background: #e2e8f0;
         }
 
-
-        /* HAPUS */
-
         .btn-delete {
             background: #fef2f2;
             color: #dc2626;
-
             border: none;
         }
 
@@ -720,32 +563,25 @@
 
         .empty-data {
             padding: 50px 20px !important;
-
             text-align: center;
-
             color: var(--muted) !important;
         }
 
         .empty-icon {
             margin-bottom: 10px;
-
             font-size: 30px;
             opacity: 0.7;
         }
 
         .empty-data strong {
             display: block;
-
             margin-bottom: 4px;
-
             color: var(--text);
-
             font-size: 14px;
         }
 
         .empty-data p {
             margin: 0;
-
             font-size: 13px;
         }
 
@@ -794,9 +630,4 @@
     </style>
 
 </x-layout>
-=======
-    <div style="margin-top: 20px;">
-        {{ $courses->appends(['as' => $role])->links() }}
-    </div>
-</x-layout>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
+```

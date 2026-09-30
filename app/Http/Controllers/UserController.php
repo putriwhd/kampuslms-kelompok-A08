@@ -8,9 +8,26 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $search = $request->query('search');
+        $search = is_string($search) ? trim($search) : '';
+
+        $users = User::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('nim_nip', 'like', "%{$search}%");
+                });
+            })
+            ->when(
+                in_array($request->query('role'), ['admin', 'dosen', 'mahasiswa'], true),
+                fn ($query) => $query->where('role', $request->query('role'))
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
         return view('users.index', compact('users'));
     }
@@ -44,7 +61,7 @@ class UserController extends Controller
         $user->save();
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
@@ -82,7 +99,7 @@ class UserController extends Controller
         $user->save();
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil diperbarui.');
     }
 
@@ -90,14 +107,14 @@ class UserController extends Controller
     {
         if ($user->taughtCourses()->exists()) {
             return redirect()
-                ->route('users.index', ['as' => $request->query('as', 'admin')])
+                ->route('admin.users.index', ['as' => 'admin'])
                 ->with('error', 'Pengguna tidak dapat dihapus karena masih menjadi Dosen pada satu atau lebih mata kuliah.');
         }
 
         $user->delete();
 
         return redirect()
-            ->route('users.index', ['as' => $request->query('as', 'admin')])
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil dihapus.');
     }
 }

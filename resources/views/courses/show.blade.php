@@ -25,20 +25,7 @@
             "
         >
 
-<<<<<<< HEAD
-            <h1
-                style="
-                    margin: 0 0 6px 0;
-                    color: #4f6f9f;
-                    font-size: 25px;
-                    font-weight: 700;
-                "
-            >
-                {{ $course->name }}
-            </h1>
-=======
             <h1>{{ $course->name }}</h1>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
             <p
                 style="
@@ -65,57 +52,6 @@
             <tbody>
 
                 <tr>
-<<<<<<< HEAD
-                    <th
-                        style="
-                            width: 200px;
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Kode
-                    </th>
-
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        {{ $course->code }}
-                    </td>
-                </tr>
-
-
-                <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Dosen Pengampu
-                    </th>
-
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        {{ $course->lecturer->name ?? '-' }}
-                    </td>
-=======
                     <th>Kode</th>
                     <td>{{ $course->code }}</td>
                 </tr>
@@ -133,102 +69,12 @@
                 <tr>
                     <th>Status</th>
                     <td>{{ $course->status }}</td>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
 
 
                 <tr>
-<<<<<<< HEAD
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        SKS
-                    </th>
-
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        {{ $course->sks }}
-                    </td>
-                </tr>
-
-
-                <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Status
-                    </th>
-
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        <span
-                            style="
-                                display: inline-block;
-                                padding: 5px 11px;
-                                background: #eaf6ee;
-                                color: #39805a;
-                                border-radius: 6px;
-                                font-size: 12px;
-                                font-weight: 600;
-                            "
-                        >
-                            {{ $course->status }}
-                        </span>
-                    </td>
-                </tr>
-
-
-                <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            vertical-align: top;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                        "
-                    >
-                        Deskripsi
-                    </th>
-
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            line-height: 1.6;
-                        "
-                    >
-                        {{ $course->description ?? '-' }}
-                    </td>
-=======
                     <th>Deskripsi</th>
                     <td>{{ $course->description ?? '-' }}</td>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
 
             </tbody>
@@ -247,20 +93,7 @@
 
             <a
                 href="{{ route('courses.index', ['as' => $role ?? request('as', 'mahasiswa')]) }}"
-<<<<<<< HEAD
-                style="
-                    display: inline-block;
-                    padding: 9px 15px;
-                    background: #7fa6d8;
-                    color: #ffffff;
-                    border-radius: 7px;
-                    text-decoration: none;
-                    font-size: 13px;
-                    font-weight: 600;
-                "
-=======
                 class="back-link"
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             >
                 &larr; Kembali ke Daftar Mata Kuliah
             </a>
