@@ -8,16 +8,36 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
+        $role = $request->attributes->get('selected_role', 'admin');
+        $search = $request->query('search');
+        $search = is_string($search) ? trim($search) : '';
 
-        return view('users.index', compact('users'));
+        $users = User::query()
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('nim_nip', 'like', "%{$search}%");
+                });
+            })
+            ->when(
+                in_array($request->query('role'), ['admin', 'dosen', 'mahasiswa'], true),
+                fn ($query) => $query->where('role', $request->query('role'))
+            )
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('users.index', compact('users', 'role'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('users.create');
+        $role = $request->attributes->get('selected_role', 'admin');
+
+        return view('users.create', compact('role'));
     }
 
     public function store(Request $request)
@@ -44,18 +64,22 @@ class UserController extends Controller
         $user->save();
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
-        return view('users.show', compact('user'));
+        $role = $request->attributes->get('selected_role', 'admin');
+
+        return view('users.show', compact('user', 'role'));
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
-        return view('users.edit', compact('user'));
+        $role = $request->attributes->get('selected_role', 'admin');
+
+        return view('users.edit', compact('user', 'role'));
     }
 
     public function update(Request $request, User $user)
@@ -82,7 +106,7 @@ class UserController extends Controller
         $user->save();
 
         return redirect()
-            ->route('users.index')
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil diperbarui.');
     }
 
@@ -90,14 +114,14 @@ class UserController extends Controller
     {
         if ($user->taughtCourses()->exists()) {
             return redirect()
-                ->route('users.index', ['as' => $request->query('as', 'admin')])
+                ->route('admin.users.index', ['as' => 'admin'])
                 ->with('error', 'Pengguna tidak dapat dihapus karena masih menjadi Dosen pada satu atau lebih mata kuliah.');
         }
 
         $user->delete();
 
         return redirect()
-            ->route('users.index', ['as' => $request->query('as', 'admin')])
+            ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil dihapus.');
     }
 }
