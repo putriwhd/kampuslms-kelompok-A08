@@ -2,9 +2,8 @@
     Laravel otomatis memakai berkas ini (resources/views/errors/404.blade.php)
     setiap kali terjadi NotFoundHttpException/404 -- TIDAK perlu
     didaftarkan di routes/web.php sama sekali, ini konvensi bawaan
-    framework. Berkas ini yang tampil kalau, misalnya,
-    CourseController@show melempar NotFoundHttpException karena id
-    tidak ditemukan di array data().
+    framework. Berkas ini juga tampil ketika route model binding tidak
+    menemukan model atau scoped binding tidak menemukan relasi induk.
 
     Dibungkus <x-layout> juga supaya navbar & footer tetap konsisten
     dengan halaman lain, bukan halaman polos terpisah.

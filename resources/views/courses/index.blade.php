@@ -18,21 +18,12 @@
         </div>
 
         @if ($role === 'admin')
-            <a href="{{ route('courses.create', ['as' => $role]) }}" class="btn-add">
+            <a href="{{ route($role . '.courses.create', ['as' => $role]) }}" class="btn-add">
                 <span>+</span>
                 Tambah Mata Kuliah
             </a>
         @endif
     </div>
-
-
-    {{-- PESAN BERHASIL --}}
-    @if (session('success'))
-        <div class="alert-success">
-            <span>✓</span>
-            {{ session('success') }}
-        </div>
-    @endif
 
 
     {{-- CARD TABEL --}}
@@ -50,6 +41,32 @@
             </div>
         </div>
 
+        <form method="GET" action="{{ route($role . '.courses.index', ['as' => $role]) }}" class="course-filters">
+            <input type="hidden" name="as" value="{{ $role }}">
+
+            <label>
+                <span>Cari kode atau nama</span>
+                <input
+                    type="search"
+                    name="search"
+                    value="{{ is_string(request('search')) ? request('search') : '' }}"
+                    placeholder="Contoh: IF101 atau Pemrograman Web"
+                >
+            </label>
+
+            <label>
+                <span>Filter status</span>
+                <select name="status">
+                    <option value="">Semua status</option>
+                    <option value="draft" @selected(request('status') === 'draft')>Draft</option>
+                    <option value="active" @selected(request('status') === 'active')>Aktif</option>
+                    <option value="archived" @selected(request('status') === 'archived')>Arsip</option>
+                </select>
+            </label>
+
+            <button type="submit" class="btn-add">Terapkan</button>
+            <a href="{{ route($role . '.courses.index', ['as' => $role]) }}" class="btn-edit">Reset</a>
+        </form>
 
         {{-- TABLE --}}
         <div class="table-container">
@@ -82,7 +99,7 @@
                             {{-- NAMA --}}
                             <td>
                                 <a
-                                    href="{{ route('courses.show', [$course->id, 'as' => $role]) }}"
+                                    href="{{ route($role . '.courses.show', [$course->id, 'as' => $role]) }}"
                                     class="course-name"
                                 >
                                     {{ $course->name ?? $course->title }}
@@ -139,7 +156,7 @@
                                 <div class="action-buttons">
 
                                     <a
-                                        href="{{ route('courses.show', [$course->id, 'as' => $role]) }}"
+                                        href="{{ route($role . '.courses.show', [$course->id, 'as' => $role]) }}"
                                         class="btn-view"
                                     >
                                         Lihat
@@ -148,14 +165,14 @@
                                     @if ($role === 'admin')
 
                                         <a
-                                            href="{{ route('courses.edit', [$course->id, 'as' => $role]) }}"
+                                            href="{{ route($role . '.courses.edit', [$course->id, 'as' => $role]) }}"
                                             class="btn-edit"
                                         >
                                             Edit
                                         </a>
 
                                         <form
-                                            action="{{ route('courses.destroy', [$course->id, 'as' => $role]) }}"
+                                            action="{{ route($role . '.courses.destroy', [$course->id, 'as' => $role]) }}"
                                             method="POST"
                                             onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?')"
                                         >
@@ -206,7 +223,7 @@
 
 {{-- PAGINATION --}}
 <div class="pagination">
-  {{ $courses->withQueryString()->links() }}
+  {{ $courses->links() }}
 </div>
 
     {{-- STYLE --}}
@@ -237,6 +254,37 @@
             color: var(--muted);
             font-size: 14px;
             line-height: 1.6;
+        }
+
+        .course-filters {
+            display: flex;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 16px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .course-filters label {
+            display: grid;
+            gap: 5px;
+            color: var(--blue-dark);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .course-filters input,
+        .course-filters select {
+            min-width: 180px;
+            padding: 9px 10px;
+            color: var(--text);
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font: inherit;
         }
 
 

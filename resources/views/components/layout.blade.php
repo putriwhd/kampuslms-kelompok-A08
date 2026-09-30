@@ -336,6 +336,26 @@
             animation: pageFade 0.35s ease;
         }
 
+        .global-alert {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .global-alert-success {
+            background: #f0fdf4;
+            color: #15803d;
+            border-color: #bbf7d0;
+        }
+
+        .global-alert-error {
+            background: #fef2f2;
+            color: #b91c1c;
+            border-color: #fecaca;
+        }
+
         @keyframes pageFade {
             from {
                 opacity: 0;
@@ -535,9 +555,8 @@
     @php
         $availableRoles = ['mahasiswa', 'dosen', 'admin'];
 
-        $selectedRole = in_array(request('as'), $availableRoles, true)
-            ? request('as')
-            : 'mahasiswa';
+        $selectedRole = request()->attributes->get('selected_role')
+            ?? (in_array(request('as'), $availableRoles, true) ? request('as') : 'mahasiswa');
     @endphp
 
     {{-- HEADER --}}
@@ -573,8 +592,8 @@
                 </a>
 
                 <a
-                    href="{{ route('courses.index', ['as' => $selectedRole]) }}"
-                    class="{{ request()->routeIs('courses.*') ? 'is-active' : '' }}"
+                    href="{{ route($selectedRole . '.courses.index', ['as' => $selectedRole]) }}"
+                    class="{{ request()->routeIs('*.courses.*') ? 'is-active' : '' }}"
                 >
                     📚 Mata Kuliah
                 </a>
@@ -588,8 +607,8 @@
 
                 @if ($selectedRole === 'admin')
                     <a
-                        href="{{ route('users.index', ['as' => $selectedRole]) }}"
-                        class="{{ request()->routeIs('users.*') ? 'is-active' : '' }}"
+                        href="{{ route('admin.users.index', ['as' => $selectedRole]) }}"
+                        class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}"
                     >
                         👥 Pengguna
                     </a>
@@ -637,6 +656,18 @@
 
     {{-- ISI HALAMAN --}}
     <main class="site-main">
+        @if (session('success'))
+            <div class="global-alert global-alert-success" role="status">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="global-alert global-alert-error" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+
         {{ $slot }}
     </main>
 
