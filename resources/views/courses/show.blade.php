@@ -1,4 +1,4 @@
-<x-layout>
+﻿<x-layout>
 
     <x-slot:title>
         {{ $course->name }}
@@ -16,7 +16,6 @@
         "
     >
 
-        {{-- HEADER --}}
         <div
             style="
                 padding: 28px 32px;
@@ -24,8 +23,6 @@
                 border-bottom: 1px solid #d8e4f2;
             "
         >
-
-<<<<<<< HEAD
             <h1
                 style="
                     margin: 0 0 6px 0;
@@ -36,9 +33,6 @@
             >
                 {{ $course->name }}
             </h1>
-=======
-            <h1>{{ $course->name }}</h1>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
 
             <p
                 style="
@@ -49,11 +43,8 @@
             >
                 Detail informasi mata kuliah
             </p>
-
         </div>
 
-
-        {{-- INFORMASI MATA KULIAH --}}
         <table
             style="
                 width: 100%;
@@ -61,11 +52,8 @@
                 font-size: 14px;
             "
         >
-
             <tbody>
-
                 <tr>
-<<<<<<< HEAD
                     <th
                         style="
                             width: 200px;
@@ -91,7 +79,6 @@
                     </td>
                 </tr>
 
-
                 <tr>
                     <th
                         style="
@@ -115,30 +102,9 @@
                     >
                         {{ $course->lecturer->name ?? '-' }}
                     </td>
-=======
-                    <th>Kode</th>
-                    <td>{{ $course->code }}</td>
                 </tr>
 
                 <tr>
-                    <th>Dosen Pengampu</th>
-                    <td>{{ $course->lecturer->name ?? '-' }}</td>
-                </tr>
-
-                <tr>
-                    <th>SKS</th>
-                    <td>{{ $course->sks }}</td>
-                </tr>
-
-                <tr>
-                    <th>Status</th>
-                    <td>{{ $course->status }}</td>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
-                </tr>
-
-
-                <tr>
-<<<<<<< HEAD
                     <th
                         style="
                             padding: 17px 24px;
@@ -162,7 +128,6 @@
                         {{ $course->sks }}
                     </td>
                 </tr>
-
 
                 <tr>
                     <th
@@ -201,7 +166,6 @@
                     </td>
                 </tr>
 
-
                 <tr>
                     <th
                         style="
@@ -225,18 +189,10 @@
                     >
                         {{ $course->description ?? '-' }}
                     </td>
-=======
-                    <th>Deskripsi</th>
-                    <td>{{ $course->description ?? '-' }}</td>
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
                 </tr>
-
             </tbody>
-
         </table>
 
-
-        {{-- FOOTER --}}
         <div
             style="
                 padding: 18px 24px;
@@ -244,10 +200,18 @@
                 border-top: 1px solid #d8e4f2;
             "
         >
+            <p>
+                <a href="{{ route($role . '.courses.materials.index', [$course, 'as' => $role]) }}">
+                    Lihat Materi
+                </a>
+                |
+                <a href="{{ route($role . '.courses.assignments.index', [$course, 'as' => $role]) }}">
+                    Lihat Tugas
+                </a>
+            </p>
 
             <a
-                href="{{ route('courses.index', ['as' => $role ?? request('as', 'mahasiswa')]) }}"
-<<<<<<< HEAD
+                href="{{ route($role . '.courses.index', ['as' => $role]) }}"
                 style="
                     display: inline-block;
                     padding: 9px 15px;
@@ -258,15 +222,10 @@
                     font-size: 13px;
                     font-weight: 600;
                 "
-=======
-                class="back-link"
->>>>>>> 36082a2b9c28c40225d5f613702da30cc2679637
             >
                 &larr; Kembali ke Daftar Mata Kuliah
             </a>
-
         </div>
-
     </div>
 
 </x-layout>

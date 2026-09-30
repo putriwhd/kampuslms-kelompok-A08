@@ -14,7 +14,7 @@
         </div>
 
         <form
-            action="{{ route('courses.store', ['as' => $role]) }}"
+            action="{{ route($role . '.courses.store', ['as' => $role]) }}"
             method="POST"
             class="course-create-form"
         >
@@ -51,18 +51,21 @@
                 @enderror
             </div>
 
-            {{-- 3. Dosen Pengampu (Input Teks) --}}
+            {{-- 3. Dosen Pengampu --}}
             <div class="form-group">
-                <label for="lecturer">Dosen Pengampu</label>
-                <input 
-                    type="text" 
-                    id="lecturer" 
-                    name="lecturer" 
-                    value="{{ old('lecturer') }}"
-                    placeholder="Masukkan nama dosen"
-                    required
-                >
-                @error('lecturer')
+                <label for="lecturer_id">Dosen Pengampu</label>
+                <select id="lecturer_id" name="lecturer_id" required>
+                    <option value="">-- Pilih Dosen Pengampu --</option>
+                    @foreach ($lecturers as $lecturer)
+                        <option
+                            value="{{ $lecturer->id }}"
+                            {{ old('lecturer_id') == $lecturer->id ? 'selected' : '' }}
+                        >
+                            {{ $lecturer->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('lecturer_id')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
             </div>
@@ -74,7 +77,7 @@
                     id="description"
                     name="description"
                     rows="5"
-                 >{{ old('description') }}></textarea>
+                >{{ old('description') }}</textarea>
                 @error('description')
                     <small class="form-error">{{ $message }}</small>
                 @enderror
@@ -101,13 +104,13 @@
             <div class="form-group">
                 <label for="status">Status Mata Kuliah</label>
                 <select id="status" name="status" required>
-                    <option value="Active" @selected(old('status', 'Active') === 'Active')>
+                    <option value="active" @selected(old('status', 'active') === 'active')>
                         Aktif
                     </option>
-                    <option value="Draft" @selected(old('status') === 'Draft')>
+                    <option value="draft" @selected(old('status') === 'draft')>
                         Draf
                     </option>
-                    <option value="Archive" @selected(old('status') === 'Archive')>
+                    <option value="archived" @selected(old('status') === 'archived')>
                         Arsip
                     </option>
                 </select>
@@ -119,7 +122,7 @@
             {{-- BUTTON --}}
             <div class="form-actions">
                 <a
-                    href="{{ route('courses.index', ['as' => $role]) }}"
+                    href="{{ route($role . '.courses.index', ['as' => $role]) }}"
                     class="cancel-button"
                 >
                     Batal
