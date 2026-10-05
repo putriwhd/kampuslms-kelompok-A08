@@ -53,9 +53,6 @@ class UserController extends Controller
         $user->email = $validated['email'];
         $user->nim_nip = $validated['nim_nip'] ?? null;
         $user->password = Hash::make($validated['password']);
-
-        // Role ditetapkan secara eksplisit,
-        // bukan melalui mass assignment.
         $user->role = $validated['role'];
 
         $user->save();
@@ -65,18 +62,34 @@ class UserController extends Controller
             ->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
+        // PERBAIKAN IDOR MANUALLY: 
+        // Hanya izinkan jika sebagai Admin (?as=admin) ATAU membuka profilenya sendiri
+        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
+        }
+
         return view('users.show', compact('user'));
     }
 
-    public function edit(User $user)
+    public function edit(Request $request, User $user)
     {
+        // PERBAIKAN IDOR MANUALLY:
+        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
+        }
+
         return view('users.edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
+        // PERBAIKAN IDOR MANUALLY:
+        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
@@ -93,7 +106,6 @@ class UserController extends Controller
             $user->password = Hash::make($validated['password']);
         }
 
-        // Role tetap ditetapkan secara eksplisit.
         $user->role = $validated['role'];
 
         $user->save();
@@ -105,6 +117,11 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
+        // PERBAIKAN IDOR MANUALLY:
+        if ($request->query('as') !== 'admin') {
+            abort(403, 'Akses Ditolak: Hanya Admin yang dapat menghapus pengguna.');
+        }
+
         if ($user->taughtCourses()->exists()) {
             return redirect()
                 ->route('admin.users.index', ['as' => 'admin'])

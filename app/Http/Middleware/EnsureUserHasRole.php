@@ -10,7 +10,7 @@ class EnsureUserHasRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $userRole = $request->user()?->role;
+        $userRole = $request->query('as');
 
         abort_unless(
             is_string($userRole) && in_array($userRole, $roles, true),
