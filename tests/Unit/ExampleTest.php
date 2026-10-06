@@ -1,10 +1,13 @@
 <?php
 
-namespace Tests;
+namespace Tests\Unit;
 
-use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use PHPUnit\Framework\TestCase;
 
-abstract class TestCase extends BaseTestCase
+class ExampleTest extends TestCase
 {
-    //
+    public function test_that_true_is_true(): void
+    {
+        $this->assertTrue(true);
+    }
 }

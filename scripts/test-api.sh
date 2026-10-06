@@ -2,12 +2,28 @@
 set -euo pipefail
 
 BASE_URL="${API_BASE_URL:-http://localhost:8000/api/v1}"
-: "${STUDENT_TOKEN:?Set STUDENT_TOKEN to a mahasiswa Sanctum token}"
-: "${OTHER_STUDENT_TOKEN:?Set OTHER_STUDENT_TOKEN to a mahasiswa token not enrolled in COURSE_ID}"
-: "${DOSEN_A_TOKEN:?Set DOSEN_A_TOKEN to a dosen Sanctum token}"
-: "${DOSEN_B_TOKEN:?Set DOSEN_B_TOKEN to another dosen Sanctum token}"
-: "${COURSE_ID:?Set COURSE_ID to an active course owned by DOSEN_A_TOKEN and enrolled by STUDENT_TOKEN}"
-: "${OTHER_COURSE_ID:?Set OTHER_COURSE_ID to an active course owned by DOSEN_B_TOKEN}"
+
+# Fungsi bantu untuk login dan mengambil token
+get_token() {
+  local email="$1"
+  local pass="$2"
+  curl -s -X POST "$BASE_URL/auth/login" \
+    -H "Accept: application/json" -H "Content-Type: application/json" \
+    -d "{\"email\":\"$email\",\"password\":\"$pass\"}" | php -r '
+      $d = json_decode(file_get_contents("php://stdin"), true);
+      echo $d["token"] ?? $d["data"]["token"] ?? "";
+    '
+}
+
+DOSEN_A_TOKEN="${DOSEN_A_TOKEN:-$(get_token 'dosen@kampuslms.test' 'password')}"
+DOSEN_B_TOKEN="${DOSEN_B_TOKEN:-$(get_token 'dosen2@kampuslms.test' 'password')}"
+STUDENT_TOKEN="${STUDENT_TOKEN:-$(get_token 'mahasiswa@kampuslms.test' 'password')}"
+OTHER_STUDENT_TOKEN="${OTHER_STUDENT_TOKEN:-$(get_token 'mahasiswa2@kampuslms.test' 'password')}"
+
+COURSE_ID="${COURSE_ID:-1}"
+OTHER_COURSE_ID="${OTHER_COURSE_ID:-2}"
+COURSE_ID="${COURSE_ID:-1}"
+OTHER_COURSE_ID="${OTHER_COURSE_ID:-2}"
 
 RESPONSE_FILE="$(mktemp)"
 UPLOAD_FILE="$(mktemp)"
