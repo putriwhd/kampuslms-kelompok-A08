@@ -10,14 +10,11 @@ class EnsureUserHasRole
 {
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $userRole = $request->query('as');
+        $user = $request->user();
 
-        abort_unless(
-            is_string($userRole) && in_array($userRole, $roles, true),
-            403
-        );
-
-        $request->attributes->set('selected_role', $userRole);
+        if (! $user || ! in_array($user->role, $roles, true)) {
+            abort(403, '403 - Akses Ditolak');
+        }
 
         return $next($request);
     }
