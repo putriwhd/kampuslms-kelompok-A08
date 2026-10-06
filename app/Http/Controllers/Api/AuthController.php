@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
@@ -33,19 +34,9 @@ class AuthController extends Controller
 
         $token = $user->createToken($request->device_name ?? 'api-token')->plainTextToken;
 
-        $userData = class_exists(\App\Http\Resources\UserResource::class)
-            ? new \App\Http\Resources\UserResource($user)
-            : [
-                'id'      => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-                'nim_nip' => $user->nim_nip,
-                'role'    => $user->role,
-            ];
-
         return response()->json([
             'token' => $token,
-            'user'  => $userData,
+            'user' => new UserResource($user),
         ]);
     }
 
@@ -64,22 +55,8 @@ class AuthController extends Controller
     /**
      * Mengembalikan data profil dan peran pengguna yang sedang login.
      */
-    public function me(Request $request)
+    public function me(Request $request): UserResource
     {
-        $user = $request->user();
-
-        if (class_exists(\App\Http\Resources\UserResource::class)) {
-            return new \App\Http\Resources\UserResource($user);
-        }
-
-        return response()->json([
-            'data' => [
-                'id'      => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-                'nim_nip' => $user->nim_nip,
-                'role'    => $user->role,
-            ],
-        ]);
+        return new UserResource($request->user());
     }
 }
