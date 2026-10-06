@@ -22,6 +22,11 @@ class CourseResource extends JsonResource
             'sks' => $this->sks,
             'lecturer_id' => $this->lecturer_id,
             'status' => $this->status,
+            'counts' => [
+                'materials' => $this->whenCounted('materials'),
+                'assignments' => $this->whenCounted('assignments'),
+            ],
+            'created_at' => $this->created_at?->toIso8601String(),
 
             'lecturer' => new UserResource(
                 $this->whenLoaded('lecturer')
