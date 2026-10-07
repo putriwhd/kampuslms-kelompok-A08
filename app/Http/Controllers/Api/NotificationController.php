@@ -13,18 +13,16 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        // Mengambil notifikasi pengguna terpanggil
         $notifications = $user->notifications()->paginate(15);
 
-       return response()->json([
-    'data' => NotificationResource::collection($notifications)->resolve($request),
-    'meta' => [
-        'current_page' => $courses->currentPage(),
-        'last_page'    => $courses->lastPage(),
-        'per_page'     => $courses->perPage(), // <-- Tambahkan baris ini
-        'total'        => $courses->total(),
-    ],
-]);
+        return response()->json([
+            'data' => NotificationResource::collection($notifications)->resolve($request),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page'    => $notifications->lastPage(),
+                'total'        => $notifications->total(),
+            ],
+        ]);
     }
 
     // POST /api/v1/notifications/{id}/read
@@ -35,7 +33,9 @@ class NotificationController extends Controller
         $notification = $user->notifications()->where('id', $id)->first();
 
         if (! $notification) {
-            return response()->json(['message' => 'Not found.'], 404);
+            return response()->json([
+                'message' => 'Not found.'
+            ], 404);
         }
 
         $notification->markAsRead();
