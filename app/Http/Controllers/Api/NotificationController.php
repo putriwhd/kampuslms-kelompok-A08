@@ -13,7 +13,14 @@ class NotificationController extends Controller
     {
         $notifications = $request->user()->notifications()->paginate(15);
 
-        return NotificationResource::collection($notifications);
+        return response()->json([
+            'data' => NotificationResource::collection($notifications)->resolve($request),
+            'meta' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'total' => $notifications->total(),
+            ],
+        ]);
     }
 
     // POST /api/v1/notifications/{id}/read
@@ -24,11 +31,15 @@ class NotificationController extends Controller
         $notification = $user->notifications()->where('id', $id)->first();
 
         if (! $notification) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
+            ], 403);
         }
 
         $notification->markAsRead();
 
-        return new NotificationResource($notification);
+        return response()->json([
+            'data' => (new NotificationResource($notification))->resolve($request),
+        ]);
     }
 }

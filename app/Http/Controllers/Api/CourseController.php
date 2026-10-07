@@ -44,7 +44,11 @@ class CourseController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
-        $course = Course::with(['lecturer', 'materials', 'assignments'])
+        $course = Course::with([
+            'lecturer',
+            'materials.uploader',
+            'assignments.creator',
+        ])
             ->withCount(['materials', 'assignments'])
             ->findOrFail($id);
 
@@ -54,6 +58,11 @@ class CourseController extends Controller
 
         if ($user->role !== 'dosen' && $course->status !== 'active') {
             return response()->json(['message' => 'Not found.'], 404);
+        }
+
+        if ($user->role === 'mahasiswa'
+            && ! $course->students()->whereKey($user->id)->exists()) {
+            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
         return new CourseResource($course);
@@ -99,6 +108,10 @@ class CourseController extends Controller
         $user = $request->user();
         $course = Course::findOrFail($id);
 
+        $filters = $request->validate([
+            'status' => ['sometimes', 'in:draft,published'],
+        ]);
+
         // Otorisasi Akses Course
         if ($user->role === 'dosen' && $course->lecturer_id !== $user->id) {
             return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
@@ -108,16 +121,19 @@ class CourseController extends Controller
             return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
-        $assignments = $course->assignments()
+        $query = $course->assignments()
             ->with([
                 'course' => fn ($query) => $query
                     ->with('lecturer')
                     ->withCount(['materials', 'assignments']),
                 'creator',
-                'submissions.student',
-                'submissions.grade.grader',
-            ])
-            ->paginate(10);
+            ]);
+
+        if (isset($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        $assignments = $query->paginate(10);
 
         return response()->json([
             'data' => AssignmentResource::collection($assignments)->resolve($request),

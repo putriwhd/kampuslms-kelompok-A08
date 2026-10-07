@@ -5,11 +5,13 @@ namespace Tests\Feature;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Grade;
+use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ApiEndpointsTest extends TestCase
@@ -31,8 +33,16 @@ class ApiEndpointsTest extends TestCase
             'device_name' => 'feature-test',
         ])
             ->assertOk()
-            ->assertJsonPath('user.id', $user->id)
-            ->assertJsonMissingPath('user.password');
+            ->assertJsonPath('data.user.id', $user->id)
+            ->assertJsonMissingPath('data.user.password');
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ])
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Data yang diberikan tidak valid.')
+            ->assertJsonStructure(['errors' => ['email']]);
     }
 
     public function test_course_collection_is_paginated_and_includes_loaded_counts(): void
@@ -46,13 +56,18 @@ class ApiEndpointsTest extends TestCase
             'status' => 'active',
         ]);
 
-        $this->actingAs($lecturer, 'sanctum')
+        $response = $this->actingAs($lecturer, 'sanctum')
             ->getJson('/api/v1/courses')
             ->assertOk()
             ->assertJsonPath('data.0.id', $course->id)
             ->assertJsonPath('data.0.counts.materials', 0)
-            ->assertJsonPath('data.0.counts.assignments', 0)
-            ->assertJsonPath('meta.per_page', 15);
+            ->assertJsonPath('data.0.counts.assignments', 0);
+
+        $this->assertSame([
+            'current_page' => 1,
+            'last_page' => 1,
+            'total' => 1,
+        ], $response->json('meta'));
 
         $this->getJson("/api/v1/courses/{$course->id}")->assertOk();
 
@@ -66,6 +81,11 @@ class ApiEndpointsTest extends TestCase
 
         $this->actingAs($student, 'sanctum')
             ->getJson("/api/v1/courses/{$course->id}")
+            ->assertForbidden();
+
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+
+        $this->getJson("/api/v1/courses/{$course->id}")
             ->assertOk();
 
         $this->getJson("/api/v1/courses/{$draftCourse->id}")
@@ -151,13 +171,20 @@ class ApiEndpointsTest extends TestCase
                 'score' => 88,
                 'feedback' => 'Good work.',
             ])
-            ->assertOk()
+            ->assertCreated()
             ->assertJsonPath('data.grade.score', '88.00');
+
+        $this->putJson("/api/v1/submissions/{$submission->id}/grade", [
+            'score' => 90,
+            'feedback' => 'Revised score.',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.grade.score', '90.00');
 
         $this->assertDatabaseHas('grades', [
             'submission_id' => $submission->id,
             'graded_by' => $lecturer->id,
-            'score' => 88,
+            'score' => 90,
         ]);
         $this->assertInstanceOf(Grade::class, $submission->fresh()->grade);
 
@@ -181,5 +208,65 @@ class ApiEndpointsTest extends TestCase
             ->assertForbidden();
 
         $this->assertDatabaseCount('grades', 0);
+    }
+
+    public function test_nested_collections_eager_load_resources_and_notifications_are_scoped(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create([
+            'status' => 'active',
+        ]);
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+
+        Material::factory()->for($course)->for($lecturer, 'uploader')->create();
+        $published = Assignment::factory()->for($course)->create([
+            'created_by' => $lecturer->id,
+            'status' => 'published',
+        ]);
+        Assignment::factory()->for($course)->create([
+            'created_by' => $lecturer->id,
+            'status' => 'draft',
+        ]);
+        Submission::factory()->for($published)->create([
+            'user_id' => $student->id,
+        ]);
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->getJson("/api/v1/courses/{$course->id}/materials")
+            ->assertOk()
+            ->assertJsonPath('data.0.uploader.id', $lecturer->id)
+            ->assertJsonPath('data.0.course.lecturer.id', $lecturer->id);
+
+        $this->getJson("/api/v1/courses/{$course->id}/assignments?status=published")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $published->id)
+            ->assertJsonPath('data.0.creator.id', $lecturer->id)
+            ->assertJsonMissingPath('data.0.submissions');
+
+        $this->getJson("/api/v1/assignments/{$published->id}/submissions")
+            ->assertOk()
+            ->assertJsonPath('data.0.assignment.id', $published->id)
+            ->assertJsonPath('data.0.student.id', $student->id);
+
+        $notificationId = (string) Str::uuid();
+        $student->notifications()->create([
+            'id' => $notificationId,
+            'type' => 'test',
+            'data' => ['message' => 'Test notification'],
+        ]);
+
+        $this->actingAs($student, 'sanctum')
+            ->getJson('/api/v1/notifications')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $notificationId)
+            ->assertJsonMissingPath('meta.per_page');
+
+        $readResponse = $this->postJson("/api/v1/notifications/{$notificationId}/read")
+            ->assertOk()
+            ->assertJsonPath('data.id', $notificationId);
+
+        $this->assertNotNull($student->notifications()->find($notificationId)->read_at);
     }
 }
