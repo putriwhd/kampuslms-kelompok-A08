@@ -18,13 +18,15 @@
         </div>
 
         @if ($role === 'admin')
-            <a href="{{ route($role . '.courses.create', ['as' => $role]) }}" class="btn-add">
+            <a
+                href="{{ route($role . '.courses.create', ['as' => $role]) }}"
+                class="btn-add"
+            >
                 <span>+</span>
                 Tambah Mata Kuliah
             </a>
         @endif
     </div>
-
 
     {{-- CARD TABEL --}}
     <div class="course-card">
@@ -41,11 +43,21 @@
             </div>
         </div>
 
-        <form method="GET" action="{{ route($role . '.courses.index', ['as' => $role]) }}" class="course-filters">
-            <input type="hidden" name="as" value="{{ $role }}">
+        {{-- FILTER --}}
+        <form
+            method="GET"
+            action="{{ route($role . '.courses.index', ['as' => $role]) }}"
+            class="course-filters"
+        >
+            <input
+                type="hidden"
+                name="as"
+                value="{{ $role }}"
+            >
 
             <label>
                 <span>Cari kode atau nama</span>
+
                 <input
                     type="search"
                     name="search"
@@ -56,16 +68,43 @@
 
             <label>
                 <span>Filter status</span>
+
                 <select name="status">
                     <option value="">Semua status</option>
-                    <option value="draft" @selected(request('status') === 'draft')>Draft</option>
-                    <option value="active" @selected(request('status') === 'active')>Aktif</option>
-                    <option value="archived" @selected(request('status') === 'archived')>Arsip</option>
+
+                    <option
+                        value="draft"
+                        @selected(request('status') === 'draft')
+                    >
+                        Draft
+                    </option>
+
+                    <option
+                        value="active"
+                        @selected(request('status') === 'active')
+                    >
+                        Aktif
+                    </option>
+
+                    <option
+                        value="archived"
+                        @selected(request('status') === 'archived')
+                    >
+                        Arsip
+                    </option>
                 </select>
             </label>
 
-            <button type="submit" class="btn-add">Terapkan</button>
-            <a href="{{ route($role . '.courses.index', ['as' => $role]) }}" class="btn-edit">Reset</a>
+            <button type="submit" class="btn-add">
+                Terapkan
+            </button>
+
+            <a
+                href="{{ route($role . '.courses.index', ['as' => $role]) }}"
+                class="btn-edit"
+            >
+                Reset
+            </a>
         </form>
 
         {{-- TABLE --}}
@@ -95,7 +134,6 @@
                                 </span>
                             </td>
 
-
                             {{-- NAMA --}}
                             <td>
                                 <a
@@ -106,14 +144,12 @@
                                 </a>
                             </td>
 
-
                             {{-- DOSEN --}}
                             <td>
                                 <span class="lecturer-name">
                                     {{ $course->lecturer->name ?? '-' }}
                                 </span>
                             </td>
-
 
                             {{-- STATUS --}}
                             <td class="text-center">
@@ -149,7 +185,6 @@
                                 @endif
 
                             </td>
-
 
                             {{-- AKSI --}}
                             <td>
@@ -221,525 +256,9 @@
 
     </div>
 
-{{-- PAGINATION --}}
-<div class="pagination">
-  {{ $courses->links() }}
-</div>
-
-    {{-- STYLE --}}
-    <style>
-
-        /* =========================
-           HEADER
-        ========================= */
-
-        .course-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 24px;
-            margin-bottom: 28px;
-        }
-
-        .course-header h1 {
-            margin: 0 0 8px;
-            color: var(--blue-dark);
-            font-size: 27px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-        }
-
-        .course-header p {
-            margin: 0;
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        .course-filters {
-            display: flex;
-            align-items: flex-end;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
-            padding: 16px;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-        }
-
-        .course-filters label {
-            display: grid;
-            gap: 5px;
-            color: var(--blue-dark);
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .course-filters input,
-        .course-filters select {
-            min-width: 180px;
-            padding: 9px 10px;
-            color: var(--text);
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font: inherit;
-        }
-
-
-        /* =========================
-           BUTTON TAMBAH
-        ========================= */
-
-        .btn-add {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-
-            padding: 10px 16px;
-
-            background: var(--blue);
-            color: var(--white);
-
-            border-radius: 8px;
-            text-decoration: none;
-
-            font-size: 13px;
-            font-weight: 600;
-
-            white-space: nowrap;
-
-            transition: var(--transition);
-        }
-
-        .btn-add span {
-            font-size: 18px;
-            line-height: 1;
-            font-weight: 400;
-        }
-
-        .btn-add:hover {
-            background: var(--blue-dark);
-            transform: translateY(-1px);
-        }
-
-
-        /* =========================
-           ALERT
-        ========================= */
-
-        .alert-success {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-
-            margin-bottom: 20px;
-            padding: 12px 16px;
-
-            background: #f0fdf4;
-            color: #15803d;
-
-            border: 1px solid #bbf7d0;
-            border-radius: 8px;
-
-            font-size: 14px;
-        }
-
-        .alert-success span {
-            font-weight: 700;
-        }
-
-
-        /* =========================
-           CARD
-        ========================= */
-
-        .course-card {
-            overflow: hidden;
-
-            background: var(--white);
-
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-
-            box-shadow: var(--shadow);
-        }
-
-
-        /* =========================
-           CARD HEADER
-        ========================= */
-
-        .course-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            gap: 20px;
-
-            padding: 20px 24px;
-
-            border-bottom: 1px solid var(--border);
-        }
-
-        .course-card-header h2 {
-            margin: 0 0 5px;
-
-            color: var(--blue-dark);
-
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .course-card-header p {
-            margin: 0;
-
-            color: var(--muted);
-
-            font-size: 13px;
-        }
-
-        .course-count {
-            padding: 6px 11px;
-
-            background: var(--blue-soft);
-            color: var(--blue-dark);
-
-            border-radius: 6px;
-
-            font-size: 12px;
-            font-weight: 600;
-
-            white-space: nowrap;
-        }
-
-
-        /* =========================
-           TABLE
-        ========================= */
-
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        .course-table {
-            width: 100%;
-
-            border-collapse: collapse;
-
-            font-size: 14px;
-        }
-
-
-        /* HEADER TABLE */
-
-        .course-table thead {
-            background: var(--blue-soft);
-        }
-
-        .course-table th {
-            padding: 13px 20px;
-
-            color: var(--blue-dark);
-
-            font-size: 12px;
-            font-weight: 700;
-
-            text-align: left;
-
-            border-bottom: 1px solid var(--border);
-
-            white-space: nowrap;
-        }
-
-        .course-table th.text-center {
-            text-align: center;
-        }
-
-
-        /* ISI TABLE */
-
-        .course-table td {
-            padding: 15px 20px;
-
-            color: var(--text);
-
-            border-bottom: 1px solid var(--border);
-
-            vertical-align: middle;
-        }
-
-        .course-table tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        .course-table tbody tr {
-            transition: background 0.15s ease;
-        }
-
-        .course-table tbody tr:hover {
-            background: #f8fafc;
-        }
-
-
-        /* =========================
-           KODE
-        ========================= */
-
-        .course-code {
-            display: inline-block;
-
-            padding: 5px 9px;
-
-            background: var(--blue-soft);
-            color: var(--blue-dark);
-
-            border-radius: 5px;
-
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-
-        /* =========================
-           NAMA MATA KULIAH
-        ========================= */
-
-        .course-name {
-            color: var(--blue-dark);
-
-            font-weight: 600;
-
-            text-decoration: none;
-
-            transition: var(--transition);
-        }
-
-        .course-name:hover {
-            color: var(--blue);
-        }
-
-
-        /* =========================
-           DOSEN
-        ========================= */
-
-        .lecturer-name {
-            color: var(--muted);
-        }
-
-
-        /* =========================
-           STATUS
-        ========================= */
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-width: 70px;
-
-            padding: 5px 10px;
-
-            border-radius: 6px;
-
-            font-size: 11px;
-            font-weight: 700;
-
-            white-space: nowrap;
-        }
-
-
-        /* ACTIVE */
-
-        .status-active {
-            background: #dcfce7;
-            color: #15803d;
-        }
-
-
-        /* DRAFT */
-
-        .status-draft {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-
-        /* ARCHIVE */
-
-        .status-archive {
-            background: #e5e7eb;
-            color: #4b5563;
-        }
-
-
-        /* STATUS LAIN */
-
-        .status-unknown {
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-
-        /* =========================
-           ACTION
-        ========================= */
-
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-            gap: 6px;
-        }
-
-        .action-buttons form {
-            margin: 0;
-        }
-
-        .btn-view,
-        .btn-edit,
-        .btn-delete {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-width: 50px;
-
-            padding: 6px 10px;
-
-            border-radius: 6px;
-
-            font-size: 12px;
-            font-weight: 600;
-
-            text-decoration: none;
-
-            cursor: pointer;
-
-            transition: var(--transition);
-        }
-
-
-        /* LIHAT */
-
-        .btn-view {
-            background: var(--blue-soft);
-            color: var(--blue-dark);
-        }
-
-        .btn-view:hover {
-            background: var(--blue-light);
-        }
-
-
-        /* EDIT */
-
-        .btn-edit {
-            background: #f1f5f9;
-            color: #475569;
-        }
-
-        .btn-edit:hover {
-            background: #e2e8f0;
-        }
-
-
-        /* HAPUS */
-
-        .btn-delete {
-            background: #fef2f2;
-            color: #dc2626;
-
-            border: none;
-        }
-
-        .btn-delete:hover {
-            background: #fee2e2;
-        }
-
-
-        /* =========================
-           EMPTY DATA
-        ========================= */
-
-        .empty-data {
-            padding: 50px 20px !important;
-
-            text-align: center;
-
-            color: var(--muted) !important;
-        }
-
-        .empty-icon {
-            margin-bottom: 10px;
-
-            font-size: 30px;
-            opacity: 0.7;
-        }
-
-        .empty-data strong {
-            display: block;
-
-            margin-bottom: 4px;
-
-            color: var(--text);
-
-            font-size: 14px;
-        }
-
-        .empty-data p {
-            margin: 0;
-
-            font-size: 13px;
-        }
-
-
-        /* =========================
-           PAGINATION
-        ========================= */
-
-        .pagination {
-            margin-top: 20px;
-        }
-
-
-        /* =========================
-           RESPONSIVE
-        ========================= */
-
-        @media (max-width: 700px) {
-
-            .course-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .btn-add {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .course-card-header {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .course-table th,
-            .course-table td {
-                padding: 12px 14px;
-            }
-
-            .action-buttons {
-                justify-content: flex-start;
-            }
-
-        }
-
-    </style>
+    {{-- PAGINATION --}}
+    <div class="pagination">
+        {{ $courses->links() }}
+    </div>
 
 </x-layout>

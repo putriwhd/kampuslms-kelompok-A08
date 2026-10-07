@@ -1,16 +1,29 @@
 <x-layout>
-    <x-slot:title>{{ $assignment->title }}</x-slot:title>
+    <x-slot:title>Tugas — {{ $course->name }}</x-slot:title>
+
+    <h1>Tugas: {{ $course->name }}</h1>
 
     <div class="content-card">
-        <h1>{{ $assignment->title }}</h1>
-        <p>Mata Kuliah: {{ $assignment->course->name }}</p>
-        <p>{{ $assignment->instructions }}</p>
-        <p>Batas pengumpulan: {{ $assignment->due_at?->format('d M Y H:i') ?? '-' }}</p>
-        <p>Nilai maksimal: {{ $assignment->max_score }}</p>
-        <p>Status: {{ ucfirst($assignment->status) }}</p>
-
-        <a href="{{ route($role . '.courses.assignments.index', [$assignment->course, 'as' => $role]) }}">
-            Kembali ke Daftar Tugas
-        </a>
+        @forelse ($assignments as $assignment)
+            <article>
+                <h2>
+                    <a href="{{ route($role . '.courses.assignments.scoped-show', [$course, $assignment, 'as' => $role]) }}">
+                        {{ $assignment->title }}
+                    </a>
+                </h2>
+                <p>Batas pengumpulan: {{ $assignment->due_at?->format('d M Y H:i') ?? '-' }}</p>
+                <p>Status: {{ ucfirst($assignment->status) }}</p>
+            </article>
+        @empty
+            <p>Belum ada tugas untuk mata kuliah ini.</p>
+        @endforelse
     </div>
+
+    {{ $assignments->links() }}
+
+    <p>
+        <a href="{{ route($role . '.courses.show', [$course, 'as' => $role]) }}">
+            Kembali ke Mata Kuliah
+        </a>
+    </p>
 </x-layout>
