@@ -137,14 +137,7 @@ class AssignmentController extends Controller
         }
 
         $submissions = $assignment->submissions()
-            ->with([
-                'assignment.course' => fn ($query) => $query
-                    ->with('lecturer')
-                    ->withCount(['materials', 'assignments']),
-                'assignment.creator',
-                'student',
-                'grade.grader',
-            ])
+            ->with(['student', 'grade.grader'])
             ->paginate(15);
 
         return response()->json([

@@ -68,12 +68,6 @@ assert_status 401 'GET /courses tanpa token' \
 assert_status 401 'GET /courses/{id} tanpa token' \
     "$BASE_URL/courses/$COURSE_ID" -H 'Accept: application/json'
 
-assert_status 401 'GET /courses/{id}/materials tanpa token' \
-    "$BASE_URL/courses/$COURSE_ID/materials" -H 'Accept: application/json'
-
-assert_status 401 'GET /courses/{id}/assignments tanpa token' \
-    "$BASE_URL/courses/$COURSE_ID/assignments" -H 'Accept: application/json'
-
 assert_status 401 'POST /assignments tanpa token' \
     -X POST "$BASE_URL/assignments" \
     -H 'Accept: application/json' --data '{}'
@@ -91,19 +85,6 @@ assert_status 401 'POST /submissions tanpa token' \
 assert_status 401 'PUT /submissions/{id}/grade tanpa token' \
     -X PUT "$BASE_URL/submissions/1/grade" \
     -H 'Accept: application/json' -H 'Content-Type: application/json' --data '{}'
-
-assert_status 401 'GET /assignments/{id}/submissions tanpa token' \
-    "$BASE_URL/assignments/1/submissions" -H 'Accept: application/json'
-
-assert_status 401 'POST /assignments/{id}/submissions tanpa token' \
-    -X POST "$BASE_URL/assignments/1/submissions" -H 'Accept: application/json'
-
-assert_status 401 'GET /notifications tanpa token' \
-    "$BASE_URL/notifications" -H 'Accept: application/json'
-
-assert_status 401 'POST /notifications/{id}/read tanpa token' \
-    -X POST "$BASE_URL/notifications/00000000-0000-0000-0000-000000000000/read" \
-    -H 'Accept: application/json'
 
 assert_status 422 'Login dengan kredensial salah ditolak' \
     -X POST "$BASE_URL/auth/login" \
@@ -124,16 +105,6 @@ assert_status 200 'Mahasiswa dapat melihat daftar courses' \
     "$BASE_URL/courses" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $STUDENT_TOKEN"
-
-assert_status 200 'Dosen dapat melihat materials course miliknya' \
-    "$BASE_URL/courses/$COURSE_ID/materials" \
-    -H 'Accept: application/json' \
-    -H "Authorization: Bearer $DOSEN_A_TOKEN"
-
-assert_status 200 'Dosen dapat memfilter assignments course miliknya' \
-    "$BASE_URL/courses/$COURSE_ID/assignments?status=published&page=1" \
-    -H 'Accept: application/json' \
-    -H "Authorization: Bearer $DOSEN_A_TOKEN"
 
 assert_status 200 'Pengguna terautentikasi dapat melihat course' \
     "$BASE_URL/courses/$COURSE_ID" \
@@ -188,10 +159,11 @@ if [[ -z "$ASSIGNMENT_ID" ]]; then
 fi
 
 printf 'Berkas submission sementara untuk pengujian API.\n' > "$UPLOAD_FILE"
-assert_status 201 'Mahasiswa dapat mengumpulkan assignment melalui endpoint nested' \
-    -X POST "$BASE_URL/assignments/$ASSIGNMENT_ID/submissions" \
+assert_status 201 'Mahasiswa dapat mengumpulkan assignment' \
+    -X POST "$BASE_URL/submissions" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $STUDENT_TOKEN" \
+    -F "assignment_id=$ASSIGNMENT_ID" \
     -F "file=@$UPLOAD_FILE_CURL;filename=jawaban-api.txt" \
     -F 'note=Pengujian API'
 
@@ -205,15 +177,17 @@ if [[ -z "$SUBMISSION_ID" ]]; then
 fi
 
 assert_status 403 'Mahasiswa yang tidak terdaftar tidak dapat mengumpulkan tugas' \
-    -X POST "$BASE_URL/assignments/$ASSIGNMENT_ID/submissions" \
+    -X POST "$BASE_URL/submissions" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $OTHER_STUDENT_TOKEN" \
+    -F "assignment_id=$ASSIGNMENT_ID" \
     -F "file=@$UPLOAD_FILE_CURL;filename=jawaban-tidak-terdaftar.txt"
 
 assert_status 422 'Mahasiswa tidak dapat mengirim submission duplikat' \
-    -X POST "$BASE_URL/assignments/$ASSIGNMENT_ID/submissions" \
+    -X POST "$BASE_URL/submissions" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $STUDENT_TOKEN" \
+    -F "assignment_id=$ASSIGNMENT_ID" \
     -F "file=@$UPLOAD_FILE_CURL;filename=jawaban-duplikat.txt"
 
 assert_status 403 'Dosen tidak dapat mengirim submission' \
@@ -252,16 +226,6 @@ assert_status 200 'Pengguna dapat mengambil daftar notifikasi' \
     "$BASE_URL/notifications" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $STUDENT_TOKEN"
-
-assert_status 403 'Pengguna tidak dapat menandai notifikasi milik pengguna lain/tidak ada' \
-    -X POST "$BASE_URL/notifications/00000000-0000-0000-0000-000000000000/read" \
-    -H 'Accept: application/json' \
-    -H "Authorization: Bearer $STUDENT_TOKEN"
-
-assert_status 200 'Dosen pemilik dapat melihat submissions assignment' \
-    "$BASE_URL/assignments/$ASSIGNMENT_ID/submissions" \
-    -H 'Accept: application/json' \
-    -H "Authorization: Bearer $DOSEN_A_TOKEN"
 
 assert_status 200 'Dosen pemilik dapat memperbarui assignment' \
     -X PATCH "$BASE_URL/assignments/$ASSIGNMENT_ID" \

@@ -9,7 +9,6 @@ use App\Models\Grade;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 
 class SubmissionController extends Controller
 {
@@ -83,9 +82,7 @@ class SubmissionController extends Controller
             ->exists();
 
         if ($alreadySubmitted) {
-            throw ValidationException::withMessages([
-                'assignment_id' => ['Mahasiswa sudah mengumpulkan tugas ini.'],
-            ]);
+            return response()->json(['message' => 'Data yang diberikan tidak valid.'], 422);
         }
 
         $validated = $request->validate([
