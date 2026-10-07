@@ -60,7 +60,7 @@ class SubmissionController extends Controller
             ->setStatusCode(201);
     }
 
-    // --- METHOD BARU: POST /assignments/{id}/submissions ---
+    // POST /assignments/{id}/submissions
     public function storeForAssignment(Request $request, $id)
     {
         $user = $request->user();
@@ -82,7 +82,7 @@ class SubmissionController extends Controller
             ->exists();
 
         if ($alreadySubmitted) {
-            return response()->json(['message' => 'Anda sudah mengumpulkan tugas ini.'], 422);
+            return response()->json(['message' => 'Data yang diberikan tidak valid.'], 422);
         }
 
         $validated = $request->validate([
@@ -119,19 +119,22 @@ class SubmissionController extends Controller
         $user = $request->user();
 
         if ($user->role !== 'dosen') {
-            return response()->json(['message' => '403 - Akses Ditolak'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
         $submission = Submission::with(['assignment.course', 'grade'])->findOrFail($id);
 
         if ($submission->assignment->course->lecturer_id !== $user->id) {
-            return response()->json(['message' => '403 - Akses Ditolak'], 403);
+            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
         $validated = $request->validate([
             'score'    => ['required', 'numeric', 'min:0', 'max:100'],
             'feedback' => ['nullable', 'string'],
         ]);
+
+        // Cek apakah nilai sudah pernah dibuat sebelumnya
+        $isNew = ! $submission->grade()->exists();
 
         Grade::updateOrCreate(
             ['submission_id' => $submission->id],
@@ -143,6 +146,9 @@ class SubmissionController extends Controller
             ]
         );
 
+        // Dinamis: 201 untuk penilain baru, 200 untuk update
+        $statusCode = $isNew ? 201 : 200;
+
         return (new SubmissionResource($submission->load([
             'assignment.course' => fn ($query) => $query
                 ->with('lecturer')
@@ -151,7 +157,6 @@ class SubmissionController extends Controller
             'grade.grader',
         ])))
             ->response()
-            ->setStatusCode(200); // <-- Pastikan ini 200 (bukan 201)
+            ->setStatusCode($statusCode);
     }
-
 }

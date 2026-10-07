@@ -32,14 +32,13 @@ class CourseController extends Controller
         }
 
         return response()->json([
-    'data' => CourseResource::collection($courses)->resolve($request),
-    'meta' => [
-        'current_page' => $courses->currentPage(),
-        'last_page'    => $courses->lastPage(),
-        'per_page'     => $courses->perPage(), // <-- Tambahkan baris ini
-        'total'        => $courses->total(),
-    ],
-]);
+            'data' => CourseResource::collection($courses)->resolve($request),
+            'meta' => [
+                'current_page' => $courses->currentPage(),
+                'last_page'    => $courses->lastPage(),
+                'total'        => $courses->total(),
+            ],
+        ]);
     }
 
     public function show(Request $request, $id)
@@ -60,7 +59,7 @@ class CourseController extends Controller
         return new CourseResource($course);
     }
 
-    // --- METHOD BARU: GET /api/v1/courses/{id}/materials ---
+    // GET /api/v1/courses/{id}/materials
     public function materials(Request $request, $id)
     {
         $user = $request->user();
@@ -75,7 +74,14 @@ class CourseController extends Controller
             return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
-        $materials = $course->materials()->paginate(10);
+        $materials = $course->materials()
+            ->with([
+                'course' => fn ($query) => $query
+                    ->with('lecturer')
+                    ->withCount(['materials', 'assignments']),
+                'uploader',
+            ])
+            ->paginate(10);
 
         return response()->json([
             'data' => MaterialResource::collection($materials)->resolve($request),
@@ -87,7 +93,7 @@ class CourseController extends Controller
         ]);
     }
 
-    // --- METHOD BARU: GET /api/v1/courses/{id}/assignments ---
+    // GET /api/v1/courses/{id}/assignments
     public function assignments(Request $request, $id)
     {
         $user = $request->user();
@@ -102,7 +108,16 @@ class CourseController extends Controller
             return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
 
-        $assignments = $course->assignments()->paginate(10);
+        $assignments = $course->assignments()
+            ->with([
+                'course' => fn ($query) => $query
+                    ->with('lecturer')
+                    ->withCount(['materials', 'assignments']),
+                'creator',
+                'submissions.student',
+                'submissions.grade.grader',
+            ])
+            ->paginate(10);
 
         return response()->json([
             'data' => AssignmentResource::collection($assignments)->resolve($request),

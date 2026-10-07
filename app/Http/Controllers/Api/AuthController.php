@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -16,27 +17,28 @@ class AuthController extends Controller
      * Autentikasi pengguna dan mengembalikan Sanctum PlainTextToken.
      * Dilindungi rate limiting throttle:5,1 di rute.
      */
-    public function login(Request $request): JsonResponse
+
+  public function login(Request $request)
     {
-        $request->validate([
+        $credentials = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
+            'password' => ['required'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        // Pesan error seragam untuk mencegah user enumeration
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Email atau kata sandi yang Anda masukkan salah.'],
-            ]);
+        if (! Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Data yang diberikan tidak valid.',
+            ], 422);
         }
 
-        $token = $user->createToken($request->device_name ?? 'api-token')->plainTextToken;
+        $user = $request->user();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
-            'user' => new UserResource($user),
+            'data' => [
+                'token' => $token,
+                'user' => new UserResource($user),
+            ],
         ]);
     }
 

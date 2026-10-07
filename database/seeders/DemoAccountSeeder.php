@@ -28,9 +28,21 @@ class DemoAccountSeeder extends Seeder
                 'role' => 'dosen',
             ],
             [
+                'name' => 'Dosen Kedua',
+                'email' => 'dosen2@kampuslms.test',
+                'nim_nip' => 'NIP002',
+                'role' => 'dosen',
+            ],
+            [
                 'name' => 'Mahasiswa Demo',
                 'email' => 'mahasiswa@kampuslms.test',
                 'nim_nip' => 'MHS0001',
+                'role' => 'mahasiswa',
+            ],
+            [
+                'name' => 'Mahasiswa Kedua',
+                'email' => 'mahasiswa2@kampuslms.test',
+                'nim_nip' => 'MHS0002',
                 'role' => 'mahasiswa',
             ],
         ];
