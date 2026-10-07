@@ -1,6 +1,6 @@
 # Dokumentasi API KampusLMS
 
-API yang didokumentasikan di sini adalah route yang saat ini terdaftar pada prefix `/api/v1`, menggunakan token Sanctum dan JSON. Dokumen ini menjelaskan implementasi yang ditemukan di repository; **bukan kontrak Bagian 5**, karena spesifikasi tersebut tidak ditemukan dan modul hanya berisi placeholder. Jangan menganggap daftar endpoint atau bentuk response di sini telah diverifikasi terhadap kontrak eksternal.
+API menggunakan prefix `/api/v1`, token Laravel Sanctum, dan JSON. Koleksi menggunakan bentuk `{ "data": [...], "meta": { "current_page": 1, "last_page": 5, "total": 47 } }`; respons tunggal menggunakan `{ "data": {...} }`. Error validasi memakai status `422` dan pesan `Data yang diberikan tidak valid.`; error akses memakai status `403` dan pesan `Anda tidak memiliki akses ke sumber daya ini.`.
 
 ## Persiapan
 
@@ -20,17 +20,19 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
   -d '{"email":"dosen@kampuslms.test","password":"password","device_name":"dokumentasi"}'
 ```
 
-Respons sukses `200` berisi token plaintext sekali tampil dan Resource pengguna:
+Respons sukses `200` berisi token plaintext sekali tampil dan Resource pengguna di dalam `data`:
 
 ```json
 {
-  "token": "1|<token>",
-  "user": {
-    "id": 2,
-    "name": "Dosen Demo",
-    "email": "dosen@kampuslms.test",
-    "nim_nip": "NIP001",
-    "role": "dosen"
+  "data": {
+    "token": "1|<token>",
+    "user": {
+      "id": 2,
+      "name": "Dosen Demo",
+      "email": "dosen@kampuslms.test",
+      "nim_nip": "NIP001",
+      "role": "dosen"
+    }
   }
 }
 ```
@@ -59,7 +61,7 @@ Contoh response kredensial salah:
 
 ```json
 {
-  "message": "The given data was invalid.",
+  "message": "Data yang diberikan tidak valid.",
   "errors": {
     "email": ["Email atau kata sandi yang Anda masukkan salah."]
   }
@@ -116,8 +118,10 @@ Contoh response `GET /me`:
 |---|---|---|---|
 | `GET` | `/api/v1/courses` | Pengguna terautentikasi | `200`, koleksi terpaginasikan |
 | `GET` | `/api/v1/courses/{id}` | Pengguna terautentikasi | `200`, Resource; `403` lintas dosen; `404` ID tidak ada/course nonaktif |
+| `GET` | `/api/v1/courses/{id}/materials` | Pengguna terdaftar / dosen pemilik | `200`, koleksi materi terpaginasikan |
+| `GET` | `/api/v1/courses/{id}/assignments` | Pengguna terdaftar / dosen pemilik | `200`, koleksi tugas; mendukung `status` dan `page` |
 
-Daftar dibatasi ke mata kuliah yang diajar dosen yang login, atau mata kuliah berstatus `active` untuk pengguna lainnya. Daftar memakai pagination 15 item per halaman serta eager loading dosen dan jumlah materi/tugas.
+Daftar dibatasi ke mata kuliah yang diajar dosen yang login, atau course aktif yang diikuti mahasiswa. Daftar memakai pagination 15 item per halaman serta eager loading dosen dan jumlah materi/tugas.
 
 `GET /courses` menerima parameter query `page` dari paginator. `GET /courses/{id}` menerima ID pada path. Dosen hanya dapat melihat detail course yang dia ampu; role lain hanya dapat melihat course berstatus `active`. Dosen yang meminta course dosen lain menerima `403`, course nonaktif bagi role lain menerima `404`, dan ID yang tidak ditemukan menerima `404`.
 
@@ -131,7 +135,7 @@ curl http://localhost:8000/api/v1/courses/1 \
   -H "Authorization: Bearer $API_TOKEN"
 ```
 
-Contoh response daftar mengikuti format pagination Laravel:
+Contoh response daftar mengikuti bentuk kontrak:
 
 ```json
 {
@@ -158,27 +162,27 @@ Contoh response daftar mengikuti format pagination Laravel:
       }
     }
   ],
-  "links": {
-    "first": "http://localhost:8000/api/v1/courses?page=1",
-    "last": "http://localhost:8000/api/v1/courses?page=1",
-    "prev": null,
-    "next": null
-  },
   "meta": {
     "current_page": 1,
-    "from": 1,
     "last_page": 1,
-    "path": "http://localhost:8000/api/v1/courses",
-    "per_page": 15,
-    "to": 1,
     "total": 1
   }
 }
 ```
 
-`links` dan `meta` diisi Laravel dengan URL halaman dan informasi pagination yang sebenarnya.
+Metadata koleksi hanya berisi `current_page`, `last_page`, dan `total`.
 
-Detail course memakai Resource yang sama serta menyertakan relasi dosen, materials, assignments, dan counts yang sudah dimuat; daftar materials dan assignments tidak memiliki route API tersendiri.
+Detail course memakai Resource yang sama serta menyertakan relasi dosen, materials, assignments, dan counts yang sudah dimuat. Mahasiswa hanya dapat melihat detail course yang diikutinya; mahasiswa yang tidak terdaftar menerima `403`. Daftar materi dan tugas juga tersedia melalui dua endpoint koleksi pada tabel di atas.
+
+```bash
+curl 'http://localhost:8000/api/v1/courses/1/materials?page=1' \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer $API_TOKEN"
+
+curl 'http://localhost:8000/api/v1/courses/1/assignments?status=published&page=1' \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer $API_TOKEN"
+```
 
 Contoh detail course berstatus aktif tanpa material atau assignment:
 
@@ -210,13 +214,13 @@ Contoh detail course berstatus aktif tanpa material atau assignment:
 }
 ```
 
-Detail course tanpa token menghasilkan `401`; dosen yang bukan pengampu mendapat `403`, sedangkan course nonaktif untuk role selain dosen menghasilkan `404`.
+Detail course tanpa token menghasilkan `401`; dosen yang bukan pengampu dan mahasiswa yang tidak terdaftar mendapat `403`, sedangkan course nonaktif untuk role selain dosen menghasilkan `404`.
 
 Contoh response dosen lintas course (`403`):
 
 ```json
 {
-  "message": "Forbidden. Anda bukan pengampu mata kuliah ini."
+  "message": "Anda tidak memiliki akses ke sumber daya ini."
 }
 ```
 
@@ -232,6 +236,7 @@ Contoh response course nonaktif bagi role selain dosen (`404`):
 
 | Method | URI | Akses | Hasil utama |
 |---|---|---|---|
+| `GET` | `/api/v1/courses/{id}/assignments` | Mahasiswa terdaftar / dosen pemilik | `200`, koleksi dengan filter `status` dan pagination |
 | `POST` | `/api/v1/assignments` | Dosen pengampu | `201`, Resource tugas |
 | `PUT` atau `PATCH` | `/api/v1/assignments/{id}` | Dosen pengampu tugas | `200`, Resource tugas |
 | `DELETE` | `/api/v1/assignments/{id}` | Dosen pengampu tugas | `204`, tanpa body |
@@ -317,7 +322,7 @@ Contoh response error validasi untuk `POST /assignments`:
 
 ```json
 {
-  "message": "The given data was invalid.",
+  "message": "Data yang diberikan tidak valid.",
   "errors": {
     "title": ["The title field is required."]
   }
@@ -328,7 +333,7 @@ Contoh response `403` jika role bukan dosen atau dosen bukan pengampu course:
 
 ```json
 {
-  "message": "Forbidden. Anda bukan pengampu mata kuliah ini."
+  "message": "Anda tidak memiliki akses ke sumber daya ini."
 }
 ```
 
@@ -348,18 +353,18 @@ curl -X DELETE http://localhost:8000/api/v1/assignments/1 \
 
 | Method | URI | Akses | Hasil utama |
 |---|---|---|---|
+| `GET` | `/api/v1/assignments/{id}/submissions` | Dosen pemilik | `200`, koleksi submission terpaginasikan |
+| `POST` | `/api/v1/assignments/{id}/submissions` | Mahasiswa terdaftar | `201`, Resource submission; multipart `file` |
 | `POST` | `/api/v1/submissions` | Mahasiswa | `201`, Resource submission |
-| `PUT` | `/api/v1/submissions/{id}/grade` | Dosen pengampu mata kuliah | `200`, Resource submission dengan nilai |
+| `PUT` | `/api/v1/submissions/{id}/grade` | Dosen pengampu mata kuliah | `201` grade baru; `200` penilaian ulang |
 
-Pengumpulan tugas memakai `multipart/form-data`: `assignment_id` wajib, `file` wajib berupa berkas, dan `note` opsional. Mahasiswa harus terdaftar di mata kuliah tugas tersebut dan hanya dapat membuat satu submission per tugas. Berkas disimpan pada disk lokal Laravel di direktori `submissions/`.
-
-Tanpa token endpoint mengembalikan `401`; selain role mahasiswa atau mahasiswa yang tidak terdaftar pada course terkait menghasilkan `403`; submission kedua untuk assignment yang sama menghasilkan `422`; field/berkas yang tidak valid menghasilkan `422`.
+Pengumpulan melalui route kontrak `/assignments/{id}/submissions` memakai `multipart/form-data`: `file` wajib dan `note` opsional; ID assignment berasal dari path. Mahasiswa harus terdaftar di mata kuliah tugas tersebut dan hanya dapat membuat satu submission per tugas. Route kompatibilitas `POST /submissions` juga tersedia dan menerima `assignment_id` di body. Berkas disimpan pada disk lokal Laravel di direktori `submissions/`.
 
 Contoh response `403` mahasiswa yang tidak terdaftar:
 
 ```json
 {
-  "message": "Forbidden. Anda tidak terdaftar di mata kuliah ini."
+  "message": "Anda tidak memiliki akses ke sumber daya ini."
 }
 ```
 
@@ -367,20 +372,23 @@ Contoh response `422` saat submission tugas yang sama dikirim ulang:
 
 ```json
 {
-  "message": "The given data was invalid.",
+  "message": "Data yang diberikan tidak valid.",
   "errors": {
-    "assignment_id": ["The assignment id has already been taken."]
+    "assignment_id": ["Mahasiswa sudah mengumpulkan tugas ini."]
   }
 }
 ```
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/submissions \
+curl -X POST http://localhost:8000/api/v1/assignments/1/submissions \
   -H 'Accept: application/json' \
   -H "Authorization: Bearer $API_TOKEN" \
-  -F 'assignment_id=1' \
   -F 'file=@./jawaban.pdf' \
   -F 'note=Jawaban latihan'
+
+curl 'http://localhost:8000/api/v1/assignments/1/submissions?page=1' \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer $API_TOKEN"
 ```
 
 Contoh response sukses `201` (nilai `grade` belum ada saat submission dibuat):
@@ -449,7 +457,7 @@ Contoh response `403` untuk dosen yang bukan pengampu:
 
 ```json
 {
-  "message": "Forbidden. Anda tidak dapat memberi nilai pada tugas ini."
+  "message": "Anda tidak memiliki akses ke sumber daya ini."
 }
 ```
 
@@ -461,7 +469,7 @@ curl -X PUT http://localhost:8000/api/v1/submissions/1/grade \
   -d '{"score":90,"feedback":"Pekerjaan baik."}'
 ```
 
-Response sukses `PUT /submissions/{id}/grade` adalah `200` Resource submission dengan nilai berikut:
+Penilaian pertama mengembalikan `201`; permintaan berikutnya untuk submission yang sama memperbarui grade dan mengembalikan `200`. Keduanya memakai Resource submission dengan nilai berikut:
 
 ```json
 {
@@ -547,16 +555,35 @@ Contoh error validasi:
 
 ```json
 {
-  "message": "The given data was invalid.",
+  "message": "Data yang diberikan tidak valid.",
   "errors": {
     "title": ["The title field is required."]
   }
 }
 ```
 
+### Notifikasi
+
+| Method | URI | Akses | Hasil utama |
+|---|---|---|---|
+| `GET` | `/api/v1/notifications` | Pengguna terautentikasi | `200`, koleksi notifikasi milik pengguna |
+| `POST` | `/api/v1/notifications/{id}/read` | Pemilik notifikasi | `200`, Resource notifikasi yang telah dibaca; `403` jika bukan milik pengguna |
+
+```bash
+curl 'http://localhost:8000/api/v1/notifications?page=1' \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer $API_TOKEN"
+
+curl -X POST http://localhost:8000/api/v1/notifications/NOTIFICATION_UUID/read \
+  -H 'Accept: application/json' \
+  -H "Authorization: Bearer $API_TOKEN"
+```
+
+Koleksi notifikasi memakai metadata kontrak yang sama. Respons penandaan dibaca berbentuk `{ "data": { ... } }`.
+
 ## Pengujian otorisasi dengan curl
 
-Skrip `scripts/test-api.sh` menguji seluruh route terlindungi yang terdaftar: request tanpa token, akses dengan role yang salah pada route role-restricted, pemeriksaan ownership lintas dosen/mahasiswa, dan aksi sukses pemilik/role yang benar. Login diuji dengan kredensial salah (`422`); route collection/detail courses diuji untuk akses yang berlaku; submission diuji untuk mahasiswa terdaftar, mahasiswa yang tidak terdaftar, dan pengiriman duplikat. Skrip membuat assignment dan submission sementara di database, lalu menghapus assignment tersebut beserta berkas submission-nya. Siapkan token Sanctum untuk dua mahasiswa (satu terdaftar dan satu tidak terdaftar pada course A), dua dosen berbeda, ID course aktif milik dosen A yang diikuti mahasiswa pertama, dan ID course aktif milik dosen B:
+Skrip `scripts/test-api.sh` menguji autentikasi, akses tanpa token, ownership course/tugas, route koleksi nested, pengumpulan submission nested, grade baru dan penilaian ulang, serta daftar notifikasi. Skrip membuat assignment dan submission sementara di database, lalu menghapus assignment tersebut beserta berkas submission-nya. Siapkan token Sanctum untuk mahasiswa yang mengikuti course, mahasiswa yang **tidak** mengikuti course tersebut, dua dosen berbeda, serta ID course yang dimiliki masing-masing dosen:
 
 ```bash
 export STUDENT_TOKEN='<token-mahasiswa>'
@@ -568,7 +595,7 @@ export OTHER_COURSE_ID='<id-course-milik-dosen-B>'
 bash scripts/test-api.sh
 ```
 
-Skrip tidak menguji endpoint yang tidak ada di route API saat ini. Request tanpa token dan setiap variasi role/ownership yang tidak sesuai diharapkan menghasilkan `401`/`403`; hasil lulus menunjukkan status aktualnya. Jalankan `php artisan route:list --path=api` untuk melihat seluruh route API yang aktif.
+Seeder demo menyediakan `mahasiswa2@kampuslms.test` sebagai mahasiswa yang tidak didaftarkan pada course demo; skrip memakai akun ini secara default dan menerima `OTHER_STUDENT_TOKEN` sebagai override. Request tanpa token dan variasi role/ownership yang tidak sesuai diharapkan menghasilkan `401`/`403`; hasil lulus menunjukkan status aktualnya. Jalankan `php artisan route:list --path=api` untuk melihat seluruh route API yang aktif.
 
 ## Jalur frontend Minggu 7–16
 
