@@ -34,6 +34,7 @@ class AssignmentController extends Controller
 
         // Anti-IDOR: Dosen hanya bisa buat assignment di course miliknya
         $course = Course::with('lecturer')->findOrFail($validated['course_id']);
+
         if ($course->lecturer_id !== $user->id) {
             return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
         }
@@ -104,6 +105,7 @@ class AssignmentController extends Controller
         }
 
         $disk = Storage::disk('local');
+
         $submissionFiles = $assignment->submissions()
             ->pluck('file_path')
             ->filter(fn (string $path) => $disk->exists($path))
@@ -118,7 +120,7 @@ class AssignmentController extends Controller
         return response()->noContent();
     }
 
-    // --- METHOD BARU: GET /api/v1/assignments/{id}/submissions ---
+    // GET /api/v1/assignments/{id}/submissions
     public function submissions(Request $request, $id)
     {
         $user = $request->user();
@@ -138,14 +140,13 @@ class AssignmentController extends Controller
             ->with(['student', 'grade.grader'])
             ->paginate(15);
 
-      return response()->json([
-    'data' => CourseResource::collection($courses)->resolve($request),
-    'meta' => [
-        'current_page' => $courses->currentPage(),
-        'last_page'    => $courses->lastPage(),
-        'per_page'     => $courses->perPage(), // <-- Tambahkan baris ini
-        'total'        => $courses->total(),
-    ],
-]);
+        return response()->json([
+            'data' => SubmissionResource::collection($submissions)->resolve($request),
+            'meta' => [
+                'current_page' => $submissions->currentPage(),
+                'last_page'    => $submissions->lastPage(),
+                'total'        => $submissions->total(),
+            ],
+        ]);
     }
 }
