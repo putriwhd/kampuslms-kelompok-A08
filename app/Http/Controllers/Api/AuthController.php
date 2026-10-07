@@ -26,9 +26,9 @@ class AuthController extends Controller
         ]);
 
         if (! Auth::attempt($credentials)) {
-            return response()->json([
-                'message' => 'Data yang diberikan tidak valid.',
-            ], 422);
+            throw ValidationException::withMessages([
+                'email' => ['Email atau kata sandi yang Anda masukkan salah.'],
+            ]);
         }
 
         $user = $request->user();
