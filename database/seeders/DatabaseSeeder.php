@@ -19,15 +19,15 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(DemoAccountSeeder::class);
 
-        $admin = User::where('email', 'admin@kampuslms.test')->firstOrFail();
-        $demoLecturer = User::where('email', 'dosen@kampuslms.test')->firstOrFail();
-        $demoStudent = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
+        $admin = User::where('email', 'admin@kampuslms.test')->first();
+        $demoLecturer = User::where('email', 'dosen@kampuslms.test')->first();
+        $demoStudent = User::where('email', 'mahasiswa@kampuslms.test')->first();
 
-        $lecturers = collect([$demoLecturer])->merge(
+        $lecturers = collect([$demoLecturer])->filter()->merge(
             User::factory(2)->dosen()->create()
         );
 
-        $students = collect([$demoStudent])->merge(
+        $students = collect([$demoStudent])->filter()->merge(
             User::factory(29)->mahasiswa()->create()
         );
 
@@ -43,8 +43,12 @@ class DatabaseSeeder extends Seeder
                 'status' => 'active',
             ]);
 
+            // Mahasiswa pertama (mahasiswa@kampuslms.test) dan 15 mahasiswa lainnya terdaftar.
+            // Sisa mahasiswa (termasuk mahasiswa2) sengaja TIDAK didaftarkan agar tes otorisasi 403 berhasil.
+            $enrolledStudents = $students->take(16);
+
             $course->students()->attach(
-                $students->mapWithKeys(fn (User $student) => [
+                $enrolledStudents->mapWithKeys(fn (User $student) => [
                     $student->id => ['enrolled_at' => now()],
                 ])->all()
             );
@@ -78,9 +82,9 @@ class DatabaseSeeder extends Seeder
                 ]);
             });
 
-            // Dua tugas yang dipublikasikan masing-masing memiliki 20 submission.
+            // Dua tugas yang dipublikasikan masing-masing memiliki submission
             foreach ($assignments->take(2) as $assignmentIndex => $assignment) {
-                foreach ($students->take(20) as $studentIndex => $student) {
+                foreach ($enrolledStudents->take(10) as $studentIndex => $student) {
                     $isLate = $assignmentIndex === 0 && $studentIndex % 5 === 0;
                     $submittedAt = $assignment->due_at->isPast()
                         ? ($isLate ? $assignment->due_at->copy()->addHour() : $assignment->due_at->copy()->subHour())
@@ -96,8 +100,7 @@ class DatabaseSeeder extends Seeder
                         'is_late' => $isLate,
                     ]);
 
-                    // 12 of every 20 submissions are graded (exactly 60% overall).
-                    if ($studentIndex < 12) {
+                    if ($studentIndex < 6) {
                         Grade::factory()->create([
                             'submission_id' => $submission->id,
                             'graded_by' => $lecturer->id,

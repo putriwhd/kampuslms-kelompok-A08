@@ -3,7 +3,7 @@ set -euo pipefail
 
 BASE_URL="${API_BASE_URL:-http://localhost:8000/api/v1}"
 
-# Fungsi bantu untuk login dan mengambil token
+# Fungsi bantu untuk login dan mengambil token (DITARUH DI SINI)
 get_token() {
   local email="$1"
   local pass="$2"
@@ -11,7 +11,7 @@ get_token() {
     -H "Accept: application/json" -H "Content-Type: application/json" \
     -d "{\"email\":\"$email\",\"password\":\"$pass\"}" | php -r '
       $d = json_decode(file_get_contents("php://stdin"), true);
-      echo $d["token"] ?? $d["data"]["token"] ?? "";
+      echo $d["data"]["token"] ?? $d["token"] ?? "";
     '
 }
 
@@ -20,8 +20,6 @@ DOSEN_B_TOKEN="${DOSEN_B_TOKEN:-$(get_token 'dosen2@kampuslms.test' 'password')}
 STUDENT_TOKEN="${STUDENT_TOKEN:-$(get_token 'mahasiswa@kampuslms.test' 'password')}"
 OTHER_STUDENT_TOKEN="${OTHER_STUDENT_TOKEN:-$(get_token 'mahasiswa2@kampuslms.test' 'password')}"
 
-COURSE_ID="${COURSE_ID:-1}"
-OTHER_COURSE_ID="${OTHER_COURSE_ID:-2}"
 COURSE_ID="${COURSE_ID:-1}"
 OTHER_COURSE_ID="${OTHER_COURSE_ID:-2}"
 
@@ -209,11 +207,25 @@ assert_status 403 'Dosen lain tidak boleh menilai submission' \
     -H "Authorization: Bearer $DOSEN_B_TOKEN" \
     -H 'Content-Type: application/json' --data '{"score":80}'
 
-assert_status 200 'Dosen pemilik dapat menilai submission' \
+# --- PENGUJIAN PENILAIAN PERTAMA KALI (HTTP 201) ---
+assert_status 201 'Dosen pemilik dapat menilai submission pertama kali' \
     -X PUT "$BASE_URL/submissions/$SUBMISSION_ID/grade" \
     -H 'Accept: application/json' \
     -H "Authorization: Bearer $DOSEN_A_TOKEN" \
     -H 'Content-Type: application/json' --data '{"score":80,"feedback":"Lulus pengujian API."}'
+
+# --- PENGUJIAN PEMBARUAN NILAI / UPDATE GRADE (HTTP 200) ---
+assert_status 200 'Dosen pemilik dapat memperbarui nilai submission' \
+    -X PUT "$BASE_URL/submissions/$SUBMISSION_ID/grade" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer $DOSEN_A_TOKEN" \
+    -H 'Content-Type: application/json' --data '{"score":90,"feedback":"Nilai diperbarui."}'
+
+# --- PENGUJIAN NOTIFIKASI ---
+assert_status 200 'Pengguna dapat mengambil daftar notifikasi' \
+    "$BASE_URL/notifications" \
+    -H 'Accept: application/json' \
+    -H "Authorization: Bearer $STUDENT_TOKEN"
 
 assert_status 200 'Dosen pemilik dapat memperbarui assignment' \
     -X PATCH "$BASE_URL/assignments/$ASSIGNMENT_ID" \
