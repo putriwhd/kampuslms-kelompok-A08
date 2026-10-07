@@ -4,228 +4,91 @@
         {{ $course->name }}
     </x-slot:title>
 
-    <div
-        style="
-            max-width: 900px;
-            margin: 20px auto;
-            background: #ffffff;
-            border: 1px solid #d8e4f2;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(79, 111, 159, 0.10);
-            overflow: hidden;
-        "
-    >
+    <div class="course-detail-card">
 
-        <div
-            style="
-                padding: 28px 32px;
-                background: #dceafa;
-                border-bottom: 1px solid #d8e4f2;
-            "
-        >
-            <h1
-                style="
-                    margin: 0 0 6px 0;
-                    color: #4f6f9f;
-                    font-size: 25px;
-                    font-weight: 700;
-                "
-            >
-                {{ $course->name }}
-            </h1>
+        <div class="course-detail-header">
+            <h1>{{ $course->name }}</h1>
 
-            <p
-                style="
-                    margin: 0;
-                    color: #66758a;
-                    font-size: 14px;
-                "
-            >
+            <p>
                 Detail informasi mata kuliah
             </p>
         </div>
 
-        <table
-            style="
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 14px;
-            "
-        >
+        <table class="course-detail-table">
             <tbody>
-                <tr>
-                    <th
-                        style="
-                            width: 200px;
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Kode
-                    </th>
 
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
+                <tr>
+                    <th>Kode</th>
+
+                    <td>
                         {{ $course->code }}
                     </td>
                 </tr>
 
                 <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Dosen Pengampu
-                    </th>
+                    <th>Dosen Pengampu</th>
 
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
+                    <td>
                         {{ $course->lecturer->name ?? '-' }}
                     </td>
                 </tr>
 
                 <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        SKS
-                    </th>
+                    <th>SKS</th>
 
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
+                    <td>
                         {{ $course->sks }}
                     </td>
                 </tr>
 
                 <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        Status
-                    </th>
+                    <th>Status</th>
 
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            border-bottom: 1px solid #d8e4f2;
-                        "
-                    >
-                        <span
-                            style="
-                                display: inline-block;
-                                padding: 5px 11px;
-                                background: #eaf6ee;
-                                color: #39805a;
-                                border-radius: 6px;
-                                font-size: 12px;
-                                font-weight: 600;
-                            "
-                        >
+                    <td>
+                        <span class="course-status-badge">
                             {{ $course->status }}
                         </span>
                     </td>
                 </tr>
 
                 <tr>
-                    <th
-                        style="
-                            padding: 17px 24px;
-                            text-align: left;
-                            vertical-align: top;
-                            background: #f7f9fc;
-                            color: #4f6f9f;
-                            font-weight: 700;
-                        "
-                    >
-                        Deskripsi
-                    </th>
+                    <th>Deskripsi</th>
 
-                    <td
-                        style="
-                            padding: 17px 24px;
-                            color: #34445a;
-                            line-height: 1.6;
-                        "
-                    >
+                    <td>
                         {{ $course->description ?? '-' }}
                     </td>
                 </tr>
+
             </tbody>
         </table>
 
-        <div
-            style="
-                padding: 18px 24px;
-                background: #f7f9fc;
-                border-top: 1px solid #d8e4f2;
-            "
-        >
+        <div class="course-detail-footer">
+
             <p>
-                <a href="{{ route($role . '.courses.materials.index', [$course, 'as' => $role]) }}">
+                <a
+                    href="{{ route($role . '.courses.materials.index', [$course, 'as' => $role]) }}"
+                >
                     Lihat Materi
                 </a>
+
                 |
-                <a href="{{ route($role . '.courses.assignments.index', [$course, 'as' => $role]) }}">
+
+                <a
+                    href="{{ route($role . '.courses.assignments.index', [$course, 'as' => $role]) }}"
+                >
                     Lihat Tugas
                 </a>
             </p>
 
             <a
                 href="{{ route($role . '.courses.index', ['as' => $role]) }}"
-                style="
-                    display: inline-block;
-                    padding: 9px 15px;
-                    background: #7fa6d8;
-                    color: #ffffff;
-                    border-radius: 7px;
-                    text-decoration: none;
-                    font-size: 13px;
-                    font-weight: 600;
-                "
+                class="course-back-button"
             >
                 &larr; Kembali ke Daftar Mata Kuliah
             </a>
+
         </div>
+
     </div>
 
 </x-layout>

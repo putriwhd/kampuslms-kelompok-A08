@@ -32,92 +32,54 @@
         $currentRole = $roleData[$role];
     @endphp
 
-    <div class="page-header" style="margin-bottom: 28px;">
+    <div class="page-header dashboard-page-header">
         <h1 class="page-title">
             KampusLMS
         </h1>
 
         <p class="page-lead">
             Selamat datang di KampusLMS. Anda sedang melihat tampilan sebagai
-            <strong style="color: var(--pink-dark);">
+            <strong class="dashboard-role">
                 {{ ucfirst($role) }}
             </strong>.
         </p>
     </div>
 
-    <div
-        style="
-            background: var(--white);
-            padding: 28px;
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            max-width: 850px;
-        "
-    >
-        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
-            <div
-                style="
-                    width: 52px;
-                    height: 52px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    background: #fff0f6;
-                    border-radius: 12px;
-                    font-size: 25px;
-                "
-            >
+    <div class="dashboard-card">
+
+        <div class="dashboard-role-header">
+
+            <div class="dashboard-role-icon">
                 {{ $currentRole['icon'] }}
             </div>
 
             <div>
-                <h2
-                    style="
-                        margin: 0;
-                        color: var(--pink-dark);
-                        font-size: 21px;
-                    "
-                >
+                <h2 class="dashboard-role-title">
                     {{ $currentRole['title'] }}
                 </h2>
 
-                <span
-                    style="
-                        font-size: 13px;
-                        color: #777;
-                    "
-                >
+                <span class="dashboard-role-info">
                     Akses sebagai {{ ucfirst($role) }}
                 </span>
             </div>
+
         </div>
 
-        <div
-            style="
-                height: 1px;
-                background: var(--border);
-                margin-bottom: 20px;
-            "
-        ></div>
+        <div class="dashboard-divider"></div>
 
-        <p style="margin: 0; line-height: 1.7; color: #555;">
+        <p class="dashboard-description">
             {{ $currentRole['description'] }}
 
             <a
                 href="{{ route($role . '.courses.index', ['as' => $role]) }}"
-                class="interactive-link"
-                style="
-                    color: var(--pink);
-                    font-weight: 600;
-                    text-decoration: none;
-                "
+                class="interactive-link dashboard-course-link"
             >
                 Mata Kuliah
             </a>
 
             {{ $currentRole['after'] }}
         </p>
+
     </div>
 
 </x-layout>

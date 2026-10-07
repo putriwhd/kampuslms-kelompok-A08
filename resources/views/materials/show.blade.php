@@ -3,12 +3,18 @@
 
     <div class="content-card">
         <h1>{{ $material->title }}</h1>
+
         <p>{{ $material->description }}</p>
+
         <p>Mata Kuliah: {{ $material->course->name }}</p>
 
         @if ($material->type === 'link' && $material->external_url)
             <p>
-                <a href="{{ $material->external_url }}" target="_blank" rel="noopener noreferrer">
+                <a
+                    href="{{ $material->external_url }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
                     Buka Materi
                 </a>
             </p>

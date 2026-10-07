@@ -11,6 +11,7 @@
                         {{ $material->title }}
                     </a>
                 </h2>
+
                 <p>{{ $material->description }}</p>
             </article>
         @empty

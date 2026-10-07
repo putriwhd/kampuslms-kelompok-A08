@@ -1,31 +1,69 @@
+/* =========================================================
+   KAMPUSLMS - GLOBAL JAVASCRIPT
+   File: resources/js/app.js
+   ========================================================= */
+
+
+/* =========================================================
+   1. MOBILE MENU
+   ========================================================= */
+
 const menuToggle = document.getElementById('menuToggle');
 const siteNav = document.getElementById('siteNav');
 
 if (menuToggle && siteNav) {
     menuToggle.addEventListener('click', () => {
-        const isOpen = siteNav.classList.toggle('open');
+        siteNav.classList.toggle('open');
 
-        menuToggle.setAttribute('aria-expanded', String(isOpen));
-        menuToggle.textContent = isOpen ? '✕' : '☰';
-    });
+        const isOpen = siteNav.classList.contains('open');
 
-    siteNav.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => {
-            siteNav.classList.remove('open');
-            menuToggle.setAttribute('aria-expanded', 'false');
-            menuToggle.textContent = '☰';
-        });
+        menuToggle.setAttribute('aria-expanded', isOpen);
+
+        menuToggle.setAttribute(
+            'aria-label',
+            isOpen ? 'Tutup menu' : 'Buka menu'
+        );
     });
 }
+
+
+/* =========================================================
+   2. ROLE SELECTOR
+   ========================================================= */
+
+const roleSelect = document.getElementById('roleSelect');
+const roleSelectorForm = document.getElementById('roleSelectorForm');
+
+if (roleSelect && roleSelectorForm) {
+    roleSelect.addEventListener('change', () => {
+        roleSelectorForm.submit();
+    });
+}
+
+
+/* =========================================================
+   3. SCROLL TO TOP
+   ========================================================= */
 
 const scrollTop = document.getElementById('scrollTop');
 
 if (scrollTop) {
-    window.addEventListener('scroll', () => {
-        scrollTop.classList.toggle('show', window.scrollY > 300);
-    });
+    const updateScrollButton = () => {
+        if (window.scrollY > 300) {
+            scrollTop.classList.add('show');
+        } else {
+            scrollTop.classList.remove('show');
+        }
+    };
+
+    window.addEventListener('scroll', updateScrollButton);
 
     scrollTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     });
+
+    updateScrollButton();
 }

@@ -1,7 +1,1668 @@
+/* =========================================================
+   KAMPUSLMS - GLOBAL CSS
+   File: resources/css/app.css
+   ========================================================= */
+
+
+/* =========================================================
+   1. GLOBAL / VARIABLES
+   ========================================================= */
+
+:root {
+    --blue-dark: #1e3a5f;
+    --blue: #2f6f9f;
+    --blue-light: #5d91bd;
+    --blue-soft: #eaf2f8;
+
+    --white: #ffffff;
+    --cream: #f8fafc;
+
+    --text: #263238;
+    --muted: #6b7280;
+    --border: #dfe6ec;
+
+    --shadow: 0 4px 14px rgba(30, 58, 95, 0.08);
+
+    --radius: 10px;
+    --transition: 0.2s ease;
+}
+
+
+/* =========================================================
+   2. RESET / BASE
+   ========================================================= */
+
 * {
     box-sizing: border-box;
 }
 
 html {
     scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+
+/* =========================================================
+   3. HEADER / NAVBAR
+   ========================================================= */
+
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+
+    min-height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+
+/* Brand */
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--blue-dark);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    border-radius: 9px;
+    font-size: 18px;
+}
+
+
+/* Navigation */
+
+.site-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.site-nav a {
+    padding: 8px 12px;
+
+    color: var(--muted);
+    text-decoration: none;
+
+    border-radius: 6px;
+
+    transition:
+        background var(--transition),
+        color var(--transition);
+}
+
+.site-nav a:hover,
+.site-nav a.active {
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+}
+
+
+/* Role selector */
+
+.role-selector-form {
+    display: flex;
+    align-items: center;
+}
+
+.role-select {
+    min-width: 130px;
+
+    padding: 8px 10px;
+
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    background: var(--white);
+    color: var(--text);
+
+    outline: none;
+    cursor: pointer;
+
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
+
+.role-select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(47, 111, 159, 0.12);
+}
+
+
+/* Mobile menu */
+
+.menu-toggle {
+    display: none;
+
+    border: 1px solid var(--border);
+    background: var(--white);
+
+    padding: 8px 10px;
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+
+/* =========================================================
+   4. MAIN / FOOTER
+   ========================================================= */
+
+.site-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    min-height: calc(100vh - 140px);
+
+    animation: pageFade 0.25s ease;
+}
+
+.site-footer {
+    margin-top: 40px;
+
+    background: var(--white);
+    border-top: 1px solid var(--border);
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.footer-brand {
+    color: var(--blue-dark);
+    font-weight: 700;
+}
+
+.site-footer small {
+    color: var(--muted);
+}
+
+
+/* =========================================================
+   5. ALERT
+   ========================================================= */
+
+.global-alert {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+
+    border-radius: 8px;
+    border: 1px solid var(--border);
+
+    font-size: 14px;
+}
+
+.global-alert.success {
+    background: #eef8f1;
+    color: #276749;
+    border-color: #c6e6ce;
+}
+
+.global-alert.error {
+    background: #fff1f1;
+    color: #9b2c2c;
+    border-color: #f1c5c5;
+}
+
+
+/* =========================================================
+   6. SCROLL TO TOP
+   ========================================================= */
+
+.scroll-top {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+
+    width: 42px;
+    height: 42px;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: var(--blue-dark);
+    color: var(--white);
+
+    cursor: pointer;
+
+    box-shadow: var(--shadow);
+}
+
+.scroll-top.show {
+    display: flex;
+}
+
+.scroll-top:hover {
+    background: var(--blue);
+}
+
+
+/* =========================================================
+   7. GENERAL CONTENT / SHARED CARD
+   ========================================================= */
+
+.content-card {
+    background: var(--white);
+    padding: 24px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+}
+
+.page-header {
+    margin-bottom: 28px;
+}
+
+.page-title {
+    margin: 0 0 8px;
+
+    color: var(--blue-dark);
+    font-size: 27px;
+    font-weight: 700;
+}
+
+.page-lead {
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.interactive-link {
+    color: var(--blue);
+    font-weight: 600;
+    text-decoration: none;
+
+    transition: color var(--transition);
+}
+
+.interactive-link:hover {
+    color: var(--blue-dark);
+}
+
+
+/* =========================================================
+   8. DASHBOARD
+   ========================================================= */
+
+.dashboard-card {
+    max-width: 850px;
+
+    background: var(--white);
+    padding: 28px;
+
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+
+    box-shadow: var(--shadow);
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    margin-bottom: 20px;
+}
+
+.dashboard-role-icon {
+    width: 52px;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: var(--blue-soft);
+    border-radius: 12px;
+
+    font-size: 25px;
+}
+
+.dashboard-role-title {
+    margin: 0;
+
+    color: var(--blue-dark);
+    font-size: 21px;
+}
+
+.dashboard-role-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.dashboard-divider {
+    height: 1px;
+
+    background: var(--border);
+    margin-bottom: 20px;
+}
+
+.dashboard-description {
+    margin: 0;
+
+    line-height: 1.7;
+    color: #555;
+}
+
+
+/* =========================================================
+   9. ABOUT / TENTANG
+   ========================================================= */
+
+.about-header {
+    margin-bottom: 28px;
+}
+
+.about-header h1 {
+    margin: 0 0 8px;
+
+    color: var(--blue-dark);
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+}
+
+.about-header p {
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.about-role-description {
+    margin: 0 0 20px;
+    color: var(--muted);
+}
+
+.about-card {
+    overflow: hidden;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+}
+
+.about-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.about-card-header h2 {
+    margin: 0 0 5px;
+
+    color: var(--blue-dark);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.about-card-header p {
+    margin: 0;
+
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.group-badge {
+    padding: 7px 12px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    border-radius: 6px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.role-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 16px 24px;
+
+    background: #f8fafc;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.role-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.role-badge {
+    padding: 5px 10px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.about-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+.about-table thead {
+    background: var(--blue-soft);
+}
+
+.about-table th {
+    padding: 13px 20px;
+
+    color: var(--blue-dark);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+
+    white-space: nowrap;
+}
+
+.about-table td {
+    padding: 15px 20px;
+
+    color: var(--text);
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.about-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.about-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.about-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+.about-table td:first-child {
+    color: var(--muted);
+    font-weight: 600;
+    text-align: center;
+}
+
+.member-name {
+    color: var(--blue-dark);
+    font-weight: 600;
+}
+
+.nim {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.2px;
+}
+
+
+/* =========================================================
+   10. FORM - SHARED
+   ========================================================= */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--text);
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--white);
+    color: var(--text);
+
+    outline: none;
+
+    transition:
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
+
+.form-input:focus,
+.form-select:focus {
+    border-color: var(--blue);
+
+    box-shadow:
+        0 0 0 3px rgba(47, 111, 159, 0.12);
+}
+
+.input-error {
+    border-color: #dc3545;
+}
+
+.error-text,
+.form-error {
+    margin-top: 5px;
+
+    color: #dc3545;
+
+    font-size: 13px;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    margin-top: 24px;
+}
+
+.label-optional {
+    font-weight: normal;
+    color: #8f9bba;
+}
+
+
+/* =========================================================
+   11. COURSE - CREATE
+   ========================================================= */
+
+.course-create-header {
+    margin-bottom: 24px;
+}
+
+.course-create-card {
+    max-width: 850px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.course-create-card-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.course-create-form {
+    padding: 24px;
+}
+
+.cancel-button,
+.secondary-btn {
+    display: inline-block;
+
+    padding: 9px 16px;
+
+    background: var(--white);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        border-color var(--transition);
+}
+
+.cancel-button:hover,
+.secondary-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5df;
+}
+
+.save-button,
+.primary-btn {
+    display: inline-block;
+
+    padding: 9px 16px;
+
+    background: var(--blue);
+    color: var(--white);
+
+    border: 1px solid var(--blue);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        border-color var(--transition);
+}
+
+.save-button:hover,
+.primary-btn:hover {
+    background: var(--blue-dark);
+    border-color: var(--blue-dark);
+}
+
+
+/* =========================================================
+   12. COURSE - EDIT
+   ========================================================= */
+
+.course-edit-header {
+    margin-bottom: 24px;
+}
+
+.course-edit-card {
+    max-width: 850px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.course-edit-card-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.course-edit-form {
+    padding: 24px;
+}
+
+
+/* =========================================================
+   13. COURSE - INDEX
+   ========================================================= */
+
+.course-header {
+    margin-bottom: 24px;
+}
+
+.course-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+.btn-add {
+    display: inline-block;
+
+    padding: 9px 15px;
+
+    background: var(--blue);
+    color: var(--white);
+
+    border: 1px solid var(--blue);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-add:hover {
+    background: var(--blue-dark);
+}
+
+.alert-success {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+
+    background: #eef8f1;
+    color: #276749;
+
+    border: 1px solid #c6e6ce;
+    border-radius: 8px;
+}
+
+.course-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.course-card-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.course-count {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.course-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+.course-table th {
+    padding: 13px 18px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+
+    white-space: nowrap;
+}
+
+.course-table td {
+    padding: 14px 18px;
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.course-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.course-code {
+    color: var(--blue-dark);
+    font-weight: 700;
+}
+
+.course-name {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.lecturer-name {
+    color: var(--muted);
+}
+
+.status-badge {
+    display: inline-block;
+
+    padding: 5px 9px;
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #eaf7ef;
+    color: #277a47;
+}
+
+.status-draft {
+    background: #fff7e6;
+    color: #9a6700;
+}
+
+.status-archive {
+    background: #f1f3f5;
+    color: #667085;
+}
+
+.status-unknown {
+    background: #f1f3f5;
+    color: #667085;
+}
+
+.action-buttons {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.btn-view,
+.btn-edit,
+.btn-delete {
+    display: inline-block;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-view {
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+}
+
+.btn-edit {
+    background: #eef3f8;
+    color: var(--blue);
+}
+
+.btn-delete {
+    background: #fff1f1;
+    color: #b42318;
+
+    border: none;
+}
+
+.btn-view:hover {
+    background: #dceaf4;
+}
+
+.btn-edit:hover {
+    background: #dfeaf3;
+}
+
+.btn-delete:hover {
+    background: #ffe0e0;
+}
+
+.empty-data {
+    padding: 40px 20px;
+
+    text-align: center;
+
+    color: var(--muted);
+}
+
+.empty-icon {
+    margin-bottom: 10px;
+    font-size: 30px;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+
+    margin-top: 24px;
+}
+
+
+/* =========================================================
+   14. COURSE - SHOW
+   ========================================================= */
+
+.course-show-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.course-show-header {
+    padding: 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.course-show-title {
+    margin: 0 0 8px;
+
+    color: var(--blue-dark);
+    font-size: 24px;
+}
+
+.course-show-description {
+    margin: 0;
+
+    color: var(--muted);
+    line-height: 1.7;
+}
+
+.course-show-content {
+    padding: 24px;
+}
+
+.course-show-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.course-show-table td {
+    padding: 12px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.course-show-label {
+    width: 180px;
+
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.course-show-value {
+    color: var(--text);
+}
+
+.course-show-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 20px 24px;
+
+    border-top: 1px solid var(--border);
+}
+
+
+/* =========================================================
+   15. USER - CREATE / EDIT FORM
+   ========================================================= */
+
+.user-page-header {
+    margin-bottom: 24px;
+}
+
+.user-form-card {
+    max-width: 850px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.user-form-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.user-form-body {
+    padding: 24px;
+}
+
+.btn-submit {
+    display: inline-block;
+
+    padding: 9px 16px;
+
+    background: var(--blue);
+    color: var(--white);
+
+    border: 1px solid var(--blue);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-submit:hover {
+    background: var(--blue-dark);
+}
+
+.btn-cancel {
+    display: inline-block;
+
+    padding: 9px 16px;
+
+    background: var(--white);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: #f8fafc;
+}
+
+
+/* =========================================================
+   16. USER - INDEX
+   ========================================================= */
+
+.user-add-button {
+    display: inline-block;
+
+    padding: 9px 15px;
+
+    background: var(--blue);
+    color: var(--white);
+
+    border-radius: 7px;
+
+    text-decoration: none;
+}
+
+.user-add-button:hover {
+    background: var(--blue-dark);
+}
+
+.user-table-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.user-table-header {
+    padding: 20px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.user-filter-wrapper {
+    padding: 16px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.filter-inputs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-input {
+    min-width: 220px;
+
+    padding: 9px 11px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    outline: none;
+}
+
+.filter-input:focus {
+    border-color: var(--blue);
+
+    box-shadow:
+        0 0 0 3px rgba(47, 111, 159, 0.12);
+}
+
+.filter-select {
+    padding: 9px 11px;
+
+    border: 1px solid var(--border);
+    border-radius: 7px;
+
+    background: var(--white);
+
+    outline: none;
+}
+
+.btn-search,
+.btn-reset {
+    display: inline-block;
+
+    padding: 9px 14px;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.btn-search {
+    background: var(--blue);
+    color: var(--white);
+
+    border: 1px solid var(--blue);
+}
+
+.btn-search:hover {
+    background: var(--blue-dark);
+}
+
+.btn-reset {
+    background: var(--white);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+}
+
+.btn-reset:hover {
+    background: #f8fafc;
+}
+
+.user-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.user-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+.user-table th {
+    padding: 13px 18px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    font-size: 12px;
+    font-weight: 700;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.user-table td {
+    padding: 14px 18px;
+
+    border-bottom: 1px solid var(--border);
+
+    vertical-align: middle;
+}
+
+.user-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.user-name {
+    color: var(--blue-dark);
+    font-weight: 600;
+}
+
+.user-email {
+    color: var(--muted);
+}
+
+.user-nim {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.user-role-badge {
+    display: inline-block;
+
+    padding: 5px 9px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.user-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.action-view,
+.action-edit,
+.action-delete {
+    display: inline-block;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.action-view {
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+}
+
+.action-edit {
+    background: #eef3f8;
+    color: var(--blue);
+}
+
+.action-delete {
+    background: #fff1f1;
+    color: #b42318;
+
+    border: none;
+}
+
+.user-empty {
+    padding: 40px 20px;
+
+    text-align: center;
+
+    color: var(--muted);
+}
+
+.user-pagination {
+    padding: 20px 24px;
+}
+
+.user-success {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+
+    background: #eef8f1;
+    color: #276749;
+
+    border: 1px solid #c6e6ce;
+    border-radius: 8px;
+}
+
+.user-error {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+
+    background: #fff1f1;
+    color: #9b2c2c;
+
+    border: 1px solid #f1c5c5;
+    border-radius: 8px;
+}
+
+
+/* =========================================================
+   17. USER - SHOW
+   ========================================================= */
+
+.user-page-container {
+    max-width: 900px;
+}
+
+.sub-heading-text {
+    margin: 0 0 20px;
+
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.user-detail-card {
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.card-top-header {
+    padding: 22px 24px;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.user-name-title {
+    margin: 0 0 5px;
+
+    color: var(--blue-dark);
+    font-size: 21px;
+}
+
+.user-sub-info {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.badge-role {
+    display: inline-block;
+
+    margin-top: 10px;
+
+    padding: 5px 10px;
+
+    background: var(--blue-soft);
+    color: var(--blue-dark);
+
+    border-radius: 5px;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.card-detail-table {
+    width: 100%;
+
+    border-collapse: collapse;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+
+    border-bottom: 1px solid var(--border);
+}
+
+.table-label,
+.table-value {
+    padding: 14px 20px;
+}
+
+.table-label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.table-value {
+    color: var(--text);
+}
+
+.card-bottom-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 20px 24px;
+}
+
+.btn-kembali,
+.btn-edit-user {
+    display: inline-block;
+
+    padding: 9px 15px;
+
+    border-radius: 7px;
+
+    text-decoration: none;
+}
+
+.btn-kembali {
+    background: var(--white);
+    color: var(--text);
+
+    border: 1px solid var(--border);
+}
+
+.btn-kembali:hover {
+    background: #f8fafc;
+}
+
+.btn-edit-user {
+    background: var(--blue);
+    color: var(--white);
+
+    border: 1px solid var(--blue);
+}
+
+.btn-edit-user:hover {
+    background: var(--blue-dark);
+}
+
+
+/* =========================================================
+   18. ANIMATION
+   ========================================================= */
+
+@keyframes pageFade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+
+/* =========================================================
+   19. RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .nav-container {
+        padding: 0 16px;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .site-nav {
+        display: none;
+
+        width: 100%;
+
+        flex-direction: column;
+        align-items: stretch;
+
+        padding: 10px 0;
+    }
+
+    .site-nav.show {
+        display: flex;
+    }
+
+    .site-header .nav-container {
+        flex-wrap: wrap;
+    }
+
+    .site-nav a {
+        width: 100%;
+    }
+
+    .role-selector-form {
+        width: 100%;
+    }
+
+    .role-select {
+        width: 100%;
+    }
+
+    .site-main {
+        padding: 24px 16px;
+    }
+
+    .footer-container {
+        flex-direction: column;
+        align-items: flex-start;
+
+        padding: 20px 16px;
+    }
+
+    .course-filters,
+    .filter-inputs {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .filter-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .form-actions,
+    .card-bottom-actions,
+    .course-show-footer {
+        flex-wrap: wrap;
+    }
+
+    .about-card-header {
+        align-items: flex-start;
+    }
+
+    .role-info {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .about-table th,
+    .about-table td {
+        padding: 12px 14px;
+    }
+
+    .table-row {
+        grid-template-columns: 1fr;
+    }
+
+    .table-label {
+        padding-bottom: 4px;
+    }
+
+    .table-value {
+        padding-top: 4px;
+    }
+
+    .dashboard-card {
+        padding: 20px;
+    }
+
+    .dashboard-card-header {
+        align-items: flex-start;
+    }
+
+    .course-create-form,
+    .course-edit-form,
+    .user-form-body {
+        padding: 20px;
+    }
 }
