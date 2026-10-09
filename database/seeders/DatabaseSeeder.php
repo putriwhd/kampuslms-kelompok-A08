@@ -17,48 +17,102 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        /*
+         * Membuat hasil Faker dapat direproduksi.
+         * Semua anggota yang menggunakan kode Seeder yang sama
+         * akan mendapatkan urutan data Faker yang sama.
+         */
+        fake()->seed(12345);
+
         $this->call(DemoAccountSeeder::class);
 
         $admin = User::where('email', 'admin@kampuslms.test')->first();
-        $demoLecturer = User::where('email', 'dosen@kampuslms.test')->first();
-        $demoStudent = User::where('email', 'mahasiswa@kampuslms.test')->first();
 
-        $lecturers = collect([$demoLecturer])->filter()->merge(
-            User::factory(2)->dosen()->create()
-        );
+        $demoLecturer = User::where(
+            'email',
+            'dosen@kampuslms.test'
+        )->first();
 
-        $students = collect([$demoStudent])->filter()->merge(
-            User::factory(29)->mahasiswa()->create()
-        );
+        $demoStudent = User::where(
+            'email',
+            'mahasiswa@kampuslms.test'
+        )->first();
+
+        $lecturers = collect([$demoLecturer])
+            ->filter()
+            ->merge(
+                User::factory(2)
+                    ->dosen()
+                    ->create()
+            );
+
+        $students = collect([$demoStudent])
+            ->filter()
+            ->merge(
+                User::factory(29)
+                    ->mahasiswa()
+                    ->create()
+            );
 
         $courses = collect();
+
         for ($courseNumber = 1; $courseNumber <= 5; $courseNumber++) {
-            $lecturer = $lecturers[($courseNumber - 1) % $lecturers->count()];
+            $lecturer = $lecturers[
+                ($courseNumber - 1) % $lecturers->count()
+            ];
+
             $course = Course::factory()->create([
-                'code' => sprintf('SI2514%02d', $courseNumber),
+                'code' => sprintf(
+                    'SI2514%02d',
+                    $courseNumber
+                ),
+
                 'name' => 'Mata Kuliah Demo '.$courseNumber,
-                'description' => 'Mata kuliah contoh untuk demonstrasi KampusLMS.',
+
+                'description' =>
+                    'Mata kuliah contoh untuk demonstrasi KampusLMS.',
+
                 'sks' => 3,
+
                 'lecturer_id' => $lecturer->id,
+
                 'status' => 'active',
             ]);
 
-            // Mahasiswa pertama (mahasiswa@kampuslms.test) dan 15 mahasiswa lainnya terdaftar.
-            // Sisa mahasiswa (termasuk mahasiswa2) sengaja TIDAK didaftarkan agar tes otorisasi 403 berhasil.
+            /*
+             * 16 mahasiswa pertama didaftarkan ke mata kuliah.
+             * Mahasiswa lainnya sengaja tidak didaftarkan
+             * untuk kebutuhan pengujian akses 403.
+             */
             $enrolledStudents = $students->take(16);
 
             $course->students()->attach(
-                $enrolledStudents->mapWithKeys(fn (User $student) => [
-                    $student->id => ['enrolled_at' => now()],
-                ])->all()
+                $enrolledStudents
+                    ->mapWithKeys(
+                        fn (User $student) => [
+                            $student->id => [
+                                'enrolled_at' => now(),
+                            ],
+                        ]
+                    )
+                    ->all()
             );
 
+            /*
+             * Membuat materi.
+             */
             Material::factory()->create([
                 'course_id' => $course->id,
+
                 'uploaded_by' => $lecturer->id,
-                'description' => 'Materi pengantar '.$course->name,
+
+                'description' =>
+                    'Materi pengantar '.$course->name,
             ]);
 
+            /*
+             * Membuat 3 tugas.
+             */
             $assignments = collect([
                 [
                     'due_at' => Carbon::now()->subDays(7),
@@ -72,40 +126,103 @@ class DatabaseSeeder extends Seeder
                     'due_at' => Carbon::now()->addDays(21),
                     'status' => 'draft',
                 ],
-            ])->map(function (array $state, int $index) use ($course, $lecturer): Assignment {
-                return Assignment::factory()->create([
-                    'course_id' => $course->id,
-                    'created_by' => $lecturer->id,
-                    'title' => 'Tugas '.($index + 1).' - '.$course->name,
-                    'instructions' => 'Kerjakan tugas sesuai materi perkuliahan.',
-                    ...$state,
-                ]);
-            });
+            ])->map(
+                function (
+                    array $state,
+                    int $index
+                ) use (
+                    $course,
+                    $lecturer
+                ): Assignment {
+                    return Assignment::factory()->create([
+                        'course_id' => $course->id,
 
-            // Dua tugas yang dipublikasikan masing-masing memiliki submission
-            foreach ($assignments->take(2) as $assignmentIndex => $assignment) {
-                foreach ($enrolledStudents->take(10) as $studentIndex => $student) {
-                    $isLate = $assignmentIndex === 0 && $studentIndex % 5 === 0;
-                    $submittedAt = $assignment->due_at->isPast()
-                        ? ($isLate ? $assignment->due_at->copy()->addHour() : $assignment->due_at->copy()->subHour())
-                        : Carbon::now()->subHours($studentIndex + 1);
+                        'created_by' => $lecturer->id,
 
-                    $submission = $assignment->submissions()->create([
-                        'user_id' => $student->id,
-                        'file_path' => 'submissions/demo/'.$assignment->id.'/'.$student->id.'.pdf',
-                        'original_name' => 'jawaban-'.$student->id.'.pdf',
-                        'file_size' => 1024 + $studentIndex * 100,
-                        'note' => 'Pengumpulan demo.',
-                        'submitted_at' => $submittedAt,
-                        'is_late' => $isLate,
+                        'title' =>
+                            'Tugas '.($index + 1).' - '.$course->name,
+
+                        'instructions' =>
+                            'Kerjakan tugas sesuai materi perkuliahan.',
+
+                        ...$state,
                     ]);
+                }
+            );
 
+            /*
+             * Dua tugas yang dipublikasikan
+             * memiliki submission.
+             */
+            foreach (
+                $assignments->take(2)
+                as $assignmentIndex => $assignment
+            ) {
+                foreach (
+                    $enrolledStudents->take(10)
+                    as $studentIndex => $student
+                ) {
+                    $isLate =
+                        $assignmentIndex === 0
+                        && $studentIndex % 5 === 0;
+
+                    $submittedAt = $assignment->due_at->isPast()
+                        ? (
+                            $isLate
+                                ? $assignment->due_at
+                                    ->copy()
+                                    ->addHour()
+                                : $assignment->due_at
+                                    ->copy()
+                                    ->subHour()
+                        )
+                        : Carbon::now()
+                            ->subHours($studentIndex + 1);
+
+                    $submission =
+                        $assignment->submissions()->create([
+                            'user_id' => $student->id,
+
+                            'file_path' =>
+                                'submissions/demo/'
+                                .$assignment->id
+                                .'/'
+                                .$student->id
+                                .'.pdf',
+
+                            'original_name' =>
+                                'jawaban-'
+                                .$student->id
+                                .'.pdf',
+
+                            'file_size' =>
+                                1024 + ($studentIndex * 100),
+
+                            'note' => 'Pengumpulan demo.',
+
+                            'submitted_at' => $submittedAt,
+
+                            'is_late' => $isLate,
+                        ]);
+
+                    /*
+                     * Enam submission pertama
+                     * diberi nilai.
+                     */
                     if ($studentIndex < 6) {
                         Grade::factory()->create([
-                            'submission_id' => $submission->id,
-                            'graded_by' => $lecturer->id,
-                            'score' => 70 + ($studentIndex % 31),
-                            'feedback' => 'Pekerjaan sudah diperiksa.',
+                            'submission_id' =>
+                                $submission->id,
+
+                            'graded_by' =>
+                                $lecturer->id,
+
+                            'score' =>
+                                70 + ($studentIndex % 31),
+
+                            'feedback' =>
+                                'Pekerjaan sudah diperiksa.',
+
                             'graded_at' => now(),
                         ]);
                     }
