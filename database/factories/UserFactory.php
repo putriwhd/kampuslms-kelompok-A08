@@ -23,10 +23,12 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = fake('id_ID');
+
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'nim_nip' => fake()->unique()->numerify('##########'),
+            'name' => $faker->name(),
+            'email' => $faker->unique()->safeEmail(),
+            'nim_nip' => $faker->unique()->numerify('##########'),
             'email_verified_at' => now(),
             'role' => 'mahasiswa',
             'password' => static::$password ??= Hash::make('password'),
@@ -43,18 +45,25 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
     public function admin(): static
     {
-        return $this->state(['role' => 'admin']);
+        return $this->state([
+            'role' => 'admin',
+        ]);
     }
 
     public function dosen(): static
     {
-        return $this->state(['role' => 'dosen']);
+        return $this->state([
+            'role' => 'dosen',
+        ]);
     }
 
     public function mahasiswa(): static
     {
-        return $this->state(['role' => 'mahasiswa']);
+        return $this->state([
+            'role' => 'mahasiswa',
+        ]);
     }
 }

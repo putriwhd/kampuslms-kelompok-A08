@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -48,7 +47,10 @@ class DemoAccountSeeder extends Seeder
         ];
 
         foreach ($accounts as $account) {
-            $user = User::firstOrNew(['email' => $account['email']]);
+            $user = User::firstOrNew([
+                'email' => $account['email'],
+            ]);
+
             $user->name = $account['name'];
             $user->nim_nip = $account['nim_nip'];
             $user->password = Hash::make('password');
