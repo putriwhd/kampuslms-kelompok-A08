@@ -1,10 +1,6 @@
 <x-layout>
     <x-slot:title>Edit Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-    @endphp
-
     <div class="user-page-header">
         <div>
             <h1>Edit Pengguna</h1>
@@ -22,7 +18,6 @@
             action="{{ route('admin.users.update', [$user->id, 'as' => $role]) }}"
             method="POST"
             class="user-form-body"
-            novalidate
         >
             @csrf
             @method('PUT')
@@ -37,6 +32,7 @@
                     value="{{ old('name', $user->name) }}"
                     class="form-input @error('name') input-error @enderror"
                     placeholder="Masukkan nama lengkap"
+                    required
                 >
 
                 @error('name')
@@ -54,6 +50,7 @@
                     value="{{ old('email', $user->email) }}"
                     class="form-input @error('email') input-error @enderror"
                     placeholder="nama@example.com"
+                    required
                 >
 
                 @error('email')
@@ -90,6 +87,7 @@
                     name="password"
                     class="form-input @error('password') input-error @enderror"
                     placeholder="Kosongkan jika tidak ingin mengubah password"
+                    minlength="6"
                 >
 
                 @error('password')
@@ -104,6 +102,7 @@
                     id="user_role"
                     name="role"
                     class="form-select @error('role') input-error @enderror"
+                    required
                 >
                     <option value="">-- Pilih Role --</option>
 
