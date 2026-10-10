@@ -1,66 +1,134 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# KampusLMS — Kelompok A08
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Platform *Learning Management System* (LMS) berbasis web yang dikembangkan menggunakan framework Laravel 12. KampusLMS dirancang untuk memfasilitasi proses pembelajaran digital di lingkungan perguruan tinggi dengan mendukung alur pengelolaan mata kuliah, distribusi materi perkuliahan, penugasan, pengumpulan tugas (*submissions*), penilaian, dan sistem notifikasi akademik bagi tiga peran utama: **Admin**, **Dosen**, dan **Mahasiswa**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Teknologi yang Digunakan
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Framework Backend:** Laravel 12 (`laravel/framework: ^12.0`)
+- **Bahasa Pemrograman:** PHP `^8.3`
+- **Database:** MySQL / MariaDB (mendukung SQLite untuk testing)
+- **Autentikasi & API Token:** Laravel Sanctum (`^4.3`)
+- **Frontend & Templating:** Blade Templating Engine, Vanilla CSS, JavaScript
+- **Asset Bundler:** Vite
+- **Package Manager:** Composer & NPM
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 👥 Tim Pengembang & Pembagian Tugas (Kelompok A-08)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Proyek ini dikembangkan oleh **Kelompok A-08** (Kelas Pemrograman Web):
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+| No. | Nama Anggota | NIM | Peran / Anggota | Cakupan Tugas (Minggu 1–2 & Berjalan) |
+| :---: | :--- | :---: | :---: | :--- |
+| 1 | **Putri Nurwahid** | 10241063 | Anggota 1 | Konfigurasi Environment (`composer.json`), Dokumentasi Proyek (`README.md`), dan Kerangka Navigasi Layout (`resources/views/components/layout.blade.php`). |
+| 2 | **Sarah Adelia W** | 10241065 | Anggota 2 | Perancangan Controller & Routing Mata Kuliah (`CourseController`), Pengelolaan Halaman Mata Kuliah, dan Pengujian Route. |
+| 3 | **Siti Fatimah** | 10241067 | Anggota 3 | Pengembangan Antarmuka Frontend, Desain Tampilan Blade (`resources/views/tentang.blade.php`), dan Penataan Aset Vite/CSS. |
+| 4 | **Syarifah Nazwa Aulia H** | 10241069 | Anggota 4 | Struktur Database & Migrasi, Definisi Model Eloquent & Relasi Data, serta Data Seeder Awal. |
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+> *Catatan: Rincian pembagian tugas anggota 2–4 dapat disesuaikan lebih lanjut oleh masing-masing anggota kelompok.*
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 📋 Persyaratan Instalasi (Prerequisites)
 
-### Premium Partners
+Sebelum menjalankan aplikasi, pastikan perangkat Anda telah terpasang:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+- **PHP:** Versi 8.3 atau lebih baru (dengan ekstensi yang diwajibkan Laravel: `openssl`, `pdo`, `mbstring`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, `curl`)
+- **Composer:** Versi 2.x
+- **Node.js & NPM:** Node.js versi LTS (v18+) dan NPM
+- **Database Server:** MySQL / MariaDB (versi 8.0+) atau SQLite
+- **Git:** Untuk manajemen repositori
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🚀 Langkah Instalasi Proyek
 
-## Code of Conduct
+Ikuti langkah-langkah instalasi berikut secara berurutan:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. Klon Repositori
+```bash
+git clone https://github.com/putriwhd/kampuslms-kelompok-A08.git
+cd kampuslms-kelompok-A08
+```
 
-## Security Vulnerabilities
+### 2. Instal Dependensi Backend (PHP)
+```bash
+composer install
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 3. Instal Dependensi Frontend & Kompilasi Aset
+```bash
+npm install
+npm run build
+```
+*(Untuk keperluan pengembangan aktif dengan auto-reload aset, jalankan `npm run dev` pada terminal terpisah).*
 
-## License
+### 4. Konfigurasi Environment (`.env`)
+Salin file `.env.example` menjadi `.env`:
+- **Linux / macOS:**
+  ```bash
+  cp .env.example .env
+  ```
+- **Windows (PowerShell / Command Prompt):**
+  ```bash
+  copy .env.example .env
+  ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Buka file `.env` dan sesuaikan pengaturan koneksi database Anda, misalnya:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=kampuslms
+DB_USERNAME=root
+DB_PASSWORD=
+```
+*(Pastikan database `kampuslms` sudah dibuat pada server MySQL Anda, atau sesuaikan dengan nama database lokal Anda).*
+
+### 5. Buat Application Key
+```bash
+php artisan key:generate
+```
+
+### 6. Jalankan Migrasi Database dan Seeder
+Eksekusi migrasi tabel dan pengisian data demo:
+```bash
+php artisan migrate --seed
+```
+*(Gunakan `php artisan migrate:fresh --seed` jika ingin mereset ulang seluruh tabel dari awal).*
+
+### 7. Jalankan Server Pengembangan
+Jalankan server aplikasi Laravel:
+```bash
+php artisan serve
+```
+
+Aplikasi sekarang dapat diakses melalui browser pada alamat:
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+
+---
+
+## 🔑 Akun Demo Aplikasi
+
+Database seeder (`DemoAccountSeeder.php` & `DatabaseSeeder.php`) telah menyediakan akun demo bawaan untuk setiap peran pengguna. Semua akun demo menggunakan kata sandi (*password*) yang sama:
+
+> **Password Akun Demo:** `password`
+
+| Peran (*Role*) | Nama Pengguna | Alamat Email | Password | Identitas (NIM/NIP) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Admin** | Administrator KampusLMS | `admin@kampuslms.test` | `password` | ADM001 |
+| **Dosen** | Dosen Demo | `dosen@kampuslms.test` | `password` | NIP001 |
+| **Mahasiswa** | Mahasiswa Demo | `mahasiswa@kampuslms.test` | `password` | MHS0001 |
+
+*Akun demo tambahan yang tersedia di seeder:*
+- **Dosen Kedua:** `dosen2@kampuslms.test` | Password: `password` | NIP: `NIP002`
+- **Mahasiswa Kedua:** `mahasiswa2@kampuslms.test` | Password: `password` | NIM: `MHS0002`
+
+---
+
+## 🌐 Tautan Proyek
+
+- **URL Repositori GitHub:** [https://github.com/putriwhd/kampuslms-kelompok-A08.git](https://github.com/putriwhd/kampuslms-kelompok-A08.git)
+- **URL Aplikasi Live:** `[Belum Tersedia — Aplikasi masih dalam tahap pengembangan lokal]`
