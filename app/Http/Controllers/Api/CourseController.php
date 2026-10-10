@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
-    public function index(Request $request)
+public function index(Request $request)
     {
         $user = $request->user();
 
@@ -40,7 +40,7 @@ class CourseController extends Controller
             ],
         ]);
     }
-
+    
     public function show(Request $request, $id)
     {
         $user = $request->user();

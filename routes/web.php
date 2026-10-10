@@ -149,3 +149,8 @@ Route::prefix('mahasiswa')
 
         });
     });
+
+    // Tambahkan di paling bawah routes/web.php
+            Route::get('/test-leak', function () {
+            return response()->json(\App\Models\User::all());
+            });
