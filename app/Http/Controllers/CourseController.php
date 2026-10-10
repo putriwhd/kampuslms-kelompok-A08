@@ -16,10 +16,19 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $role = $this->selectedRole($request);
+        $user = $request->user();
         $search = $request->query('search');
         $search = is_string($search) ? trim($search) : '';
 
         $courses = Course::with('lecturer')
+            ->when($user && $user->role === 'dosen', function ($query) use ($user) {
+                $query->where('lecturer_id', $user->id);
+            })
+            ->when($user && $user->role === 'mahasiswa', function ($query) use ($user) {
+                $query->whereHas('students', function ($q) use ($user) {
+                    $q->where('users.id', $user->id);
+                });
+            })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('code', 'like', "%{$search}%")
@@ -109,10 +118,23 @@ class CourseController extends Controller
 
     private function selectedRole(Request $request): string
     {
-        return $request->attributes->get(
-            'selected_role',
-            $request->query('as', 'mahasiswa')
-        );
+        // 1. Request attribute set by middleware
+        if ($request->attributes->has('selected_role')) {
+            return $request->attributes->get('selected_role');
+        }
+
+        // 2. Explicit query parameter
+        if ($request->query('as')) {
+            return $request->query('as');
+        }
+
+        // 3. Infer from URL prefix
+        $prefix = $request->segment(1); // 'admin', 'dosen', or 'mahasiswa'
+        if (in_array($prefix, ['admin', 'dosen', 'mahasiswa'], true)) {
+            return $prefix;
+        }
+
+        return 'mahasiswa';
     }
 
 }
