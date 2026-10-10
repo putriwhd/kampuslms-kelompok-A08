@@ -20,14 +20,13 @@ Platform *Learning Management System* (LMS) berbasis web yang dikembangkan mengg
 
 Proyek ini dikembangkan oleh **Kelompok A-08** (Kelas Pemrograman Web):
 
-| No. | Nama Anggota | NIM | Peran / Anggota | Cakupan Tugas (Minggu 1–2 & Berjalan) |
+| No. | Nama Anggota | NIM | Peran / Anggota | Tugas |
 | :---: | :--- | :---: | :---: | :--- |
-| 1 | **Putri Nurwahid** | 10241063 | Anggota 1 | Konfigurasi Environment (`composer.json`), Dokumentasi Proyek (`README.md`), dan Kerangka Navigasi Layout (`resources/views/components/layout.blade.php`). |
-| 2 | **Sarah Adelia W** | 10241065 | Anggota 2 | Perancangan Controller & Routing Mata Kuliah (`CourseController`), Pengelolaan Halaman Mata Kuliah, dan Pengujian Route. |
-| 3 | **Siti Fatimah** | 10241067 | Anggota 3 | Pengembangan Antarmuka Frontend, Desain Tampilan Blade (`resources/views/tentang.blade.php`), dan Penataan Aset Vite/CSS. |
-| 4 | **Syarifah Nazwa Aulia H** | 10241069 | Anggota 4 | Struktur Database & Migrasi, Definisi Model Eloquent & Relasi Data, serta Data Seeder Awal. |
+| 1 | **Putri Nurwahid** | 10241063 | Anggota 1 | Backend |
+| 2 | **Sarah Adelia W** | 10241065 | Anggota 2 | Backend |
+| 3 | **Siti Fatimah** | 10241067 | Anggota 3 | Frontend |
+| 4 | **Syarifah Nazwa Aulia H** | 10241069 | Anggota 4 | Frontend |
 
-> *Catatan: Rincian pembagian tugas anggota 2–4 dapat disesuaikan lebih lanjut oleh masing-masing anggota kelompok.*
 
 ---
 
