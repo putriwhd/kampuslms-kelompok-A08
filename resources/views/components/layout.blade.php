@@ -14,8 +14,12 @@
     @php
         $availableRoles = ['mahasiswa', 'dosen', 'admin'];
 
-        $selectedRole = request()->attributes->get('selected_role')
-            ?? (in_array(request('as'), $availableRoles, true) ? request('as') : 'mahasiswa');
+        if (auth()->check()) {
+            $selectedRole = auth()->user()->role;
+        } else {
+            $selectedRole = request()->attributes->get('selected_role')
+                ?? (in_array(request('as'), $availableRoles, true) ? request('as') : 'mahasiswa');
+        }
     @endphp
 
     {{-- HEADER --}}
@@ -24,7 +28,7 @@
         <div class="nav-container">
 
             {{-- LOGO --}}
-            <a href="{{ route('dashboard') }}" class="brand">
+            <a href="{{ route('dashboard', ['as' => $selectedRole]) }}" class="brand">
                 <span class="brand-icon">K</span>
                 <span>KampusLMS</span>
             </a>
