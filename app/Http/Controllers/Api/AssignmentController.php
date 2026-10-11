@@ -3,90 +3,89 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreAssignmentRequest;
+use App\Http\Requests\UpdateAssignmentRequest;
 use App\Http\Resources\AssignmentResource;
 use App\Http\Resources\SubmissionResource;
 use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class AssignmentController extends Controller
 {
-    public function store(Request $request)
+    public function store(StoreAssignmentRequest $request)
     {
         $user = $request->user();
 
-        // Hak akses: Hanya dosen
+        // Hanya dosen yang dapat membuat tugas.
         if ($user->role !== 'dosen') {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
+            ], 403);
         }
 
-        $validated = $request->validate([
-            'course_id'    => ['required', 'exists:courses,id'],
-            'title'        => ['required', 'string', 'max:255'],
-            'instructions' => ['required', 'string'],
-            'due_at'       => ['required', 'date'],
-            'max_score'    => ['sometimes', 'integer', 'min:0', 'max:255'],
-            'allow_late'   => ['sometimes', 'boolean'],
-            'status'       => ['sometimes', Rule::in(['draft', 'published'])],
-        ]);
+        $validated = $request->validated();
 
-        // Anti-IDOR: Dosen hanya bisa buat assignment di course miliknya
-        $course = Course::with('lecturer')->findOrFail($validated['course_id']);
+        // Pastikan mata kuliah diajar oleh dosen yang login.
+        $course = Course::findOrFail($validated['course_id']);
 
-        if ($course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        abort_unless(
+            (int) $course->lecturer_id === (int) $user->id,
+            403,
+            'Anda tidak memiliki akses ke sumber daya ini.'
+        );
 
         $assignment = Assignment::create([
             ...$validated,
             'created_by' => $user->id,
-            'status'     => $validated['status'] ?? 'published',
+            'max_score' => $validated['max_score'] ?? 100,
+            'allow_late' => $validated['allow_late'] ?? true,
+            'status' => $validated['status'] ?? 'published',
         ]);
 
-        return (new AssignmentResource($assignment->load([
-            'course' => fn ($query) => $query
-                ->with('lecturer')
-                ->withCount(['materials', 'assignments']),
-            'creator',
-        ])))
+        return (new AssignmentResource(
+            $assignment->load([
+                'course' => fn ($query) => $query
+                    ->with('lecturer')
+                    ->withCount(['materials', 'assignments']),
+                'creator',
+            ])
+        ))
             ->response()
             ->setStatusCode(201);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateAssignmentRequest $request, $id)
     {
         $user = $request->user();
 
+        // Hanya dosen yang dapat mengubah tugas.
         if ($user->role !== 'dosen') {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
+            ], 403);
         }
 
         $assignment = Assignment::with('course')->findOrFail($id);
 
-        // Anti-IDOR (Cross-Dosen)
-        if ($assignment->course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        // Cegah dosen mengubah tugas milik dosen lain.
+        abort_unless(
+            (int) $assignment->course->lecturer_id === (int) $user->id,
+            403,
+            'Anda tidak memiliki akses ke sumber daya ini.'
+        );
 
-        $validated = $request->validate([
-            'title'        => ['sometimes', 'required', 'string', 'max:255'],
-            'instructions' => ['sometimes', 'required', 'string'],
-            'due_at'       => ['sometimes', 'required', 'date'],
-            'max_score'    => ['sometimes', 'integer', 'min:0', 'max:255'],
-            'allow_late'   => ['sometimes', 'boolean'],
-            'status'       => ['sometimes', Rule::in(['draft', 'published'])],
-        ]);
+        $assignment->update($request->validated());
 
-        $assignment->update($validated);
-
-        return new AssignmentResource($assignment->load([
-            'course' => fn ($query) => $query
-                ->with('lecturer')
-                ->withCount(['materials', 'assignments']),
-            'creator',
-        ]));
+        return new AssignmentResource(
+            $assignment->load([
+                'course' => fn ($query) => $query
+                    ->with('lecturer')
+                    ->withCount(['materials', 'assignments']),
+                'creator',
+            ])
+        );
     }
 
     public function destroy(Request $request, $id)
@@ -94,25 +93,36 @@ class AssignmentController extends Controller
         $user = $request->user();
 
         if ($user->role !== 'dosen') {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
+            ], 403);
         }
 
         $assignment = Assignment::with('course')->findOrFail($id);
 
-        // Anti-IDOR (Cross-Dosen)
-        if ($assignment->course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        // Cegah dosen menghapus tugas milik dosen lain.
+        abort_unless(
+            (int) $assignment->course->lecturer_id === (int) $user->id,
+            403,
+            'Anda tidak memiliki akses ke sumber daya ini.'
+        );
 
         $disk = Storage::disk('local');
 
         $submissionFiles = $assignment->submissions()
             ->pluck('file_path')
-            ->filter(fn (string $path) => $disk->exists($path))
+            ->filter(
+                fn ($path) => is_string($path) && $disk->exists($path)
+            )
             ->all();
 
-        if ($submissionFiles !== [] && ! $disk->delete($submissionFiles)) {
-            return response()->json(['message' => 'Gagal menghapus berkas submission.'], 500);
+        if (
+            $submissionFiles !== []
+            && ! $disk->delete($submissionFiles)
+        ) {
+            return response()->json([
+                'message' => 'Gagal menghapus berkas submission.',
+            ], 500);
         }
 
         $assignment->delete();
@@ -120,21 +130,24 @@ class AssignmentController extends Controller
         return response()->noContent();
     }
 
-    // GET /api/v1/assignments/{id}/submissions
     public function submissions(Request $request, $id)
     {
         $user = $request->user();
 
         if ($user->role !== 'dosen') {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+            return response()->json([
+                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
+            ], 403);
         }
 
         $assignment = Assignment::with('course')->findOrFail($id);
 
-        // Anti-IDOR (Dosen pengampu course)
-        if ($assignment->course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        // Hanya dosen pengampu yang dapat melihat pengumpulan tugas.
+        abort_unless(
+            (int) $assignment->course->lecturer_id === (int) $user->id,
+            403,
+            'Anda tidak memiliki akses ke sumber daya ini.'
+        );
 
         $submissions = $assignment->submissions()
             ->with([
@@ -148,11 +161,12 @@ class AssignmentController extends Controller
             ->paginate(15);
 
         return response()->json([
-            'data' => SubmissionResource::collection($submissions)->resolve($request),
+            'data' => SubmissionResource::collection($submissions)
+                ->resolve($request),
             'meta' => [
                 'current_page' => $submissions->currentPage(),
-                'last_page'    => $submissions->lastPage(),
-                'total'        => $submissions->total(),
+                'last_page' => $submissions->lastPage(),
+                'total' => $submissions->total(),
             ],
         ]);
     }

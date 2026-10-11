@@ -1,7 +1,6 @@
 <x-layout>
     <x-slot:title>Daftar Mata Kuliah</x-slot:title>
 
-    {{-- HEADER --}}
     <div class="course-header">
         <div>
             <h1>Daftar Mata Kuliah</h1>
@@ -10,14 +9,14 @@
                 @if ($role === 'admin')
                     Sebagai Admin, Anda dapat mengelola data mata kuliah.
                 @elseif ($role === 'dosen')
-                    Sebagai Dosen, Anda dapat melihat daftar mata kuliah.
+                    Berikut daftar mata kuliah yang dapat Anda akses.
                 @else
-                    Sebagai Mahasiswa, Anda dapat melihat daftar mata kuliah yang tersedia.
+                    Berikut daftar mata kuliah yang dapat Anda akses.
                 @endif
             </p>
         </div>
 
-        @if ($role === 'admin')
+        @can('create', \App\Models\Course::class)
             <a
                 href="{{ route($role . '.courses.create', ['as' => $role]) }}"
                 class="btn-add"
@@ -25,13 +24,10 @@
                 <span>+</span>
                 Tambah Mata Kuliah
             </a>
-        @endif
+        @endcan
     </div>
 
-    {{-- CARD TABEL --}}
     <div class="course-card">
-
-        {{-- CARD HEADER --}}
         <div class="course-card-header">
             <div>
                 <h2>Data Mata Kuliah</h2>
@@ -43,21 +39,15 @@
             </div>
         </div>
 
-        {{-- FILTER --}}
         <form
             method="GET"
             action="{{ route($role . '.courses.index', ['as' => $role]) }}"
             class="course-filters"
         >
-            <input
-                type="hidden"
-                name="as"
-                value="{{ $role }}"
-            >
+            <input type="hidden" name="as" value="{{ $role }}">
 
             <label>
                 <span>Cari kode atau nama</span>
-
                 <input
                     type="search"
                     name="search"
@@ -68,36 +58,21 @@
 
             <label>
                 <span>Filter status</span>
-
                 <select name="status">
                     <option value="">Semua status</option>
-
-                    <option
-                        value="draft"
-                        @selected(request('status') === 'draft')
-                    >
+                    <option value="draft" @selected(request('status') === 'draft')>
                         Draft
                     </option>
-
-                    <option
-                        value="active"
-                        @selected(request('status') === 'active')
-                    >
+                    <option value="active" @selected(request('status') === 'active')>
                         Aktif
                     </option>
-
-                    <option
-                        value="archived"
-                        @selected(request('status') === 'archived')
-                    >
+                    <option value="archived" @selected(request('status') === 'archived')>
                         Arsip
                     </option>
                 </select>
             </label>
 
-            <button type="submit" class="btn-add">
-                Terapkan
-            </button>
+            <button type="submit" class="btn-add">Terapkan</button>
 
             <a
                 href="{{ route($role . '.courses.index', ['as' => $role]) }}"
@@ -107,10 +82,8 @@
             </a>
         </form>
 
-        {{-- TABLE --}}
         <div class="table-container">
             <table class="course-table">
-
                 <thead>
                     <tr>
                         <th width="15%">Kode</th>
@@ -122,143 +95,117 @@
                 </thead>
 
                 <tbody>
-
                     @forelse ($courses as $course)
-
                         <tr>
-
-                            {{-- KODE --}}
                             <td>
                                 <span class="course-code">
                                     {{ $course->code }}
                                 </span>
                             </td>
 
-                            {{-- NAMA --}}
                             <td>
                                 <a
-                                    href="{{ route($role . '.courses.show', [$course->id, 'as' => $role]) }}"
+                                    href="{{ route($role . '.courses.show', [
+                                        'course' => $course,
+                                        'as' => $role,
+                                    ]) }}"
                                     class="course-name"
                                 >
-                                    {{ $course->name ?? $course->title }}
+                                    {{ $course->name }}
                                 </a>
                             </td>
 
-                            {{-- DOSEN --}}
                             <td>
                                 <span class="lecturer-name">
-                                    {{ $course->lecturer->name ?? '-' }}
+                                    {{ $course->lecturer?->name ?? '-' }}
                                 </span>
                             </td>
 
-                            {{-- STATUS --}}
                             <td class="text-center">
-
                                 @php
                                     $status = strtolower($course->status ?? 'draft');
                                 @endphp
 
                                 @if ($status === 'active')
-
                                     <span class="status-badge status-active">
-                                        Active
+                                        Aktif
                                     </span>
-
                                 @elseif ($status === 'draft')
-
                                     <span class="status-badge status-draft">
                                         Draft
                                     </span>
-
-                                @elseif ($status === 'archive')
-
+                                @elseif ($status === 'archived')
                                     <span class="status-badge status-archive">
-                                        Archive
+                                        Arsip
                                     </span>
-
                                 @else
-
                                     <span class="status-badge status-unknown">
                                         {{ ucfirst($status) }}
                                     </span>
-
                                 @endif
-
                             </td>
 
-                            {{-- AKSI --}}
                             <td>
                                 <div class="action-buttons">
-
                                     <a
-                                        href="{{ route($role . '.courses.show', [$course->id, 'as' => $role]) }}"
+                                        href="{{ route($role . '.courses.show', [
+                                            'course' => $course,
+                                            'as' => $role,
+                                        ]) }}"
                                         class="btn-view"
                                     >
                                         Lihat
                                     </a>
 
-                                    @if ($role === 'admin')
-
+                                    @can('update', $course)
                                         <a
-                                            href="{{ route($role . '.courses.edit', [$course->id, 'as' => $role]) }}"
+                                            href="{{ route($role . '.courses.edit', [
+                                                'course' => $course,
+                                                'as' => $role,
+                                            ]) }}"
                                             class="btn-edit"
                                         >
                                             Edit
                                         </a>
+                                    @endcan
 
+                                    @can('delete', $course)
                                         <form
-                                            action="{{ route($role . '.courses.destroy', [$course->id, 'as' => $role]) }}"
+                                            action="{{ route($role . '.courses.destroy', [
+                                                'course' => $course,
+                                                'as' => $role,
+                                            ]) }}"
                                             method="POST"
                                             onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?')"
                                         >
                                             @csrf
                                             @method('DELETE')
 
-                                            <button
-                                                type="submit"
-                                                class="btn-delete"
-                                            >
+                                            <button type="submit" class="btn-delete">
                                                 Hapus
                                             </button>
                                         </form>
-
-                                    @endif
-
+                                    @endcan
                                 </div>
                             </td>
-
                         </tr>
-
                     @empty
-
                         <tr>
                             <td colspan="5" class="empty-data">
-
                                 <div class="empty-icon">📚</div>
 
-                                <strong>
-                                    Belum ada data mata kuliah
-                                </strong>
+                                <strong>Belum ada data mata kuliah</strong>
 
-                                <p>
-                                    Data mata kuliah belum tersedia.
-                                </p>
-
+                                <p>Data mata kuliah belum tersedia.</p>
                             </td>
                         </tr>
-
                     @endforelse
-
                 </tbody>
-
             </table>
         </div>
-
     </div>
 
-    {{-- PAGINATION --}}
     <div class="pagination">
         {{ $courses->links() }}
     </div>
-
 </x-layout>

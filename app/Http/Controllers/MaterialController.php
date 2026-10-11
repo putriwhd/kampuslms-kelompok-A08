@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ChecksCourseOwnership;
 use App\Models\Course;
 use App\Models\Material;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class MaterialController extends Controller
 {
@@ -14,27 +15,54 @@ class MaterialController extends Controller
     public function index(Request $request, Course $course)
     {
         $this->ensureCourseOwnership($request, $course);
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
-        $materials = $course->materials()->latest()->paginate(15)->withQueryString();
+        Gate::authorize('view', $course);
 
-        return view('materials.index', compact('course', 'materials', 'role'));
+        $role = $request->attributes->get(
+            'selected_role',
+            $request->query('as', 'mahasiswa')
+        );
+
+        $materials = $course->materials()
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view(
+            'materials.index',
+            compact('course', 'materials', 'role')
+        );
     }
 
     public function show(Request $request, Material $material)
     {
         $material->load('course');
+
         $this->ensureCourseOwnership($request, $material->course);
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
+        Gate::authorize('view', $material);
+
+        $role = $request->attributes->get(
+            'selected_role',
+            $request->query('as', 'mahasiswa')
+        );
 
         return view('materials.show', compact('material', 'role'));
     }
 
-    public function showInCourse(Request $request, Course $course, Material $material)
-    {
-        abort_unless($material->course_id === $course->id, 403);
-        $this->ensureCourseOwnership($request, $course);
+    public function showInCourse(
+        Request $request,
+        Course $course,
+        Material $material
+    ) {
+        abort_unless($material->course_id === $course->id, 404);
 
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
+        $this->ensureCourseOwnership($request, $course);
+        Gate::authorize('view', $material);
+
+        $role = $request->attributes->get(
+            'selected_role',
+            $request->query('as', 'mahasiswa')
+        );
+
         $material->load('course');
 
         return view('materials.show', compact('material', 'role'));
