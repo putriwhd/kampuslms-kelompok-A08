@@ -1,11 +1,6 @@
 <x-layout>
     <x-slot:title>Tambah Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-        $currentRole = $role;
-    @endphp
-
     <div class="user-page-header">
         <div>
             <h1>Tambah Pengguna</h1>
@@ -23,7 +18,6 @@
             action="{{ route('admin.users.store', ['as' => $role]) }}"
             method="POST"
             class="user-form-body"
-            novalidate
         >
             @csrf
 
@@ -83,7 +77,6 @@
             <div class="form-group">
                 <label for="password" class="form-label">
                     Password
-                    <span class="label-optional">(Opsional)</span>
                 </label>
 
                 <input
@@ -91,7 +84,9 @@
                     id="password"
                     name="password"
                     class="form-input @error('password') input-error @enderror"
-                    placeholder="Kosongkan jika ingin menggunakan password default"
+                    placeholder="Buat kata sandi untuk pengguna"
+                    minlength="6"
+                    required
                 >
 
                 @error('password')

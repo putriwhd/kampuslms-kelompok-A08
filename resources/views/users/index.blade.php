@@ -1,11 +1,6 @@
 <x-layout>
     <x-slot:title>Data Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-        $currentRole = $role;
-    @endphp
-
     <div class="user-page-header">
         <div>
             <h1>Data Pengguna</h1>

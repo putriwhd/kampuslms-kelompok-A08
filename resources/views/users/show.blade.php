@@ -1,10 +1,6 @@
 <x-layout>
     <x-slot:title>Detail Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-    @endphp
-
     <div class="user-page-container">
         <p class="sub-heading-text">
             Informasi lengkap mengenai pengguna KampusLMS.

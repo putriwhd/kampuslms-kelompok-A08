@@ -10,6 +10,8 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $this->ensureAdmin($request);
+
         $search = $request->query('search');
         $search = is_string($search) ? trim($search) : '';
 
@@ -29,16 +31,23 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('users.index', compact('users'));
+        $role = $request->user()->role;
+
+        return view('users.index', compact('users', 'role'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('users.create');
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
+
+        return view('users.create', compact('role'));
     }
 
     public function store(Request $request)
     {
+        $this->ensureAdmin($request);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
@@ -64,31 +73,23 @@ class UserController extends Controller
 
     public function show(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY: 
-        // Hanya izinkan jika sebagai Admin (?as=admin) ATAU membuka profilenya sendiri
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
 
-        return view('users.show', compact('user'));
+        return view('users.show', compact('user', 'role'));
     }
 
     public function edit(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
 
-        return view('users.edit', compact('user'));
+        return view('users.edit', compact('user', 'role'));
     }
 
     public function update(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
+        $this->ensureAdmin($request);
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -117,10 +118,7 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin') {
-            abort(403, 'Akses Ditolak: Hanya Admin yang dapat menghapus pengguna.');
-        }
+        $this->ensureAdmin($request);
 
         if ($user->taughtCourses()->exists()) {
             return redirect()
@@ -133,5 +131,10 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil dihapus.');
+    }
+
+    private function ensureAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->role === 'admin', 403);
     }
 }
