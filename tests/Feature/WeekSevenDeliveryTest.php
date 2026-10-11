@@ -18,10 +18,18 @@ class WeekSevenDeliveryTest extends TestCase
 
     public function test_authentication_and_password_reset_pages_are_routed(): void
     {
+        $this->assertSame(url('/login'), route('login'));
+        $this->assertSame(url('/api/login'), route('api.login'));
+
         $this->get('/login')
             ->assertOk()
+            ->assertSee('Masuk ke KampusLMS')
             ->assertSee(route('login.store'), false)
             ->assertSee(route('password.request'), false);
+
+        $this->getJson('/api/login')
+            ->assertUnauthorized()
+            ->assertJsonPath('message', 'Tidak terautentikasi.');
 
         $this->get('/forgot-password')->assertOk();
         $this->get(route('password.reset', [
@@ -30,6 +38,63 @@ class WeekSevenDeliveryTest extends TestCase
         ]))->assertOk();
 
         $this->assertTrue(route('password.email') !== route('password.update'));
+    }
+
+    public function test_login_uses_dashboard_instead_of_a_saved_role_specific_url(): void
+    {
+        $admin = User::factory()->admin()->create([
+            'email' => 'admin-login-test@kampuslms.test',
+            'password' => 'test-password',
+        ]);
+
+        $this->get('/dosen/courses')
+            ->assertRedirect(route('login'));
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'test-password',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->get(route('dashboard'))
+            ->assertOk()
+            ->assertSeeText('Dashboard Admin')
+            ->assertDontSeeText('Dashboard Dosen');
+    }
+
+    public function test_demo_role_accounts_follow_the_role_policy_boundaries(): void
+    {
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+
+        $admin = User::where('email', 'admin2@kampuslms.test')->firstOrFail();
+        $lecturer = User::where('email', 'dosen2@kampuslms.test')->firstOrFail();
+        $student = User::where('email', 'mahasiswa2@kampuslms.test')->firstOrFail();
+        $course = $lecturer->taughtCourses()->firstOrFail();
+        $draftAssignment = $course->assignments()
+            ->where('status', 'draft')
+            ->firstOrFail();
+
+        $this->actingAs($admin)
+            ->get('/admin/courses')
+            ->assertOk()
+            ->assertSee($course->name);
+        $this->get("/admin/courses/{$course->id}/assignments")
+            ->assertOk()
+            ->assertSee($draftAssignment->title);
+
+        $this->actingAs($lecturer)
+            ->get('/dosen/courses')
+            ->assertOk()
+            ->assertSee($course->name);
+        $this->get("/dosen/courses/{$course->id}/assignments")
+            ->assertOk()
+            ->assertSee($draftAssignment->title);
+
+        $this->actingAs($student)
+            ->get('/mahasiswa/courses')
+            ->assertOk()
+            ->assertDontSee($course->name);
+        $this->get("/mahasiswa/courses/{$course->id}")
+            ->assertForbidden();
     }
 
     public function test_logout_clears_the_authenticated_session(): void

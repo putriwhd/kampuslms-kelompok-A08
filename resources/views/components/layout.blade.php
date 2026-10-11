@@ -557,10 +557,8 @@
 <body>
 
     @php
-        $availableRoles = ['mahasiswa', 'dosen', 'admin'];
-
-        $selectedRole = request()->attributes->get('selected_role')
-            ?? (in_array(request('as'), $availableRoles, true) ? request('as') : 'mahasiswa');
+        $currentUser = auth()->user();
+        $selectedRole = $currentUser?->role;
     @endphp
 
     {{-- HEADER --}}
@@ -581,6 +579,7 @@
                 id="menuToggle"
                 aria-label="Buka menu"
                 aria-expanded="false"
+                aria-controls="siteNav"
             >
                 ☰
             </button>
@@ -590,22 +589,17 @@
 
                 <a
                     href="{{ route('dashboard') }}"
-                    class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}"
+                    @class(['is-active' => request()->routeIs('dashboard')])
+                    @if (request()->routeIs('dashboard')) aria-current="page" @endif
                 >
                     🏠 Dashboard
                 </a>
 
-                <a
-                    href="{{ route('tentang') }}"
-                    class="{{ request()->routeIs('tentang') ? 'is-active' : '' }}"
-                >
-                    ℹ️ Tentang
-                </a>
-
-                @if ($selectedRole)
+                @if ($currentUser)
                     <a
                         href="{{ route($selectedRole . '.courses.index') }}"
-                        class="{{ request()->routeIs('*.courses.*') ? 'is-active' : '' }}"
+                        @class(['is-active' => request()->routeIs('*.courses.*')])
+                        @if (request()->routeIs('*.courses.*')) aria-current="page" @endif
                     >
                         📚 Mata Kuliah
                     </a>
@@ -613,16 +607,37 @@
                     @if ($selectedRole === 'admin')
                         <a
                             href="{{ route('admin.users.index') }}"
-                            class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}"
+                            @class(['is-active' => request()->routeIs('admin.users.*')])
+                            @if (request()->routeIs('admin.users.*')) aria-current="page" @endif
                         >
                             👥 Pengguna
                         </a>
                     @endif
 
-                    <span class="role-select">Role: {{ ucfirst($selectedRole) }}</span>
-                    <form action="{{ route('logout') }}" method="POST" class="role-selector-form">
+                    <a
+                        href="{{ route('tentang') }}"
+                        @class(['is-active' => request()->routeIs('tentang')])
+                        @if (request()->routeIs('tentang')) aria-current="page" @endif
+                    >
+                        ℹ️ Tentang
+                    </a>
+
+                @guest
+                    <a
+                        href="{{ route('login') }}"
+                        @class(['is-active' => request()->routeIs('login')])
+                        @if (request()->routeIs('login')) aria-current="page" @endif
+                    >
+                        Masuk
+                    </a>
+                @else
+                    <span class="nav-user">
+                        {{ $currentUser->name }}
+                        <span class="nav-user-role">{{ ucfirst($selectedRole) }}</span>
+                    </span>
+                    <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="role-select">Keluar</button>
+                        <button type="submit" class="nav-logout">Keluar</button>
                     </form>
                 @else
                     <a href="{{ route('login') }}" class="{{ request()->routeIs('login') ? 'is-active' : '' }}">
@@ -668,14 +683,5 @@
     </footer>
 
     {{-- SCROLL TO TOP --}}
-    <button
-        type="button"
-        class="scroll-top"
-        id="scrollTop"
-        aria-label="Kembali ke atas"
-    >
-        ↑
-    </button>
-
 </body>
 </html>
