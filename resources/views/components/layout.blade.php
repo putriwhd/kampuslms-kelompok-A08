@@ -13,7 +13,8 @@
 <body>
 
     @php
-        $selectedRole = auth()->user()?->role ?? 'mahasiswa';
+        $currentUser = auth()->user();
+        $selectedRole = $currentUser?->role;
     @endphp
 
     {{-- HEADER --}}
@@ -22,7 +23,7 @@
         <div class="nav-container">
 
             {{-- LOGO --}}
-            <a href="{{ route('dashboard', ['as' => $selectedRole]) }}" class="brand">
+            <a href="{{ route('dashboard') }}" class="brand">
                 <span class="brand-icon">K</span>
                 <span>KampusLMS</span>
             </a>
@@ -34,6 +35,7 @@
                 id="menuToggle"
                 aria-label="Buka menu"
                 aria-expanded="false"
+                aria-controls="siteNav"
             >
                 ☰
             </button>
@@ -42,41 +44,57 @@
             <nav class="site-nav" id="siteNav">
 
                 <a
-                    href="{{ route('dashboard', ['as' => $selectedRole]) }}"
-                    class="{{ request()->routeIs('dashboard') ? 'is-active' : '' }}"
+                    href="{{ route('dashboard') }}"
+                    @class(['is-active' => request()->routeIs('dashboard')])
+                    @if (request()->routeIs('dashboard')) aria-current="page" @endif
                 >
                     🏠 Dashboard
                 </a>
 
-                <a
-                    href="{{ route($selectedRole . '.courses.index', ['as' => $selectedRole]) }}"
-                    class="{{ request()->routeIs('*.courses.*') ? 'is-active' : '' }}"
-                >
-                    📚 Mata Kuliah
-                </a>
-
-                <a
-                    href="{{ route('tentang', ['as' => $selectedRole]) }}"
-                    class="{{ request()->routeIs('tentang') ? 'is-active' : '' }}"
-                >
-                    ℹ️ Tentang
-                </a>
-
-                @if ($selectedRole === 'admin')
+                @if ($currentUser)
                     <a
-                        href="{{ route('admin.users.index', ['as' => $selectedRole]) }}"
-                        class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}"
+                        href="{{ route($selectedRole . '.courses.index') }}"
+                        @class(['is-active' => request()->routeIs('*.courses.*')])
+                        @if (request()->routeIs('*.courses.*')) aria-current="page" @endif
                     >
-                        👥 Pengguna
+                        📚 Mata Kuliah
+                    </a>
+
+                    @if ($selectedRole === 'admin')
+                        <a
+                            href="{{ route('admin.users.index') }}"
+                            @class(['is-active' => request()->routeIs('admin.users.*')])
+                            @if (request()->routeIs('admin.users.*')) aria-current="page" @endif
+                        >
+                            👥 Pengguna
+                        </a>
+                    @endif
+
+                    <a
+                        href="{{ route('tentang') }}"
+                        @class(['is-active' => request()->routeIs('tentang')])
+                        @if (request()->routeIs('tentang')) aria-current="page" @endif
+                    >
+                        ℹ️ Tentang
                     </a>
                 @endif
 
                 @guest
-                    <a href="{{ route('login') }}">Masuk</a>
+                    <a
+                        href="{{ route('login') }}"
+                        @class(['is-active' => request()->routeIs('login')])
+                        @if (request()->routeIs('login')) aria-current="page" @endif
+                    >
+                        Masuk
+                    </a>
                 @else
+                    <span class="nav-user">
+                        {{ $currentUser->name }}
+                        <span class="nav-user-role">{{ ucfirst($selectedRole) }}</span>
+                    </span>
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit">Keluar</button>
+                        <button type="submit" class="nav-logout">Keluar</button>
                     </form>
                 @endguest
 
@@ -129,14 +147,5 @@
     </footer>
 
     {{-- SCROLL TO TOP --}}
-    <button
-        type="button"
-        class="scroll-top"
-        id="scrollTop"
-        aria-label="Kembali ke atas"
-    >
-        ↑
-    </button>
-
 </body>
 </html>

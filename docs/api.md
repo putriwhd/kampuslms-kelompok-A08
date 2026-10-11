@@ -11,7 +11,12 @@ php artisan serve
 php artisan db:seed
 ```
 
-Seeder menyediakan `dosen@kampuslms.test` dan `mahasiswa@kampuslms.test`, keduanya memakai kata sandi `password`. Login untuk memperoleh token:
+Seeder menyediakan `admin@kampuslms.test`, `admin2@kampuslms.test`,
+`dosen@kampuslms.test`, `dosen2@kampuslms.test`, `mahasiswa@kampuslms.test`,
+dan `mahasiswa2@kampuslms.test`; semuanya memakai kata sandi `password`.
+`dosen2` mengampu course demo, sedangkan `mahasiswa2` sengaja tidak terdaftar
+di course demo untuk pengujian penolakan akses. Kedua akun admin memiliki hak
+admin yang sama. Login untuk memperoleh token:
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \

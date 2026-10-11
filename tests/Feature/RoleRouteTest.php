@@ -48,8 +48,10 @@ class RoleRouteTest extends TestCase
         $this->actingAs($admin)
             ->get('/')
             ->assertOk()
-            ->assertSee('/admin/courses?as=admin', false)
-            ->assertSee('/admin/users?as=admin', false);
+            ->assertSee('/admin/courses', false)
+            ->assertSee('/admin/users', false)
+            ->assertDontSee('/dosen/courses', false)
+            ->assertDontSee('/mahasiswa/courses', false);
     }
 
     public function test_dosen_navigation_links_to_dosen_courses_and_hides_users_menu(): void
@@ -61,8 +63,11 @@ class RoleRouteTest extends TestCase
         $this->actingAs($dosen)
             ->get('/')
             ->assertOk()
-            ->assertSee('/dosen/courses?as=dosen', false)
-            ->assertDontSee('/admin/users?as=admin', false);
+            ->assertSee('/dosen/courses', false)
+            ->assertSee('/tentang', false)
+            ->assertDontSee('/admin/courses', false)
+            ->assertDontSee('/mahasiswa/courses', false)
+            ->assertDontSee('/admin/users', false);
     }
 
     public function test_mahasiswa_navigation_links_to_mahasiswa_courses_and_hides_users_menu(): void
@@ -74,24 +79,29 @@ class RoleRouteTest extends TestCase
         $this->actingAs($mahasiswa)
             ->get('/')
             ->assertOk()
-            ->assertSee('/mahasiswa/courses?as=mahasiswa', false)
-            ->assertDontSee('/admin/users?as=admin', false);
+            ->assertSee('/mahasiswa/courses', false)
+            ->assertSee('/tentang', false)
+            ->assertDontSee('/admin/courses', false)
+            ->assertDontSee('/dosen/courses', false)
+            ->assertDontSee('/admin/users', false);
     }
 
     public function test_unauthenticated_navigation_defaults_to_mahasiswa(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSee('/mahasiswa/courses?as=mahasiswa', false);
+            ->assertSee('/login', false)
+            ->assertDontSee('/mahasiswa/courses', false)
+            ->assertDontSee('/tentang', false)
+            ->assertDontSee('/admin/users', false);
     }
 
     public function test_guest_dashboard_does_not_appear_logged_in(): void
     {
         $this->get('/')
             ->assertOk()
-            ->assertSeeText(
-                'Silakan login untuk mengakses dashboard sesuai role Anda.'
-            )
+            ->assertSeeText('Selamat datang di KampusLMS')
+            ->assertSeeText('Masuk ke akun')
             ->assertDontSeeText('Akses sebagai Mahasiswa');
     }
 
@@ -104,9 +114,9 @@ class RoleRouteTest extends TestCase
         $this->actingAs($admin)
             ->get('/?as=mahasiswa')
             ->assertOk()
-            ->assertSeeText('Selamat datang, Admin')
-            ->assertSeeText('Akses sebagai Admin')
-            ->assertDontSeeText('Akses sebagai Mahasiswa');
+            ->assertSeeText('Halo,')
+            ->assertSeeText('Dashboard Admin')
+            ->assertDontSeeText('Dashboard Mahasiswa');
     }
 
     public function test_dosen_dashboard_uses_authenticated_user_role(): void
@@ -118,9 +128,9 @@ class RoleRouteTest extends TestCase
         $this->actingAs($dosen)
             ->get('/?as=admin')
             ->assertOk()
-            ->assertSeeText('Selamat datang, Dosen')
-            ->assertSeeText('Akses sebagai Dosen')
-            ->assertDontSeeText('Akses sebagai Admin');
+            ->assertSeeText('Halo,')
+            ->assertSeeText('Dashboard Dosen')
+            ->assertDontSeeText('Dashboard Admin');
     }
 
     public function test_mahasiswa_dashboard_uses_authenticated_user_role(): void
@@ -132,8 +142,8 @@ class RoleRouteTest extends TestCase
         $this->actingAs($mahasiswa)
             ->get('/?as=admin')
             ->assertOk()
-            ->assertSeeText('Selamat datang, Mahasiswa')
-            ->assertSeeText('Akses sebagai Mahasiswa')
-            ->assertDontSeeText('Akses sebagai Admin');
+            ->assertSeeText('Halo,')
+            ->assertSeeText('Dashboard Mahasiswa')
+            ->assertDontSeeText('Dashboard Admin');
     }
 }

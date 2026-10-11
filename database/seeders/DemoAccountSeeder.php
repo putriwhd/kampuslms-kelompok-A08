@@ -21,6 +21,12 @@ class DemoAccountSeeder extends Seeder
                 'role' => 'admin',
             ],
             [
+                'name' => 'Administrator Kedua',
+                'email' => 'admin2@kampuslms.test',
+                'nim_nip' => 'ADM002',
+                'role' => 'admin',
+            ],
+            [
                 'name' => 'Dosen Demo',
                 'email' => 'dosen@kampuslms.test',
                 'nim_nip' => 'NIP001',
