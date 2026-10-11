@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
+use LogicException;
 use Illuminate\Validation\Rule;
 
 class UpdateCourseRequest extends FormRequest

@@ -13,16 +13,7 @@
 <body>
 
     @php
-        $availableRoles = ['mahasiswa', 'dosen', 'admin'];
-
-        if (auth()->check()) {
-            $selectedRole = auth()->user()->role;
-        } else {
-            $selectedRole = request()->attributes->get('selected_role')
-                ?? (in_array(request('as'), $availableRoles, true)
-                    ? request('as')
-                    : 'mahasiswa');
-        }
+        $selectedRole = auth()->user()?->role ?? 'mahasiswa';
     @endphp
 
     {{-- HEADER --}}
@@ -80,42 +71,12 @@
                     </a>
                 @endif
 
-                {{-- DROPDOWN SIMULASI ROLE UNTUK GUEST --}}
                 @guest
-                    <form
-                        action="{{ route('dashboard') }}"
-                        method="GET"
-                        class="role-selector-form"
-                        id="roleSelectorForm"
-                    >
-                        <select
-                            name="as"
-                            class="role-select"
-                            id="roleSelect"
-                            aria-label="Pilih simulasi role"
-                            onchange="this.form.submit()"
-                        >
-                            <option
-                                value="mahasiswa"
-                                {{ $selectedRole === 'mahasiswa' ? 'selected' : '' }}
-                            >
-                                👤 Role: Mahasiswa
-                            </option>
-
-                            <option
-                                value="dosen"
-                                {{ $selectedRole === 'dosen' ? 'selected' : '' }}
-                            >
-                                👨‍🏫 Role: Dosen
-                            </option>
-
-                            <option
-                                value="admin"
-                                {{ $selectedRole === 'admin' ? 'selected' : '' }}
-                            >
-                                🛠️ Role: Admin
-                            </option>
-                        </select>
+                    <a href="{{ route('login') }}">Masuk</a>
+                @else
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit">Keluar</button>
                     </form>
                 @endguest
 

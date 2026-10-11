@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\ChecksCourseOwnership;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
@@ -12,31 +11,25 @@ use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
-    use ChecksCourseOwnership;
-
     public function index(Request $request)
     {
         $user = $request->user();
+        Gate::authorize('viewAny', Course::class);
+
         $role = $this->selectedRole($request);
 
         $search = $request->query('search');
         $search = is_string($search) ? trim($search) : '';
 
-        $query = Course::with('lecturer');
+        $query = match ($user->role) {
+            'admin' => Course::query(),
+            'dosen' => $user->taughtCourses(),
+            'mahasiswa' => $user->courses()->where('courses.status', '!=', 'draft'),
+            default => abort(403),
+        };
 
-        if ($user && $user->role === 'admin') {
-            // Admin dapat melihat semua mata kuliah.
-        } elseif ($user && $user->role === 'dosen') {
-            $query->where('lecturer_id', $user->id);
-        } elseif ($user && $user->role === 'mahasiswa') {
-            $query->whereHas('students', function ($q) use ($user) {
-                $q->where('users.id', $user->id);
-            });
-        } else {
-            $query->whereRaw('1 = 0');
-        }
-
-        $query
+        $courses = $query
+            ->with('lecturer')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
@@ -54,9 +47,9 @@ class CourseController extends Controller
                     $request->query('status')
                 )
             )
-            ->latest();
-
-        $courses = $query->paginate(15)->withQueryString();
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
         return view('courses.index', compact('courses', 'role'));
     }
@@ -86,15 +79,12 @@ class CourseController extends Controller
 
     public function show(Request $request, Course $course)
     {
-        $this->ensureCourseOwnership($request, $course);
-
         Gate::authorize('view', $course);
 
         $role = $this->selectedRole($request);
 
         $course->load([
             'lecturer',
-            'students',
             'materials',
             'assignments',
         ]);
@@ -104,8 +94,6 @@ class CourseController extends Controller
 
     public function edit(Request $request, Course $course)
     {
-        $this->ensureCourseOwnership($request, $course);
-
         Gate::authorize('update', $course);
 
         $role = $this->selectedRole($request);
@@ -118,8 +106,6 @@ class CourseController extends Controller
         UpdateCourseRequest $request,
         Course $course
     ) {
-        $this->ensureCourseOwnership($request, $course);
-
         Gate::authorize('update', $course);
 
         $course->update($request->validated());
@@ -133,8 +119,6 @@ class CourseController extends Controller
 
     public function destroy(Request $request, Course $course)
     {
-        $this->ensureCourseOwnership($request, $course);
-
         Gate::authorize('delete', $course);
 
         $course->delete();
@@ -148,20 +132,6 @@ class CourseController extends Controller
 
     private function selectedRole(Request $request): string
     {
-        if ($request->attributes->has('selected_role')) {
-            return $request->attributes->get('selected_role');
-        }
-
-        if ($request->query('as')) {
-            return $request->query('as');
-        }
-
-        $prefix = $request->segment(1);
-
-        if (in_array($prefix, ['admin', 'dosen', 'mahasiswa'], true)) {
-            return $prefix;
-        }
-
-        return 'mahasiswa';
+        return $request->user()->role;
     }
 }
