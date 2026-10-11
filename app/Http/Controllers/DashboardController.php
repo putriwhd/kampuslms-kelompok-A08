@@ -15,7 +15,13 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        abort_unless($user, 401);
+        if (! $user) {
+            return view('dashboard', [
+                'role' => null,
+                'stats' => [],
+                'courses' => collect(),
+            ]);
+        }
 
         $role = $user->role;
         [$stats, $courses] = match ($role) {
@@ -64,7 +70,11 @@ class DashboardController extends Controller
     private function studentDashboard(User $user): array
     {
         $courses = $user->courses()
-            ->withCount(['materials', 'assignments'])
+            ->where('courses.status', '!=', 'draft')
+            ->withCount([
+                'materials',
+                'assignments' => fn ($query) => $query->where('status', 'published'),
+            ])
             ->orderBy('name')
             ->get();
 
@@ -72,7 +82,13 @@ class DashboardController extends Controller
             'Mata Kuliah Diikuti' => $courses->count(),
             'Tugas Published' => Assignment::query()
                 ->where('status', 'published')
-                ->whereHas('course.students', fn ($query) => $query->whereKey($user->getKey()))
+                ->whereHas('course', function ($query) use ($user) {
+                    $query->where('status', '!=', 'draft')
+                        ->whereHas(
+                            'students',
+                            fn ($students) => $students->whereKey($user->getKey())
+                        );
+                })
                 ->count(),
             'Submission Saya' => Submission::query()
                 ->where('user_id', $user->getKey())

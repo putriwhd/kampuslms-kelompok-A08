@@ -20,7 +20,18 @@
             </p>
         @elseif ($material->original_name)
             <p>File: {{ $material->original_name }}</p>
+        @elseif ($material->type === 'file')
+            <p>Metadata berkas tersedia; fitur unggah berkas belum termasuk deliverable Minggu 7.</p>
         @endif
+
+        @can('update', $material)
+            <p>
+                <a href="{{ route($role . '.materials.edit', [
+                    'material' => $material,
+                    'as' => $role,
+                ]) }}">Edit Materi</a>
+            </p>
+        @endcan
 
         <a href="{{ route($role . '.courses.materials.index', [$material->course, 'as' => $role]) }}">
             Kembali ke Daftar Materi

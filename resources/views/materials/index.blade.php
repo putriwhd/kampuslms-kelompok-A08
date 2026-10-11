@@ -3,6 +3,15 @@
 
     <h1>Materi: {{ $course->name }}</h1>
 
+    @can('create', [\App\Models\Material::class, $course])
+        <p>
+            <a href="{{ route($role . '.courses.materials.create', [
+                'course' => $course,
+                'as' => $role,
+            ]) }}">Tambah Materi</a>
+        </p>
+    @endcan
+
     <div class="content-card">
         @forelse ($materials as $material)
             <article>
@@ -29,6 +38,28 @@
                         <strong>Jenis materi:</strong>
                         {{ ucfirst($material->type) }}
                     </p>
+                @endcan
+
+                @can('update', $material)
+                    <a href="{{ route($role . '.materials.edit', [
+                        'material' => $material,
+                        'as' => $role,
+                    ]) }}">Edit</a>
+                @endcan
+
+                @can('delete', $material)
+                    <form
+                        action="{{ route($role . '.materials.destroy', [
+                            'material' => $material,
+                            'as' => $role,
+                        ]) }}"
+                        method="POST"
+                        onsubmit="return confirm('Yakin ingin menghapus materi ini?')"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit">Hapus</button>
+                    </form>
                 @endcan
             </article>
 

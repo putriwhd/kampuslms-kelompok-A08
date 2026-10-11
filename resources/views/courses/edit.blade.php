@@ -65,24 +65,28 @@
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label for="lecturer_id">Dosen Pengampu</label>
-                <select id="lecturer_id" name="lecturer_id" required>
-                    <option value="">-- Pilih Dosen Pengampu --</option>
+            @if ($role === 'admin')
+                <div class="form-group">
+                    <label for="lecturer_id">Dosen Pengampu</label>
+                    <select id="lecturer_id" name="lecturer_id" required>
+                        <option value="">-- Pilih Dosen Pengampu --</option>
 
-                    @foreach ($lecturers as $lecturer)
-                        <option
-                            value="{{ $lecturer->id }}"
-                            @selected((string) old('lecturer_id', $course->lecturer_id) === (string) $lecturer->id)
-                        >
-                            {{ $lecturer->name }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('lecturer_id')
-                    <small class="form-error">{{ $message }}</small>
-                @enderror
-            </div>
+                        @foreach ($lecturers as $lecturer)
+                            <option
+                                value="{{ $lecturer->id }}"
+                                @selected((string) old('lecturer_id', $course->lecturer_id) === (string) $lecturer->id)
+                            >
+                                {{ $lecturer->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('lecturer_id')
+                        <small class="form-error">{{ $message }}</small>
+                    @enderror
+                </div>
+            @else
+                <p>Dosen Pengampu: {{ $course->lecturer?->name ?? '-' }}</p>
+            @endif
 
             <div class="form-group">
                 <label for="sks">SKS</label>

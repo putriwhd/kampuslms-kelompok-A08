@@ -2,28 +2,44 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
+use LogicException;
 use Illuminate\Validation\Rule;
 
 class UpdateCourseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // TODO: Ganti dengan otorisasi berbasis Policy pada Minggu 7
-        return true;
+        $course = $this->input('course');
+
+        if (! ($course instanceof Course) && $this->getRouteResolver()) {
+            try {
+                $course = $this->route('course');
+            } catch (LogicException) {
+                return false;
+            }
+        }
+
+        return $course instanceof Course
+            && ($this->user()?->can('update', $course) ?? false);
     }
 
     public function rules(): array
     {
-        $course = null;
-        try {
-            $course = $this->route('course');
-        } catch (\Throwable) {
-            // Fallback jika request diuji di luar HTTP pipeline (misalnya di Tinker/Unit Test)
+        $course = $this->input('course');
+
+        if (! ($course instanceof Course) && $this->getRouteResolver()) {
+            try {
+                $course = $this->route('course');
+            } catch (LogicException) {
+                $course = null;
+            }
         }
 
-        $course = $course ?? $this->course ?? $this->id;
-        $courseId = is_object($course) ? $course->id : $course;
+        $courseId = $course instanceof Course
+            ? $course->getKey()
+            : ($this->input('id') ?? $course);
 
         return [
             'code' => [
@@ -50,12 +66,14 @@ class UpdateCourseRequest extends FormRequest
                 'between:1,6',
             ],
 
-            'lecturer_id' => [
-                'required',
-                'integer',
-                Rule::exists('users', 'id')
-                    ->where(fn ($query) => $query->where('role', 'dosen')),
-            ],
+            'lecturer_id' => $this->user()?->role === 'dosen'
+                ? ['prohibited']
+                : [
+                    'required',
+                    'integer',
+                    Rule::exists('users', 'id')
+                        ->where(fn ($query) => $query->where('role', 'dosen')),
+                ],
 
             'status' => [
                 'required',

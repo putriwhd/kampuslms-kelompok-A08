@@ -3,6 +3,15 @@
 
     <h1>Tugas: {{ $course->name }}</h1>
 
+    @can('create', [\App\Models\Assignment::class, $course])
+        <p>
+            <a href="{{ route($role . '.courses.assignments.create', [
+                'course' => $course,
+                'as' => $role,
+            ]) }}">Tambah Tugas</a>
+        </p>
+    @endcan
+
     <div class="content-card">
         @forelse ($assignments as $assignment)
             <article>
@@ -29,6 +38,25 @@
                     <p>
                         Status: {{ ucfirst($assignment->status) }}
                     </p>
+                    <a href="{{ route($role . '.assignments.edit', [
+                        'assignment' => $assignment,
+                        'as' => $role,
+                    ]) }}">Edit</a>
+                @endcan
+
+                @can('delete', $assignment)
+                    <form
+                        action="{{ route($role . '.assignments.destroy', [
+                            'assignment' => $assignment,
+                            'as' => $role,
+                        ]) }}"
+                        method="POST"
+                        onsubmit="return confirm('Yakin ingin menghapus tugas ini?')"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit">Hapus</button>
+                    </form>
                 @endcan
             </article>
 

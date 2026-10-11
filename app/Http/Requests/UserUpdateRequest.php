@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use LogicException;
 use Illuminate\Validation\Rule;
 
 class UserUpdateRequest extends FormRequest
@@ -14,15 +16,19 @@ class UserUpdateRequest extends FormRequest
 
     public function rules(): array
     {
-        $user = null;
-        try {
-            $user = $this->route('user');
-        } catch (\Throwable) {
-            // Fallback jika request diuji di luar HTTP pipeline (misalnya di Tinker/Unit Test)
+        $user = $this->input('user');
+
+        if (! ($user instanceof User) && $this->getRouteResolver()) {
+            try {
+                $user = $this->route('user');
+            } catch (LogicException) {
+                $user = null;
+            }
         }
 
-        $user = $user ?? $this->user ?? $this->id;
-        $userId = is_object($user) ? $user->id : $user;
+        $userId = $user instanceof User
+            ? $user->getKey()
+            : ($this->input('id') ?? $user);
 
         return [
             'name' => [

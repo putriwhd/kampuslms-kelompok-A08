@@ -8,28 +8,32 @@ use App\Http\Resources\CourseResource;
 use App\Http\Resources\MaterialResource;
 use App\Models\Course;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
-public function index(Request $request)
+    public function index(Request $request)
     {
         $user = $request->user();
+        Gate::authorize('viewAny', Course::class);
 
-        if ($user->role === 'dosen') {
-            $courses = Course::with('lecturer')
-                ->withCount(['materials', 'assignments'])
-                ->where('lecturer_id', $user->id)
-                ->paginate(15);
-        } else {
-            // Mahasiswa: Hanya menampilkan course aktif yang diikuti oleh mahasiswa tersebut
-            $courses = Course::with('lecturer')
-                ->withCount(['materials', 'assignments'])
-                ->where('status', 'active')
-                ->whereHas('students', function ($query) use ($user) {
-                    $query->where('users.id', $user->id);
-                })
-                ->paginate(15);
-        }
+        $query = match ($user->role) {
+            'admin' => Course::query(),
+            'dosen' => $user->taughtCourses(),
+            'mahasiswa' => $user->courses()->where('courses.status', '!=', 'draft'),
+            default => abort(403),
+        };
+        $assignmentCount = $user->role === 'mahasiswa'
+            ? fn ($query) => $query->where('status', 'published')
+            : fn ($query) => $query;
+
+        $courses = $query
+            ->with('lecturer')
+            ->withCount([
+                'materials',
+                'assignments' => $assignmentCount,
+            ])
+            ->paginate(15);
 
         return response()->json([
             'data' => CourseResource::collection($courses)->resolve($request),
@@ -44,26 +48,30 @@ public function index(Request $request)
     public function show(Request $request, $id)
     {
         $user = $request->user();
+        $assignmentCount = $user->role === 'mahasiswa'
+            ? fn ($query) => $query->where('status', 'published')
+            : fn ($query) => $query;
         $course = Course::with([
             'lecturer',
             'materials.uploader',
-            'assignments.creator',
+            'assignments' => function ($query) use ($user) {
+                if ($user->role === 'mahasiswa') {
+                    $query->where('status', 'published');
+                }
+                $query->with('creator');
+            },
         ])
-            ->withCount(['materials', 'assignments'])
+            ->withCount([
+                'materials',
+                'assignments' => $assignmentCount,
+            ])
             ->findOrFail($id);
 
-        if ($user->role === 'dosen' && $course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
+        if ($user->role === 'mahasiswa' && $course->status === 'draft') {
+            abort(404);
         }
 
-        if ($user->role !== 'dosen' && $course->status !== 'active') {
-            return response()->json(['message' => 'Not found.'], 404);
-        }
-
-        if ($user->role === 'mahasiswa'
-            && ! $course->students()->whereKey($user->id)->exists()) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        Gate::authorize('view', $course);
 
         return new CourseResource($course);
     }
@@ -72,22 +80,21 @@ public function index(Request $request)
     public function materials(Request $request, $id)
     {
         $user = $request->user();
+        $assignmentCount = $user->role === 'mahasiswa'
+            ? fn ($query) => $query->where('status', 'published')
+            : fn ($query) => $query;
         $course = Course::findOrFail($id);
-
-        // Otorisasi Akses Course
-        if ($user->role === 'dosen' && $course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
-
-        if ($user->role === 'mahasiswa' && ! $course->students()->whereKey($user->id)->exists()) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        Gate::authorize('view', $course);
 
         $materials = $course->materials()
             ->with([
-                'course' => fn ($query) => $query
-                    ->with('lecturer')
-                    ->withCount(['materials', 'assignments']),
+                'course' => function ($query) use ($assignmentCount) {
+                    $query->with('lecturer')
+                        ->withCount([
+                            'materials',
+                            'assignments' => $assignmentCount,
+                        ]);
+                },
                 'uploader',
             ])
             ->paginate(10);
@@ -106,30 +113,32 @@ public function index(Request $request)
     public function assignments(Request $request, $id)
     {
         $user = $request->user();
+        $assignmentCount = $user->role === 'mahasiswa'
+            ? fn ($query) => $query->where('status', 'published')
+            : fn ($query) => $query;
         $course = Course::findOrFail($id);
 
         $filters = $request->validate([
             'status' => ['sometimes', 'in:draft,published'],
         ]);
 
-        // Otorisasi Akses Course
-        if ($user->role === 'dosen' && $course->lecturer_id !== $user->id) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
-
-        if ($user->role === 'mahasiswa' && ! $course->students()->whereKey($user->id)->exists()) {
-            return response()->json(['message' => 'Anda tidak memiliki akses ke sumber daya ini.'], 403);
-        }
+        Gate::authorize('view', $course);
 
         $query = $course->assignments()
             ->with([
-                'course' => fn ($query) => $query
-                    ->with('lecturer')
-                    ->withCount(['materials', 'assignments']),
+                'course' => function ($query) use ($assignmentCount) {
+                    $query->with('lecturer')
+                        ->withCount([
+                            'materials',
+                            'assignments' => $assignmentCount,
+                        ]);
+                },
                 'creator',
             ]);
 
-        if (isset($filters['status'])) {
+        if ($user->role === 'mahasiswa') {
+            $query->where('status', 'published');
+        } elseif (isset($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 

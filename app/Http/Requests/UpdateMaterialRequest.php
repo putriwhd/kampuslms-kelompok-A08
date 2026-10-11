@@ -2,13 +2,17 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Material;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateMaterialRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()?->role, ['admin', 'dosen'], true);
+        $material = $this->route('material');
+
+        return $material instanceof Material
+            && ($this->user()?->can('update', $material) ?? false);
     }
 
     public function rules(): array
@@ -23,11 +27,6 @@ class UpdateMaterialRequest extends FormRequest
                 'url',
                 'max:255',
             ],
-            'file' => [
-                'nullable',
-                'file',
-                'max:10240',
-            ],
         ];
     }
 
@@ -39,8 +38,6 @@ class UpdateMaterialRequest extends FormRequest
             'type.required' => 'Jenis materi wajib dipilih.',
             'external_url.required_if' => 'URL wajib diisi untuk materi berbentuk link.',
             'external_url.url' => 'Masukkan URL yang valid.',
-            'file.required_if' => 'File materi wajib diunggah jika belum memiliki file.',
-            'file.max' => 'Ukuran file maksimal 10 MB.',
         ];
     }
 }

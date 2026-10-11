@@ -29,6 +29,10 @@ class RequestValidationTest extends TestCase
     ): \Illuminate\Validation\Validator {
         if ($routeEntity !== null) {
             $route = new Route('PUT', 'dummy/{' . $paramName . '}', []);
+            $route->bind(\Illuminate\Http\Request::create(
+                '/dummy/' . (is_object($routeEntity) ? $routeEntity->getKey() : $routeEntity),
+                'PUT'
+            ));
             $route->setParameter($paramName, $routeEntity);
             $request->setRouteResolver(fn () => $route);
 
@@ -412,11 +416,31 @@ class RequestValidationTest extends TestCase
     |--------------------------------------------------------------------------
     */
 
-    public function test_all_form_requests_authorize_method_returns_true(): void
+    public function test_form_requests_require_authorized_users(): void
     {
-        $this->assertTrue((new StoreCourseRequest())->authorize());
-        $this->assertTrue((new UpdateCourseRequest())->authorize());
-        $this->assertTrue((new UserStoreRequest())->authorize());
-        $this->assertTrue((new UserUpdateRequest())->authorize());
+        $this->assertFalse((new StoreCourseRequest())->authorize());
+        $this->assertFalse((new UpdateCourseRequest())->authorize());
+        $this->assertFalse((new UserStoreRequest())->authorize());
+        $this->assertFalse((new UserUpdateRequest())->authorize());
+
+        $admin = User::factory()->admin()->create();
+        $course = Course::factory()->create();
+        $updateCourseRequest = new UpdateCourseRequest();
+        $updateCourseRequest->setUserResolver(fn () => $admin);
+        $updateCourseRequest->merge(['course' => $course]);
+
+        $userUpdateRequest = new UserUpdateRequest();
+        $userUpdateRequest->setUserResolver(fn () => $admin);
+
+        $storeCourseRequest = new StoreCourseRequest();
+        $storeCourseRequest->setUserResolver(fn () => $admin);
+
+        $storeUserRequest = new UserStoreRequest();
+        $storeUserRequest->setUserResolver(fn () => $admin);
+
+        $this->assertTrue($storeCourseRequest->authorize());
+        $this->assertTrue($updateCourseRequest->authorize());
+        $this->assertTrue($storeUserRequest->authorize());
+        $this->assertTrue($userUpdateRequest->authorize());
     }
 }
