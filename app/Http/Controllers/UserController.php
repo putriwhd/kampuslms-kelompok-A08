@@ -6,7 +6,6 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -48,6 +47,7 @@ class UserController extends Controller
 
     public function store(UserStoreRequest $request)
     {
+        $this->ensureAdmin($request);
         $validated = $request->validated();
 
         $user = new User();
@@ -55,7 +55,7 @@ class UserController extends Controller
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->nim_nip = $validated['nim_nip'] ?? null;
-        $user->password = Hash::make($validated['password']);
+        $user->password = $validated['password'];
         $user->role = $validated['role'];
 
         $user->save();
@@ -83,6 +83,7 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request, User $user)
     {
+        $this->ensureAdmin($request);
         $validated = $request->validated();
 
         $user->name = $validated['name'];
@@ -90,7 +91,7 @@ class UserController extends Controller
         $user->nim_nip = $validated['nim_nip'] ?? null;
 
         if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+            $user->password = $validated['password'];
         }
 
         $user->role = $validated['role'];
