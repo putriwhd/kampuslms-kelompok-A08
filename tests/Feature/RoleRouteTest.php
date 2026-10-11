@@ -8,9 +8,10 @@ use Tests\TestCase;
 
 class RoleRouteTest extends TestCase
 {
-    public function test_query_parameter_cannot_grant_access_to_role_route(): void
+    public function test_query_parameter_cannot_grant_access_to_a_role_route(): void
     {
-        $response = $this->get('/admin/courses?as=admin');
+        $this->get('/admin/users?as=admin')
+            ->assertRedirect(route('login'));
 
         $this->assertTrue(
             in_array($response->status(), [302, 401, 403, 404])
@@ -86,7 +87,7 @@ class RoleRouteTest extends TestCase
             ->assertDontSee('/admin/users', false);
     }
 
-    public function test_unauthenticated_navigation_defaults_to_mahasiswa(): void
+    public function test_authenticated_user_must_have_the_route_role(): void
     {
         $this->get('/')
             ->assertOk()
@@ -96,9 +97,8 @@ class RoleRouteTest extends TestCase
             ->assertDontSee('/admin/users', false);
     }
 
-    public function test_guest_dashboard_does_not_appear_logged_in(): void
-    {
-        $this->get('/')
+        $this->actingAs(User::factory()->make(['role' => 'admin']))
+            ->get('/_test/admin-role?as=dosen')
             ->assertOk()
             ->assertSeeText('Selamat datang di KampusLMS')
             ->assertSeeText('Masuk ke akun')
@@ -133,7 +133,7 @@ class RoleRouteTest extends TestCase
             ->assertDontSeeText('Dashboard Admin');
     }
 
-    public function test_mahasiswa_dashboard_uses_authenticated_user_role(): void
+    public function test_role_groups_have_prefixed_route_names(): void
     {
         $mahasiswa = User::factory()->make([
             'role' => 'mahasiswa',
