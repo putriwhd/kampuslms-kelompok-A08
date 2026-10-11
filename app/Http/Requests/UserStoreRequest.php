@@ -9,8 +9,7 @@ class UserStoreRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // TODO: Ganti dengan otorisasi berbasis Policy pada Minggu 7
-        return true;
+        return $this->user()?->role === 'admin';
     }
 
     public function rules(): array

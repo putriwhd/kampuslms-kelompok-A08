@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -44,17 +46,9 @@ class UserController extends Controller
         return view('users.create', compact('role'));
     }
 
-    public function store(Request $request)
+    public function store(UserStoreRequest $request)
     {
-        $this->ensureAdmin($request);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'nim_nip' => 'nullable|string|unique:users,nim_nip',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,dosen,mahasiswa',
-        ]);
+        $validated = $request->validated();
 
         $user = new User();
 
@@ -87,17 +81,9 @@ class UserController extends Controller
         return view('users.edit', compact('user', 'role'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UserUpdateRequest $request, User $user)
     {
-        $this->ensureAdmin($request);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'nim_nip' => 'nullable|string|unique:users,nim_nip,' . $user->id,
-            'password' => 'nullable|string|min:6',
-            'role' => 'required|in:admin,dosen,mahasiswa',
-        ]);
+        $validated = $request->validated();
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
