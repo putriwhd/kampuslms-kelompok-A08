@@ -4,32 +4,28 @@ namespace App\Http\Requests;
 
 use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
-use LogicException;
 use Illuminate\Validation\Rule;
 
 class UpdateCourseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $course = $this->route('course');
+
+        if (! $course instanceof Course) {
+            return false;
+        }
+
+        return $this->user()?->can('update', $course) ?? false;
     }
 
     public function rules(): array
     {
-        $courseId = null;
+        $routeCourse = $this->route('course');
 
-        try {
-            $route = $this->route();
-            $course = $route?->parameter('course');
-            $courseId = is_object($course) ? $course->id : $course;
-        } catch (\Throwable) {
-            $courseId = null;
-        }
-
-        $courseId = $courseId
-            ?? $this->attributes->get('course')?->id
-            ?? $this->input('course_id')
-            ?? $this->input('id');
+        $courseId = $routeCourse instanceof Course
+            ? $routeCourse->getKey()
+            : (is_numeric($routeCourse) ? $routeCourse : null);
 
         return [
             'code' => [
@@ -38,14 +34,34 @@ class UpdateCourseRequest extends FormRequest
                 'max:20',
                 Rule::unique('courses', 'code')->ignore($courseId),
             ],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'sks' => ['required', 'integer', 'between:1,6'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+            'description' => [
+                'nullable',
+                'string',
+            ],
+            'sks' => [
+                'required',
+                'integer',
+                'between:1,6',
+            ],
             'lecturer_id' => [
                 'required',
                 'integer',
                 Rule::exists('users', 'id')
                     ->where(fn ($query) => $query->where('role', 'dosen')),
+                function ($attribute, $value, $fail) use ($routeCourse) {
+                    if (
+                        $this->user()?->role === 'dosen'
+                        && $routeCourse instanceof Course
+                        && (int) $value !== (int) $routeCourse->lecturer_id
+                    ) {
+                        $fail('Dosen pengampu tidak boleh diubah.');
+                    }
+                },
             ],
             'status' => [
                 'required',
@@ -61,18 +77,23 @@ class UpdateCourseRequest extends FormRequest
             'code.string' => 'Kode mata kuliah harus berupa teks.',
             'code.max' => 'Kode mata kuliah tidak boleh lebih dari :max karakter.',
             'code.unique' => 'Kode mata kuliah sudah digunakan oleh mata kuliah lain.',
+
             'name.required' => 'Nama mata kuliah wajib diisi.',
             'name.string' => 'Nama mata kuliah harus berupa teks.',
             'name.max' => 'Nama mata kuliah tidak boleh lebih dari :max karakter.',
+
             'description.string' => 'Deskripsi mata kuliah harus berupa teks.',
+
             'sks.required' => 'Jumlah SKS wajib diisi.',
             'sks.integer' => 'Jumlah SKS harus berupa angka bulat.',
             'sks.between' => 'Jumlah SKS harus antara :min sampai :max.',
             'sks.min' => 'Jumlah SKS minimal adalah :min SKS.',
             'sks.max' => 'Jumlah SKS maksimal adalah :max SKS.',
+
             'lecturer_id.required' => 'Dosen pengampu wajib dipilih.',
             'lecturer_id.integer' => 'Format ID dosen pengampu tidak valid.',
             'lecturer_id.exists' => 'Dosen pengampu yang dipilih tidak terdaftar sebagai dosen.',
+
             'status.required' => 'Status mata kuliah wajib dipilih.',
             'status.in' => 'Status mata kuliah harus salah satu dari: draft, active, atau archived.',
         ];
