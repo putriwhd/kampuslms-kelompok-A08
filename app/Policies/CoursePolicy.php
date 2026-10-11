@@ -13,9 +13,21 @@ use App\Models\User;
  * - update(Course $course), delete(Course $course), manage(Course $course):
  *   hanya admin, sesuai hak CRUD mata kuliah.
  * - viewDraft(Course $course): admin atau dosen pengampu.
+ * - viewEnrollments(Course $course): admin atau dosen pengampu; daftar anggota.
+ * - viewEnrollment(Course $course, User $student): admin, dosen pengampu,
+ *   atau mahasiswa tersebut untuk enrollment miliknya sendiri.
+ * - manageEnrollment(Course $course): admin atau dosen pengampu.
+ * - enroll(Course $course, User $student): admin atau dosen pengampu dapat
+ *   mendaftarkan pengguna ber-role mahasiswa.
+ * - unenroll(Course $course, User $student): admin atau dosen pengampu dapat
+ *   mengeluarkan mahasiswa yang terdaftar.
  *
  * Blade: @can('view', $course), @can('create', \App\Models\Course::class),
- * @can('manage', $course), dan @can('viewDraft', $course).
+ * @can('manage', $course), @can('viewDraft', $course),
+ * @can('viewEnrollments', $course),
+ * @can('viewEnrollment', [$course, $student]),
+ * @can('enroll', [$course, $student]), dan
+ * @can('unenroll', [$course, $student]).
  */
 class CoursePolicy
 {
@@ -24,7 +36,7 @@ class CoursePolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
     }
 
     /**
@@ -99,5 +111,66 @@ class CoursePolicy
     public function manage(User $user, Course $course): bool
     {
         return $user->role === 'admin';
+    }
+
+    /**
+     * Menentukan apakah pengguna dapat melihat daftar mahasiswa terdaftar.
+     */
+    public function viewEnrollments(User $user, Course $course): bool
+    {
+        return $user->role === 'admin'
+            || ($user->role === 'dosen'
+                && $user->taughtCourses()->whereKey($course->getKey())->exists());
+    }
+
+    /**
+     * Menentukan apakah pengguna dapat melihat enrollment mahasiswa tertentu.
+     */
+    public function viewEnrollment(User $user, Course $course, User $student): bool
+    {
+        if (! $course->students()->whereKey($student->getKey())->exists()) {
+            return false;
+        }
+
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        if ($user->role === 'dosen') {
+            return $user->taughtCourses()->whereKey($course->getKey())->exists();
+        }
+
+        return $user->role === 'mahasiswa'
+            && $user->is($student);
+    }
+
+    /**
+     * Menentukan apakah pengguna dapat menambah atau menghapus enrollment.
+     */
+    public function manageEnrollment(User $user, Course $course): bool
+    {
+        return $user->role === 'admin'
+            || ($user->role === 'dosen'
+                && $user->taughtCourses()->whereKey($course->getKey())->exists());
+    }
+
+    /**
+     * Menentukan apakah pengguna dapat mendaftarkan mahasiswa ke mata kuliah.
+     */
+    public function enroll(User $user, Course $course, User $student): bool
+    {
+        return $student->role === 'mahasiswa'
+            && $this->manageEnrollment($user, $course)
+            && ! $course->students()->whereKey($student->getKey())->exists();
+    }
+
+    /**
+     * Menentukan apakah pengguna dapat mengeluarkan mahasiswa dari mata kuliah.
+     */
+    public function unenroll(User $user, Course $course, User $student): bool
+    {
+        return $student->role === 'mahasiswa'
+            && $this->manageEnrollment($user, $course)
+            && $course->students()->whereKey($student->getKey())->exists();
     }
 }
