@@ -28,7 +28,7 @@ class AssignmentPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
     }
 
     /**
