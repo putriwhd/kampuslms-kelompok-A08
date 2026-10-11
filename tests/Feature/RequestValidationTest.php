@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
@@ -19,7 +20,7 @@ class RequestValidationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * Helper untuk memvalidasi instance FormRequest secara presisi.
+     * Helper untuk memvalidasi instance FormRequest.
      */
     protected function validateRequest(
         FormRequest $request,
@@ -28,15 +29,35 @@ class RequestValidationTest extends TestCase
         string $paramName = 'id'
     ): \Illuminate\Validation\Validator {
         if ($routeEntity !== null) {
-            $route = new Route('PUT', 'dummy/{' . $paramName . '}', []);
+            $idValue = is_object($routeEntity)
+                ? $routeEntity->getKey()
+                : $routeEntity;
+
+            $route = new Route(
+                'PUT',
+                'dummy/{' . $paramName . '}',
+                []
+            );
+
+            $route->bind(
+                Request::create('/dummy/' . $idValue, 'PUT')
+            );
+
             $route->setParameter($paramName, $routeEntity);
+
             $request->setRouteResolver(fn () => $route);
 
-            $idValue = is_object($routeEntity) ? $routeEntity->id : $routeEntity;
-            $request->merge([$paramName => $routeEntity, 'id' => $idValue]);
+            $request->merge([
+                $paramName => $routeEntity,
+                'id' => $idValue,
+            ]);
         }
 
-        return Validator::make($data, $request->rules(), $request->messages());
+        return Validator::make(
+            $data,
+            $request->rules(),
+            $request->messages()
+        );
     }
 
     /*
@@ -58,7 +79,10 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validator = $this->validateRequest(new StoreCourseRequest(), $data);
+        $validator = $this->validateRequest(
+            new StoreCourseRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->passes());
     }
@@ -66,7 +90,11 @@ class RequestValidationTest extends TestCase
     public function test_store_course_request_fails_if_code_is_duplicate(): void
     {
         $lecturer = User::factory()->dosen()->create();
-        Course::factory()->create(['code' => 'CS101', 'lecturer_id' => $lecturer->id]);
+
+        Course::factory()->create([
+            'code' => 'CS101',
+            'lecturer_id' => $lecturer->id,
+        ]);
 
         $data = [
             'code' => 'CS101',
@@ -76,9 +104,13 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validator = $this->validateRequest(new StoreCourseRequest(), $data);
+        $validator = $this->validateRequest(
+            new StoreCourseRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Kode mata kuliah sudah terdaftar. Gunakan kode lain.',
             $validator->errors()->get('code')
@@ -97,8 +129,13 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validatorZero = $this->validateRequest(new StoreCourseRequest(), $dataZero);
+        $validatorZero = $this->validateRequest(
+            new StoreCourseRequest(),
+            $dataZero
+        );
+
         $this->assertTrue($validatorZero->fails());
+
         $this->assertContains(
             'Jumlah SKS harus antara 1 sampai 6.',
             $validatorZero->errors()->get('sks')
@@ -112,8 +149,13 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validatorSeven = $this->validateRequest(new StoreCourseRequest(), $dataSeven);
+        $validatorSeven = $this->validateRequest(
+            new StoreCourseRequest(),
+            $dataSeven
+        );
+
         $this->assertTrue($validatorSeven->fails());
+
         $this->assertContains(
             'Jumlah SKS harus antara 1 sampai 6.',
             $validatorSeven->errors()->get('sks')
@@ -132,9 +174,13 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validator = $this->validateRequest(new StoreCourseRequest(), $data);
+        $validator = $this->validateRequest(
+            new StoreCourseRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Dosen pengampu yang dipilih tidak terdaftar atau bukan dosen.',
             $validator->errors()->get('lecturer_id')
@@ -153,9 +199,13 @@ class RequestValidationTest extends TestCase
             'status' => 'superadmin',
         ];
 
-        $validator = $this->validateRequest(new StoreCourseRequest(), $data);
+        $validator = $this->validateRequest(
+            new StoreCourseRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Status mata kuliah harus salah satu dari: draft, active, atau archived.',
             $validator->errors()->get('status')
@@ -164,13 +214,14 @@ class RequestValidationTest extends TestCase
 
     /*
     |--------------------------------------------------------------------------
-    | UpdateCourseRequest Tests (Unique Ignore)
+    | UpdateCourseRequest Tests
     |--------------------------------------------------------------------------
     */
 
     public function test_update_course_request_passes_when_keeping_the_same_code(): void
     {
         $lecturer = User::factory()->dosen()->create();
+
         $course = Course::factory()->create([
             'code' => 'CS201',
             'lecturer_id' => $lecturer->id,
@@ -184,7 +235,12 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validator = $this->validateRequest(new UpdateCourseRequest(), $updateData, $course, 'course');
+        $validator = $this->validateRequest(
+            new UpdateCourseRequest(),
+            $updateData,
+            $course,
+            'course'
+        );
 
         $this->assertTrue($validator->passes());
     }
@@ -192,10 +248,12 @@ class RequestValidationTest extends TestCase
     public function test_update_course_request_fails_when_code_used_by_another_course(): void
     {
         $lecturer = User::factory()->dosen()->create();
-        $courseA = Course::factory()->create([
+
+        Course::factory()->create([
             'code' => 'CS201',
             'lecturer_id' => $lecturer->id,
         ]);
+
         $courseB = Course::factory()->create([
             'code' => 'CS202',
             'lecturer_id' => $lecturer->id,
@@ -209,9 +267,15 @@ class RequestValidationTest extends TestCase
             'status' => 'active',
         ];
 
-        $validator = $this->validateRequest(new UpdateCourseRequest(), $updateData, $courseB, 'course');
+        $validator = $this->validateRequest(
+            new UpdateCourseRequest(),
+            $updateData,
+            $courseB,
+            'course'
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Kode mata kuliah sudah digunakan oleh mata kuliah lain.',
             $validator->errors()->get('code')
@@ -234,20 +298,42 @@ class RequestValidationTest extends TestCase
             'role' => 'mahasiswa',
         ];
 
-        $validator = $this->validateRequest(new UserStoreRequest(), $data);
+        $validator = $this->validateRequest(
+            new UserStoreRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->passes());
     }
 
     public function test_user_store_request_fails_if_required_fields_are_missing(): void
     {
-        $validator = $this->validateRequest(new UserStoreRequest(), []);
+        $validator = $this->validateRequest(
+            new UserStoreRequest(),
+            []
+        );
 
         $this->assertTrue($validator->fails());
-        $this->assertContains('Nama pengguna wajib diisi.', $validator->errors()->get('name'));
-        $this->assertContains('Alamat email wajib diisi.', $validator->errors()->get('email'));
-        $this->assertContains('Kata sandi wajib diisi.', $validator->errors()->get('password'));
-        $this->assertContains('Peran pengguna wajib dipilih.', $validator->errors()->get('role'));
+
+        $this->assertContains(
+            'Nama pengguna wajib diisi.',
+            $validator->errors()->get('name')
+        );
+
+        $this->assertContains(
+            'Alamat email wajib diisi.',
+            $validator->errors()->get('email')
+        );
+
+        $this->assertContains(
+            'Kata sandi wajib diisi.',
+            $validator->errors()->get('password')
+        );
+
+        $this->assertContains(
+            'Peran pengguna wajib dipilih.',
+            $validator->errors()->get('role')
+        );
     }
 
     public function test_user_store_request_fails_if_email_or_nim_nip_is_duplicate(): void
@@ -265,13 +351,18 @@ class RequestValidationTest extends TestCase
             'role' => 'dosen',
         ];
 
-        $validator = $this->validateRequest(new UserStoreRequest(), $data);
+        $validator = $this->validateRequest(
+            new UserStoreRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Alamat email sudah terdaftar. Gunakan email lain.',
             $validator->errors()->get('email')
         );
+
         $this->assertContains(
             'NIM/NIP sudah terdaftar. Gunakan NIM/NIP lain.',
             $validator->errors()->get('nim_nip')
@@ -287,9 +378,13 @@ class RequestValidationTest extends TestCase
             'role' => 'mahasiswa',
         ];
 
-        $validator = $this->validateRequest(new UserStoreRequest(), $data);
+        $validator = $this->validateRequest(
+            new UserStoreRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Kata sandi minimal harus 6 karakter.',
             $validator->errors()->get('password')
@@ -305,9 +400,13 @@ class RequestValidationTest extends TestCase
             'role' => 'superadmin',
         ];
 
-        $validator = $this->validateRequest(new UserStoreRequest(), $data);
+        $validator = $this->validateRequest(
+            new UserStoreRequest(),
+            $data
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Peran pengguna harus salah satu dari: admin, dosen, atau mahasiswa.',
             $validator->errors()->get('role')
@@ -316,7 +415,7 @@ class RequestValidationTest extends TestCase
 
     /*
     |--------------------------------------------------------------------------
-    | UserUpdateRequest Tests (Unique Ignore & Password Opsional)
+    | UserUpdateRequest Tests
     |--------------------------------------------------------------------------
     */
 
@@ -334,17 +433,23 @@ class RequestValidationTest extends TestCase
             'role' => 'dosen',
         ];
 
-        $validator = $this->validateRequest(new UserUpdateRequest(), $updateData, $user, 'user');
+        $validator = $this->validateRequest(
+            new UserUpdateRequest(),
+            $updateData,
+            $user,
+            'user'
+        );
 
         $this->assertTrue($validator->passes());
     }
 
     public function test_user_update_request_fails_when_email_or_nim_nip_used_by_another_user(): void
     {
-        $userA = User::factory()->create([
+        User::factory()->create([
             'email' => 'user.a@kampuslms.test',
             'nim_nip' => 'NIMA111',
         ]);
+
         $userB = User::factory()->create([
             'email' => 'user.b@kampuslms.test',
             'nim_nip' => 'NIMB222',
@@ -357,13 +462,20 @@ class RequestValidationTest extends TestCase
             'role' => 'mahasiswa',
         ];
 
-        $validator = $this->validateRequest(new UserUpdateRequest(), $updateData, $userB, 'user');
+        $validator = $this->validateRequest(
+            new UserUpdateRequest(),
+            $updateData,
+            $userB,
+            'user'
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Alamat email sudah digunakan oleh pengguna lain.',
             $validator->errors()->get('email')
         );
+
         $this->assertContains(
             'NIM/NIP sudah digunakan oleh pengguna lain.',
             $validator->errors()->get('nim_nip')
@@ -381,7 +493,12 @@ class RequestValidationTest extends TestCase
             'role' => 'mahasiswa',
         ];
 
-        $validator = $this->validateRequest(new UserUpdateRequest(), $updateData, $user, 'user');
+        $validator = $this->validateRequest(
+            new UserUpdateRequest(),
+            $updateData,
+            $user,
+            'user'
+        );
 
         $this->assertTrue($validator->passes());
     }
@@ -397,9 +514,15 @@ class RequestValidationTest extends TestCase
             'role' => 'mahasiswa',
         ];
 
-        $validator = $this->validateRequest(new UserUpdateRequest(), $updateData, $user, 'user');
+        $validator = $this->validateRequest(
+            new UserUpdateRequest(),
+            $updateData,
+            $user,
+            'user'
+        );
 
         $this->assertTrue($validator->fails());
+
         $this->assertContains(
             'Kata sandi minimal harus 6 karakter.',
             $validator->errors()->get('password')
@@ -412,11 +535,19 @@ class RequestValidationTest extends TestCase
     |--------------------------------------------------------------------------
     */
 
-    public function test_all_form_requests_authorize_method_returns_true(): void
+    public function test_course_form_requests_authorize_method_returns_true(): void
     {
         $this->assertTrue((new StoreCourseRequest())->authorize());
         $this->assertTrue((new UpdateCourseRequest())->authorize());
-        $this->assertTrue((new UserStoreRequest())->authorize());
-        $this->assertTrue((new UserUpdateRequest())->authorize());
+    }
+
+    public function test_user_update_request_denies_unauthenticated_access(): void
+    {
+        $this->assertFalse((new UserUpdateRequest())->authorize());
+    }
+
+    public function test_user_store_request_denies_unauthenticated_access(): void
+    {
+        $this->assertFalse((new UserStoreRequest())->authorize());
     }
 }
