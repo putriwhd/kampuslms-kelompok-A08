@@ -4,34 +4,21 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebAuthController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Halaman Statis
+| Halaman Statis & Autentikasi Web
 |--------------------------------------------------------------------------
 */
 
 Route::view('/', 'dashboard')->name('dashboard');
-
 Route::view('/tentang', 'tentang')->name('tentang');
 
-
-/*
-|--------------------------------------------------------------------------
-| TEST SECURITY — DATA LEAK
-|--------------------------------------------------------------------------
-| Route ini sengaja dibuat untuk menguji apakah data User
-| dapat diakses tanpa autentikasi.
-|
-| JIKA endpoint ini mengembalikan data User dalam JSON,
-| berarti terjadi kebocoran data.
-*/
-
-Route::get('/test-leak', function () {
-    return response()->json(\App\Models\User::all());
-});
-
+Route::get('/login', [WebAuthController::class, 'create'])->name('login');
+Route::post('/login', [WebAuthController::class, 'store']);
+Route::post('/logout', [WebAuthController::class, 'destroy'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -41,37 +28,38 @@ Route::get('/test-leak', function () {
 
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware('role:admin')
     ->group(function () {
 
-        Route::resource('users', UserController::class);
+        Route::middleware('role:admin')->group(function () {
+            Route::resource('users', UserController::class);
+        });
 
-        Route::resource('courses', CourseController::class);
+        Route::middleware(['auth', 'role:admin'])->group(function () {
+            Route::resource('courses', CourseController::class);
 
-        Route::scopeBindings()->group(function () {
+            Route::scopeBindings()->group(function () {
 
-            Route::resource('courses.materials', MaterialController::class)
-                ->only(['index', 'show'])
-                ->shallow();
+                Route::resource('courses.materials', MaterialController::class)
+                    ->only(['index', 'show'])
+                    ->shallow();
 
-            Route::get(
-                'courses/{course}/materials/{material}',
-                [MaterialController::class, 'showInCourse']
-            )->name('courses.materials.scoped-show');
+                Route::get(
+                    'courses/{course}/materials/{material}',
+                    [MaterialController::class, 'showInCourse']
+                )->name('courses.materials.scoped-show');
 
+                Route::resource('courses.assignments', AssignmentController::class)
+                    ->only(['index', 'show'])
+                    ->shallow();
 
-            Route::resource('courses.assignments', AssignmentController::class)
-                ->only(['index', 'show'])
-                ->shallow();
+                Route::get(
+                    'courses/{course}/assignments/{assignment}',
+                    [AssignmentController::class, 'showInCourse']
+                )->name('courses.assignments.scoped-show');
 
-            Route::get(
-                'courses/{course}/assignments/{assignment}',
-                [AssignmentController::class, 'showInCourse']
-            )->name('courses.assignments.scoped-show');
-
+            });
         });
     });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -98,7 +86,6 @@ Route::prefix('dosen')
                 [MaterialController::class, 'showInCourse']
             )->name('courses.materials.scoped-show');
 
-
             Route::resource('courses.assignments', AssignmentController::class)
                 ->only(['index', 'show'])
                 ->shallow();
@@ -110,7 +97,6 @@ Route::prefix('dosen')
 
         });
     });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -137,7 +123,6 @@ Route::prefix('mahasiswa')
                 [MaterialController::class, 'showInCourse']
             )->name('courses.materials.scoped-show');
 
-
             Route::resource('courses.assignments', AssignmentController::class)
                 ->only(['index', 'show'])
                 ->shallow();
@@ -149,8 +134,3 @@ Route::prefix('mahasiswa')
 
         });
     });
-
-    // Tambahkan di paling bawah routes/web.php
-            Route::get('/test-leak', function () {
-            return response()->json(\App\Models\User::all());
-            });
