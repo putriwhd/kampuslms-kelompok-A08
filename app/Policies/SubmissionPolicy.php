@@ -72,14 +72,10 @@ class SubmissionPolicy
             return false;
         }
 
-        if ($assignment->course->status === 'draft') {
-            return false;
-        }
-
-        return $assignment->course()->whereHas(
-            'students',
-            fn ($query) => $query->whereKey($user->getKey())
-        )->exists();
+        return $assignment->course()
+            ->where('status', '!=', 'draft')
+            ->whereHas('students', fn ($query) => $query->whereKey($user->getKey()))
+            ->exists();
     }
 
     /**

@@ -10,8 +10,9 @@ use App\Models\User;
  * - viewAny(): tanpa argumen; daftar mata kuliah.
  * - view(Course $course): mahasiswa harus terdaftar dan mata kuliah bukan draft.
  * - create(): tanpa argumen; hanya admin.
- * - update(Course $course), delete(Course $course): pengelolaan sesuai peran.
- * - viewDraft(Course $course), manage(Course $course): admin atau dosen pengampu.
+ * - update(Course $course), delete(Course $course), manage(Course $course):
+ *   hanya admin, sesuai hak CRUD mata kuliah.
+ * - viewDraft(Course $course): admin atau dosen pengampu.
  *
  * Blade: @can('view', $course), @can('create', \App\Models\Course::class),
  * @can('manage', $course), dan @can('viewDraft', $course).
@@ -65,13 +66,11 @@ class CoursePolicy
 
     /**
      * Menentukan apakah pengguna dapat memperbarui data mata kuliah.
-     * Aturan: Admin atau dosen pengampu mata kuliah.
+     * Aturan: Hanya admin yang dapat mengubah mata kuliah.
      */
     public function update(User $user, Course $course): bool
     {
-        return $user->role === 'admin'
-            || ($user->role === 'dosen'
-                && $user->taughtCourses()->whereKey($course->getKey())->exists());
+        return $user->role === 'admin';
     }
 
     /**
@@ -95,12 +94,10 @@ class CoursePolicy
     }
 
     /**
-     * Menentukan apakah pengguna memiliki hak pengelolaan mata kuliah.
+     * Menentukan apakah pengguna memiliki hak CRUD mata kuliah.
      */
     public function manage(User $user, Course $course): bool
     {
-        return $user->role === 'admin'
-            || ($user->role === 'dosen'
-                && $user->taughtCourses()->whereKey($course->getKey())->exists());
+        return $user->role === 'admin';
     }
 }
