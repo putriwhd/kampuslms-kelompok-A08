@@ -8,6 +8,8 @@ use App\Models\User;
 
 /**
  * Kontrak ability (argumen selain User):
+ * - viewAny(): tanpa argumen; admin, dosen, dan mahasiswa dapat meminta daftar
+ *   yang wajib dibatasi ke nilai yang boleh mereka lihat.
  * - view(Grade $grade): admin, dosen pengampu, atau mahasiswa pemilik submission.
  * - create(?Submission $submission = null): hanya dosen pengampu dan submission
  *   wajib diberikan (mis. @can('create', [Grade::class, $submission])).
@@ -20,6 +22,14 @@ use App\Models\User;
  */
 class GradePolicy
 {
+    /**
+     * Menentukan apakah pengguna dapat meminta daftar nilai yang terscope.
+     */
+    public function viewAny(User $user): bool
+    {
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
+    }
+
     /**
      * Menentukan apakah pengguna dapat melihat nilai.
      * Aturan:

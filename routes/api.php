@@ -14,12 +14,12 @@ use App\Http\Controllers\Api\NotificationController;
 |--------------------------------------------------------------------------
 */
 
-// Rute fallback login
+// Rute fallback login API
 Route::get('/login', function () {
     return response()->json([
         'message' => 'Tidak terautentikasi.'
     ], 401);
-})->name('login');
+})->name('api.login');
 
 Route::prefix('v1')->group(function () {
 
@@ -43,13 +43,13 @@ Route::prefix('v1')->group(function () {
         // --- Assignments (Hanya Dosen yang Boleh Bikin / Edit / Hapus) ---
         Route::post('/assignments', [AssignmentController::class, 'store'])
             ->middleware('role:dosen');
-            
+
         Route::match(['put', 'patch'], '/assignments/{id}', [AssignmentController::class, 'update'])
             ->middleware('role:dosen');
-            
+
         Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy'])
             ->middleware('role:dosen');
-            
+
         Route::get('/assignments/{id}/submissions', [AssignmentController::class, 'submissions']);
         Route::post('/assignments/{id}/submissions', [SubmissionController::class, 'storeForAssignment']);
 

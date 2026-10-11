@@ -11,9 +11,9 @@ use App\Models\User;
  * - viewAny(): tanpa argumen; daftar submission.
  * - view(Submission $submission): admin/pengampu atau mahasiswa pemilik.
  * - create(Assignment $assignment): mahasiswa terdaftar untuk tugas published.
- * - update(Submission $submission): pemilik mahasiswa, tugas masih published,
- *   dan submission belum dinilai.
- * - delete(Submission $submission): admin atau dosen pengampu.
+ * - update(Submission $submission), delete(Submission $submission):
+ *   admin atau dosen pengampu; mahasiswa tidak dapat mengubah/menghapus
+ *   submission setelah dikirim.
  * - grade(Submission $submission): hanya dosen pengampu.
  *
  * Blade: @can('view', $submission),
@@ -28,7 +28,7 @@ class SubmissionPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
     }
 
     /**
@@ -79,24 +79,19 @@ class SubmissionPolicy
     }
 
     /**
-     * Menentukan apakah pengguna dapat memperbarui file submission.
-     * Aturan: Hanya mahasiswa pemilik submission yang belum dinilai dan tugas masih published.
+     * Menentukan apakah pengguna dapat memperbarui submission.
+     * Mahasiswa tidak dapat mengubah submission setelah dikirim.
      */
     public function update(User $user, Submission $submission): bool
     {
-        if ($user->role !== 'mahasiswa') {
-            return false;
+        if ($user->role === 'admin') {
+            return true;
         }
 
-        if (! $submission->student()->whereKey($user->getKey())->exists()) {
-            return false;
-        }
-
-        if ($submission->assignment->status !== 'published') {
-            return false;
-        }
-
-        return ! $submission->grade()->exists();
+        return $user->role === 'dosen'
+            && $user->taughtCourses()
+                ->whereHas('assignments.submissions', fn ($query) => $query->whereKey($submission->getKey()))
+                ->exists();
     }
 
     /**

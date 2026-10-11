@@ -201,16 +201,19 @@ printf '%s' "$LAST_BODY" | php -r '
 '
 printf 'PASS daftar mahasiswa tidak membocorkan tugas draft\n'
 
-request_status 200 'Filter draft tidak menampilkan tugas draft kepada mahasiswa' \
+request_status 200 'Mahasiswa tetap hanya menerima tugas published pada filter draft' \
     "$BASE_URL/courses/$COURSE_ID/assignments?status=draft" \
     -H 'Accept: application/json' "${AUTH_STUDENT[@]}"
 php -r '
     $response = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
-    if (($response["data"] ?? []) !== []) {
-        fwrite(STDERR, "FAIL filter draft mahasiswa mengembalikan data.\n");
-        exit(1);
+    foreach ($response["data"] ?? [] as $assignment) {
+        if (($assignment["status"] ?? null) !== "published") {
+            fwrite(STDERR, "FAIL filter draft mahasiswa membocorkan tugas draft.\n");
+            exit(1);
+        }
     }
 ' <<< "$LAST_BODY"
+printf 'PASS filter draft tidak membocorkan tugas draft kepada mahasiswa\n'
 
 request_status 403 'Dosen lain tidak dapat melihat tugas draft course asing' \
     "$BASE_URL/courses/$COURSE_ID/assignments?status=draft" \
