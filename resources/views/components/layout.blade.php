@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -18,7 +19,9 @@
             $selectedRole = auth()->user()->role;
         } else {
             $selectedRole = request()->attributes->get('selected_role')
-                ?? (in_array(request('as'), $availableRoles, true) ? request('as') : 'mahasiswa');
+                ?? (in_array(request('as'), $availableRoles, true)
+                    ? request('as')
+                    : 'mahasiswa');
         }
     @endphp
 
@@ -77,40 +80,44 @@
                     </a>
                 @endif
 
-                {{-- DROPDOWN SIMULASI ROLE --}}
-                <form
-                    action="{{ route('dashboard') }}"
-                    method="GET"
-                    class="role-selector-form"
-                    id="roleSelectorForm"
-                >
-                    <select
-                        name="as"
-                        class="role-select"
-                        id="roleSelect"
+                {{-- DROPDOWN SIMULASI ROLE UNTUK GUEST --}}
+                @guest
+                    <form
+                        action="{{ route('dashboard') }}"
+                        method="GET"
+                        class="role-selector-form"
+                        id="roleSelectorForm"
                     >
-                        <option
-                            value="mahasiswa"
-                            {{ $selectedRole === 'mahasiswa' ? 'selected' : '' }}
+                        <select
+                            name="as"
+                            class="role-select"
+                            id="roleSelect"
+                            aria-label="Pilih simulasi role"
+                            onchange="this.form.submit()"
                         >
-                            👤 Role: Mahasiswa
-                        </option>
+                            <option
+                                value="mahasiswa"
+                                {{ $selectedRole === 'mahasiswa' ? 'selected' : '' }}
+                            >
+                                👤 Role: Mahasiswa
+                            </option>
 
-                        <option
-                            value="dosen"
-                            {{ $selectedRole === 'dosen' ? 'selected' : '' }}
-                        >
-                            👨‍🏫 Role: Dosen
-                        </option>
+                            <option
+                                value="dosen"
+                                {{ $selectedRole === 'dosen' ? 'selected' : '' }}
+                            >
+                                👨‍🏫 Role: Dosen
+                            </option>
 
-                        <option
-                            value="admin"
-                            {{ $selectedRole === 'admin' ? 'selected' : '' }}
-                        >
-                            🛠️ Role: Admin
-                        </option>
-                    </select>
-                </form>
+                            <option
+                                value="admin"
+                                {{ $selectedRole === 'admin' ? 'selected' : '' }}
+                            >
+                                🛠️ Role: Admin
+                            </option>
+                        </select>
+                    </form>
+                @endguest
 
             </nav>
 
