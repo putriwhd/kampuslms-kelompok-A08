@@ -2,13 +2,27 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Assignment;
+use App\Models\Course;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAssignmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()?->role, ['admin', 'dosen'], true);
+        $user = $this->user();
+        if (! $user || ! in_array($user->role, ['admin', 'dosen'], true)) {
+            return false;
+        }
+
+        $course = $this->route('course');
+
+        if (! $course instanceof Course && $this->filled('course_id')) {
+            $course = Course::find($this->input('course_id'));
+        }
+
+        return ! ($course instanceof Course)
+            || $user->can('create', [Assignment::class, $course]);
     }
 
     public function rules(): array

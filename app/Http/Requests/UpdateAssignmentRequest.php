@@ -2,13 +2,26 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Assignment;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateAssignmentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return in_array($this->user()?->role, ['admin', 'dosen'], true);
+        $user = $this->user();
+        if (! $user || ! in_array($user->role, ['admin', 'dosen'], true)) {
+            return false;
+        }
+
+        $assignment = $this->route('assignment');
+
+        if (! $assignment instanceof Assignment) {
+            $assignment = Assignment::find($this->route('id'));
+        }
+
+        return ! ($assignment instanceof Assignment)
+            || $user->can('update', $assignment);
     }
 
     public function rules(): array

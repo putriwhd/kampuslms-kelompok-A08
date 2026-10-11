@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebAuthController;
@@ -13,12 +14,22 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::view('/', 'dashboard')->name('dashboard');
+Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::view('/tentang', 'tentang')->name('tentang');
 
 Route::get('/login', [WebAuthController::class, 'create'])->name('login');
-Route::post('/login', [WebAuthController::class, 'store']);
-Route::post('/logout', [WebAuthController::class, 'destroy'])->name('logout');
+Route::post('/login', [WebAuthController::class, 'store'])->name('login.store');
+Route::get('/forgot-password', [WebAuthController::class, 'requestPasswordReset'])
+    ->name('password.request');
+Route::post('/forgot-password', [WebAuthController::class, 'sendPasswordResetLink'])
+    ->name('password.email');
+Route::get('/reset-password/{token}', [WebAuthController::class, 'showPasswordResetForm'])
+    ->name('password.reset');
+Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])
+    ->name('password.update');
+Route::post('/logout', [WebAuthController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +41,7 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
 
-        Route::middleware('role:admin')->group(function () {
+        Route::middleware(['auth', 'role:admin'])->group(function () {
             Route::resource('users', UserController::class);
         });
 
@@ -40,7 +51,15 @@ Route::prefix('admin')
             Route::scopeBindings()->group(function () {
 
                 Route::resource('courses.materials', MaterialController::class)
-                    ->only(['index', 'show'])
+                    ->only([
+                        'index',
+                        'show',
+                        'create',
+                        'store',
+                        'edit',
+                        'update',
+                        'destroy',
+                    ])
                     ->shallow();
 
                 Route::get(
@@ -49,7 +68,15 @@ Route::prefix('admin')
                 )->name('courses.materials.scoped-show');
 
                 Route::resource('courses.assignments', AssignmentController::class)
-                    ->only(['index', 'show'])
+                    ->only([
+                        'index',
+                        'show',
+                        'create',
+                        'store',
+                        'edit',
+                        'update',
+                        'destroy',
+                    ])
                     ->shallow();
 
                 Route::get(
@@ -69,16 +96,24 @@ Route::prefix('admin')
 
 Route::prefix('dosen')
     ->name('dosen.')
-    ->middleware('role:dosen')
+    ->middleware(['auth', 'role:dosen'])
     ->group(function () {
 
         Route::resource('courses', CourseController::class)
-            ->only(['index', 'show']);
+            ->only(['index', 'show', 'edit', 'update']);
 
         Route::scopeBindings()->group(function () {
 
             Route::resource('courses.materials', MaterialController::class)
-                ->only(['index', 'show'])
+                ->only([
+                    'index',
+                    'show',
+                    'create',
+                    'store',
+                    'edit',
+                    'update',
+                    'destroy',
+                ])
                 ->shallow();
 
             Route::get(
@@ -87,7 +122,15 @@ Route::prefix('dosen')
             )->name('courses.materials.scoped-show');
 
             Route::resource('courses.assignments', AssignmentController::class)
-                ->only(['index', 'show'])
+                ->only([
+                    'index',
+                    'show',
+                    'create',
+                    'store',
+                    'edit',
+                    'update',
+                    'destroy',
+                ])
                 ->shallow();
 
             Route::get(
@@ -106,7 +149,7 @@ Route::prefix('dosen')
 
 Route::prefix('mahasiswa')
     ->name('mahasiswa.')
-    ->middleware('role:mahasiswa')
+    ->middleware(['auth', 'role:mahasiswa'])
     ->group(function () {
 
         Route::resource('courses', CourseController::class)

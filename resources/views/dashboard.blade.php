@@ -1,102 +1,62 @@
 <x-layout>
-
-    <x-slot:title>
-        Dashboard
-    </x-slot:title>
-
-    @php
-        $roles = ['mahasiswa', 'dosen', 'admin'];
-
-        // Role pengguna login diambil dari akun autentikasi.
-        if (auth()->check()) {
-            $role = auth()->user()->role;
-        } else {
-            // Guest tidak otomatis dianggap sebagai mahasiswa.
-            $role = in_array(request('as'), $roles, true)
-                ? request('as')
-                : null;
-        }
-
-        $roleData = [
-            'mahasiswa' => [
-                'icon' => '🎓',
-                'title' => 'Selamat datang, Mahasiswa',
-                'description' => 'Gunakan menu',
-                'after' => 'untuk melihat daftar mata kuliah yang tersedia.',
-            ],
-            'dosen' => [
-                'icon' => '👨‍🏫',
-                'title' => 'Selamat datang, Dosen',
-                'description' => 'Lihat mata kuliah yang tersedia melalui menu',
-                'after' => 'Pada tahap ini, simulasi role belum menggunakan login atau pembatasan akses.',
-            ],
-            'admin' => [
-                'icon' => '🛠️',
-                'title' => 'Selamat datang, Admin',
-                'description' => 'Kelola mata kuliah melalui menu',
-                'after' => 'Menu Pengguna tersedia di navbar untuk simulasi CRUD pengguna.',
-            ],
-        ];
-
-        $currentRole = $role ? ($roleData[$role] ?? null) : null;
-    @endphp
+    <x-slot:title>Dashboard</x-slot:title>
 
     <div class="page-header dashboard-page-header">
-        <h1 class="page-title">
-            KampusLMS
-        </h1>
+        <h1 class="page-title">KampusLMS</h1>
 
-        @if ($currentRole)
-            <p class="page-lead">
-                Selamat datang di KampusLMS. Anda sedang melihat tampilan sebagai
-                <strong class="dashboard-role">
-                    {{ ucfirst($role) }}
-                </strong>.
-            </p>
-        @else
+        @if (! $role)
             <p class="page-lead">
                 Selamat datang di KampusLMS. Silakan login untuk mengakses dashboard sesuai role Anda.
             </p>
-        @endif
-    </div>
+            <p><a href="{{ route('login') }}">Masuk ke KampusLMS</a></p>
+        @else
+            <p class="page-lead">
+                Selamat datang, {{ ucfirst($role) }} — {{ auth()->user()->name }}.
+                Dashboard Anda menampilkan data sesuai peran
+                <strong class="dashboard-role">{{ ucfirst($role) }}</strong>.
+            </p>
+            <span class="dashboard-role-info">Akses sebagai {{ ucfirst($role) }}</span>
 
-    @if ($currentRole)
-        <div class="dashboard-card">
+            <section class="dashboard-card" aria-labelledby="dashboard-summary">
+                <h2 id="dashboard-summary">Ringkasan {{ ucfirst($role) }}</h2>
 
-            <div class="dashboard-role-header">
+                <dl class="dashboard-stats">
+                    @foreach ($stats as $label => $value)
+                        <div class="dashboard-stat">
+                            <dt>{{ $label }}</dt>
+                            <dd>{{ $value }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </section>
 
-                <div class="dashboard-role-icon">
-                    {{ $currentRole['icon'] }}
-                </div>
-
-                <div>
-                    <h2 class="dashboard-role-title">
-                        {{ $currentRole['title'] }}
+            @if ($role !== 'admin')
+                <section class="dashboard-card" aria-labelledby="dashboard-courses">
+                    <h2 id="dashboard-courses">
+                        {{ $role === 'dosen' ? 'Mata Kuliah yang Diampu' : 'Mata Kuliah yang Diikuti' }}
                     </h2>
 
-                    <span class="dashboard-role-info">
-                        Akses sebagai {{ ucfirst($role) }}
-                    </span>
-                </div>
-
-            </div>
-
-            <div class="dashboard-divider"></div>
-
-            <p class="dashboard-description">
-                {{ $currentRole['description'] }}
-
-                <a
-                    href="{{ route($role . '.courses.index', ['as' => $role]) }}"
-                    class="interactive-link dashboard-course-link"
-                >
-                    Mata Kuliah
-                </a>
-
-                {{ $currentRole['after'] }}
-            </p>
-
-        </div>
-    @endif
-
+                    @forelse ($courses as $course)
+                        <article class="dashboard-course">
+                            <h3>
+                                <a href="{{ route($role . '.courses.show', [
+                                    'course' => $course,
+                                    'as' => $role,
+                                ]) }}">
+                                    {{ $course->name }}
+                                </a>
+                            </h3>
+                            <p>
+                                {{ $course->code }}
+                                · {{ $course->materials_count }} materi
+                                · {{ $course->assignments_count }} tugas
+                            </p>
+                        </article>
+                    @empty
+                        <p>Belum ada mata kuliah yang dapat ditampilkan.</p>
+                    @endforelse
+                </section>
+            @endif
+        @endif
+    </div>
 </x-layout>
