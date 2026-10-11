@@ -1,4 +1,3 @@
-﻿
 <x-layout>
 
     <x-slot:title>

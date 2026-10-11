@@ -9,6 +9,10 @@
             <div class="login-error" role="alert">{{ $errors->first() }}</div>
         @endif
 
+        @if (session('status'))
+            <div role="status">{{ session('status') }}</div>
+        @endif
+
         <form action="{{ route('login.store') }}" method="POST">
             @csrf
 
@@ -20,6 +24,8 @@
 
             <button type="submit">Masuk</button>
         </form>
+
+        <p><a href="{{ route('password.request') }}">Lupa kata sandi?</a></p>
     </section>
 
     <style>
