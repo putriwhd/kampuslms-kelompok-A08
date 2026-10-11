@@ -4,19 +4,9 @@ Platform *Learning Management System* (LMS) berbasis web yang dikembangkan mengg
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
-
-- **Framework Backend:** Laravel 12 (`laravel/framework: ^12.0`)
-- **Bahasa Pemrograman:** PHP `^8.3`
-- **Database:** MySQL / MariaDB (mendukung SQLite untuk testing)
-- **Autentikasi & API Token:** Laravel Sanctum (`^4.3`)
-- **Frontend & Templating:** Blade Templating Engine, Vanilla CSS, JavaScript
-- **Asset Bundler:** Vite
-- **Package Manager:** Composer & NPM
-
 ---
 
-## 👥 Tim Pengembang & Pembagian Tugas (Kelompok A-08)
+## Tim Pengembang & Pembagian Tugas (Kelompok A-08)
 
 Proyek ini dikembangkan oleh **Kelompok A-08** (Kelas Pemrograman Web):
 
@@ -30,7 +20,7 @@ Proyek ini dikembangkan oleh **Kelompok A-08** (Kelas Pemrograman Web):
 
 ---
 
-## 📋 Persyaratan Instalasi (Prerequisites)
+## Persyaratan Instalasi (Prerequisites)
 
 Sebelum menjalankan aplikasi, pastikan perangkat Anda telah terpasang:
 
@@ -42,7 +32,7 @@ Sebelum menjalankan aplikasi, pastikan perangkat Anda telah terpasang:
 
 ---
 
-## 🚀 Langkah Instalasi Proyek
+## Langkah Instalasi Proyek
 
 Ikuti langkah-langkah instalasi berikut secara berurutan:
 
@@ -105,27 +95,10 @@ php artisan serve
 ```
 
 Aplikasi sekarang dapat diakses melalui browser pada alamat:
-👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+ **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ---
 
-## 🔑 Akun Demo Aplikasi
-
-Database seeder (`DemoAccountSeeder.php` & `DatabaseSeeder.php`) telah menyediakan akun demo bawaan untuk setiap peran pengguna. Semua akun demo menggunakan kata sandi (*password*) yang sama:
-
-> **Password Akun Demo:** `password`
-
-| Peran (*Role*) | Nama Pengguna | Alamat Email | Password | Identitas (NIM/NIP) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Admin** | Administrator KampusLMS | `admin@kampuslms.test` | `password` | ADM001 |
-| **Dosen** | Dosen Demo | `dosen@kampuslms.test` | `password` | NIP001 |
-| **Mahasiswa** | Mahasiswa Demo | `mahasiswa@kampuslms.test` | `password` | MHS0001 |
-
-*Akun demo tambahan yang tersedia di seeder:*
-- **Dosen Kedua:** `dosen2@kampuslms.test` | Password: `password` | NIP: `NIP002`
-- **Mahasiswa Kedua:** `mahasiswa2@kampuslms.test` | Password: `password` | NIM: `MHS0002`
-
----
 
 ## 🌐 Tautan Proyek
 
