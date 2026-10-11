@@ -7,11 +7,22 @@
     </div>
 
     <div class="course-create-card">
-
         <div class="course-create-card-header">
             <h2>Informasi Mata Kuliah</h2>
             <p>Silakan isi data mata kuliah sesuai kebutuhan.</p>
         </div>
+
+        @if ($errors->any())
+            <div class="form-error" role="alert">
+                <strong>Data belum dapat disimpan.</strong>
+                <p>Periksa kembali isian berikut:</p>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form
             action="{{ route($role . '.courses.store', ['as' => $role]) }}"
@@ -20,7 +31,6 @@
         >
             @csrf
 
-            {{-- 1. Kode Mata Kuliah --}}
             <div class="form-group">
                 <label for="code">Kode Mata Kuliah</label>
                 <input
@@ -28,14 +38,15 @@
                     name="code"
                     type="text"
                     value="{{ old('code') }}"
+                    maxlength="20"
                     required
+                    aria-describedby="code-error"
                 >
                 @error('code')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="code-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- 2. Nama Mata Kuliah --}}
             <div class="form-group">
                 <label for="name">Nama Mata Kuliah</label>
                 <input
@@ -43,23 +54,29 @@
                     name="name"
                     type="text"
                     value="{{ old('name') }}"
+                    maxlength="255"
                     required
+                    aria-describedby="name-error"
                 >
                 @error('name')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="name-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- 3. Dosen Pengampu --}}
             <div class="form-group">
                 <label for="lecturer_id">Dosen Pengampu</label>
-                <select id="lecturer_id" name="lecturer_id" required>
+                <select
+                    id="lecturer_id"
+                    name="lecturer_id"
+                    required
+                    aria-describedby="lecturer-error"
+                >
                     <option value="">-- Pilih Dosen Pengampu --</option>
 
                     @foreach ($lecturers as $lecturer)
                         <option
                             value="{{ $lecturer->id }}"
-                            {{ old('lecturer_id') == $lecturer->id ? 'selected' : '' }}
+                            @selected((string) old('lecturer_id') === (string) $lecturer->id)
                         >
                             {{ $lecturer->name }}
                         </option>
@@ -67,29 +84,27 @@
                 </select>
 
                 @error('lecturer_id')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="lecturer-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- 4. Deskripsi --}}
             <div class="form-group">
                 <label for="description">Deskripsi</label>
-
                 <textarea
                     id="description"
                     name="description"
                     rows="5"
+                    maxlength="2000"
+                    aria-describedby="description-error"
                 >{{ old('description') }}</textarea>
 
                 @error('description')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="description-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- 5. SKS --}}
             <div class="form-group">
                 <label for="sks">SKS</label>
-
                 <input
                     id="sks"
                     name="sks"
@@ -98,18 +113,22 @@
                     max="6"
                     value="{{ old('sks', 3) }}"
                     required
+                    aria-describedby="sks-error"
                 >
 
                 @error('sks')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="sks-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- 6. Status Mata Kuliah --}}
             <div class="form-group">
                 <label for="status">Status Mata Kuliah</label>
-
-                <select id="status" name="status" required>
+                <select
+                    id="status"
+                    name="status"
+                    required
+                    aria-describedby="status-error"
+                >
                     <option
                         value="active"
                         @selected(old('status', 'active') === 'active')
@@ -133,11 +152,10 @@
                 </select>
 
                 @error('status')
-                    <small class="form-error">{{ $message }}</small>
+                    <small id="status-error" class="form-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            {{-- BUTTON --}}
             <div class="form-actions">
                 <a
                     href="{{ route($role . '.courses.index', ['as' => $role]) }}"
@@ -146,14 +164,10 @@
                     Batal
                 </a>
 
-                <button
-                    type="submit"
-                    class="save-button"
-                >
+                <button type="submit" class="save-button">
                     Simpan Mata Kuliah
                 </button>
             </div>
-
         </form>
     </div>
 </x-layout>
