@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
@@ -73,7 +74,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil ditambahkan.');
     }
 
@@ -89,7 +90,54 @@ class CourseController extends Controller
             'assignments',
         ]);
 
-        return view('courses.show', compact('course', 'role'));
+        $students = $role === 'admin'
+            ? User::query()->where('role', 'mahasiswa')->orderBy('name')->get()
+            : collect();
+        $enrolledStudentIds = $role === 'admin'
+            ? $course->students()->pluck('users.id')->all()
+            : [];
+
+        return view(
+            'courses.show',
+            compact('course', 'role', 'students', 'enrolledStudentIds')
+        );
+    }
+
+    public function updateStudents(Request $request, Course $course)
+    {
+        Gate::authorize('manageStudents', $course);
+
+        $validated = $request->validate([
+            'student_ids' => ['sometimes', 'array'],
+            'student_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('users', 'id')->where(
+                    fn ($query) => $query->where('role', 'mahasiswa')
+                ),
+            ],
+        ]);
+
+        $studentIds = $validated['student_ids'] ?? [];
+        $syncData = collect($studentIds)
+            ->mapWithKeys(fn (int $studentId) => [
+                $studentId => ['enrolled_at' => now()],
+            ])
+            ->all();
+
+        $currentlyEnrolledIds = $course->students()->pluck('users.id')->all();
+        $course->students()->syncWithoutDetaching($syncData);
+        $course->students()->detach(
+            array_diff($currentlyEnrolledIds, $studentIds)
+        );
+
+        return redirect()
+            ->route('admin.courses.show', [
+                'course' => $course,
+                'as' => 'admin',
+            ])
+            ->with('success', 'Pendaftaran mahasiswa pada mata kuliah berhasil diperbarui.');
     }
 
     public function edit(Request $request, Course $course)
@@ -113,7 +161,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil diperbarui.');
     }
 
@@ -126,7 +174,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil dihapus.');
     }
 

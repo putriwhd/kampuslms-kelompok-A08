@@ -293,6 +293,77 @@ textarea {
     background: var(--blue);
 }
 
+.course-enrollment-card,
+.submission-list,
+.student-grade-card {
+    margin-top: 28px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--white);
+}
+
+.student-enrollment-list {
+    display: grid;
+    gap: 10px;
+    max-height: 360px;
+    margin: 18px 0;
+    padding: 14px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.student-enrollment-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.student-enrollment-option small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+}
+
+.submission-card {
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #f8fafc;
+}
+
+.grade-form {
+    display: grid;
+    max-width: 520px;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.grade-form input,
+.grade-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font: inherit;
+}
+
+.grade-form button {
+    justify-self: start;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--blue);
+    color: var(--white);
+    font: inherit;
+    cursor: pointer;
+}
+
 
 /* =========================================================
    7. GENERAL CONTENT / SHARED CARD
@@ -2152,5 +2223,60 @@ a:focus-visible {
 
     .welcome-panel {
         border-radius: 16px;
+    }
+}
+
+.login-panel {
+    width: min(100%, 520px);
+    margin: 48px auto;
+    padding: 32px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.login-panel h1 {
+    margin: 0 0 8px;
+    color: var(--blue-dark);
+    font-size: 24px;
+}
+
+.login-panel p {
+    margin: 0 0 18px;
+    color: var(--muted);
+}
+
+.login-panel form {
+    display: grid;
+    gap: 10px;
+}
+
+.login-panel input {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+}
+
+.login-panel button {
+    margin-top: 8px;
+    padding: 11px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--blue);
+    color: var(--white);
+    cursor: pointer;
+}
+
+.login-error {
+    margin-bottom: 16px;
+    color: #a61b1b;
+}
+
+@media (max-width: 560px) {
+    .login-panel {
+        padding: 24px;
     }
 }

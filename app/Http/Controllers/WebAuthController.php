@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
@@ -25,6 +26,30 @@ class WebAuthController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('dashboard');
+    }
+
+    public function createAccount()
+    {
+        return view('auth.register');
+    }
+
+    public function register(RegisterRequest $request)
+    {
+        $validated = $request->validated();
+        $user = new User;
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->nim_nip = $validated['nim_nip'] ?? null;
+        $user->password = $validated['password'];
+        $user->role = 'mahasiswa';
+        $user->save();
+
+        Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Akun mahasiswa berhasil dibuat.');
     }
 
     public function requestPasswordReset()

@@ -14,6 +14,7 @@ use App\Models\User;
  * - viewDraft(Course $course), manage(Course $course): admin atau dosen pengampu.
  *
  * Blade: @can('view', $course), @can('create', \App\Models\Course::class),
+ *
  * @can('manage', $course), dan @can('viewDraft', $course).
  */
 class CoursePolicy
@@ -102,5 +103,10 @@ class CoursePolicy
         return $user->role === 'admin'
             || ($user->role === 'dosen'
                 && $user->taughtCourses()->whereKey($course->getKey())->exists());
+    }
+
+    public function manageStudents(User $user, Course $course): bool
+    {
+        return $user->role === 'admin';
     }
 }

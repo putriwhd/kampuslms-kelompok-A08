@@ -6,8 +6,11 @@ use App\Http\Requests\StoreAssignmentRequest;
 use App\Http\Requests\UpdateAssignmentRequest;
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\Grade;
+use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class AssignmentController extends Controller
 {
@@ -61,7 +64,7 @@ class AssignmentController extends Controller
         $role = $request->user()->role;
 
         return redirect()
-            ->route($role . '.courses.assignments.index', [
+            ->route($role.'.courses.assignments.index', [
                 'course' => $course,
                 'as' => $role,
             ])
@@ -72,11 +75,7 @@ class AssignmentController extends Controller
     {
         $assignment->load('course');
 
-        Gate::authorize('view', $assignment);
-
-        $role = $request->user()->role;
-
-        return view('assignments.show', compact('assignment', 'role'));
+        return $this->showAssignment($request, $assignment);
     }
 
     public function edit(Request $request, Assignment $assignment)
@@ -99,7 +98,7 @@ class AssignmentController extends Controller
         $role = $request->user()->role;
 
         return redirect()
-            ->route($role . '.courses.assignments.index', [
+            ->route($role.'.courses.assignments.index', [
                 'course' => $assignment->course,
                 'as' => $role,
             ])
@@ -115,7 +114,7 @@ class AssignmentController extends Controller
         $assignment->delete();
 
         return redirect()
-            ->route($role . '.courses.assignments.index', [
+            ->route($role.'.courses.assignments.index', [
                 'course' => $course,
                 'as' => $role,
             ])
@@ -131,10 +130,91 @@ class AssignmentController extends Controller
 
         Gate::authorize('view', $assignment);
 
-        $role = $request->user()->role;
-
         $assignment->load('course');
 
-        return view('assignments.show', compact('assignment', 'role'));
+        return $this->showAssignment($request, $assignment);
+    }
+
+    public function gradeSubmission(
+        Request $request,
+        Course $course,
+        Assignment $assignment,
+        Submission $submission
+    ) {
+        abort_unless(
+            $assignment->course_id === $course->getKey()
+                && $submission->assignment_id === $assignment->getKey(),
+            404
+        );
+        Gate::authorize('grade', $submission);
+
+        $validated = $request->validate([
+            'score' => ['required', 'numeric', 'min:0', 'max:'.$assignment->max_score],
+            'feedback' => ['nullable', 'string', 'max:5000'],
+        ]);
+
+        Grade::updateOrCreate(
+            ['submission_id' => $submission->getKey()],
+            [
+                'graded_by' => $request->user()->getKey(),
+                'score' => $validated['score'],
+                'feedback' => $validated['feedback'] ?? null,
+                'graded_at' => now(),
+            ]
+        );
+
+        return redirect()
+            ->route('dosen.assignments.show', $assignment)
+            ->with('success', 'Nilai submission berhasil disimpan.');
+    }
+
+    public function downloadSubmission(
+        Request $request,
+        Course $course,
+        Assignment $assignment,
+        Submission $submission
+    ) {
+        abort_unless(
+            $assignment->course_id === $course->getKey()
+                && $submission->assignment_id === $assignment->getKey(),
+            404
+        );
+        Gate::authorize('view', $submission);
+
+        $disk = Storage::disk('local');
+        abort_unless($disk->exists($submission->file_path), 404);
+
+        return $disk->download(
+            $submission->file_path,
+            $submission->original_name
+        );
+    }
+
+    private function showAssignment(Request $request, Assignment $assignment)
+    {
+        $user = $request->user();
+        Gate::authorize('view', $assignment);
+
+        $role = $user->role;
+        $submissions = collect();
+        $ownSubmission = null;
+
+        if (in_array($role, ['admin', 'dosen'], true)) {
+            Gate::authorize('viewSubmissions', $assignment);
+            $submissions = $assignment->submissions()
+                ->with(['student', 'grade.grader'])
+                ->orderBy('submitted_at')
+                ->get();
+        } elseif ($role === 'mahasiswa') {
+            $ownSubmission = $assignment->submissions()
+                ->where('user_id', $user->getKey())
+                ->with('grade.grader')
+                ->first();
+        }
+
+        return view(
+            'assignments.show',
+            compact('assignment', 'role', 'submissions', 'ownSubmission')
+        );
     }
 }
