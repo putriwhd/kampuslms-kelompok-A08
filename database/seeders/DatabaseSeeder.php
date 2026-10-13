@@ -33,15 +33,20 @@ class DatabaseSeeder extends Seeder
             'dosen@kampuslms.test'
         )->first();
 
+        $secondDemoLecturer = User::where(
+            'email',
+            'dosen2@kampuslms.test'
+        )->first();
+
         $demoStudent = User::where(
             'email',
             'mahasiswa@kampuslms.test'
         )->first();
 
-        $lecturers = collect([$demoLecturer])
+        $lecturers = collect([$demoLecturer, $secondDemoLecturer])
             ->filter()
             ->merge(
-                User::factory(2)
+                User::factory(1)
                     ->dosen()
                     ->create()
             );

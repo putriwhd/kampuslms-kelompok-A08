@@ -4,6 +4,19 @@ Semua pemeriksaan akses dilakukan di server. Menyembunyikan tombol dengan
 Blade `@can` hanya membantu antarmuka dan bukan pengganti Policy, pemeriksaan
 controller, middleware, atau pembatasan query.
 
+## Matriks akses per role
+
+| Role | Akses yang diizinkan |
+|---|---|
+| Admin (`admin@kampuslms.test`, `admin2@kampuslms.test`) | Melihat semua course, materi, tugas, submission, dan nilai; mengelola pengguna/course/materi/tugas; menghapus submission. Admin tidak membuat atau mengubah nilai. |
+| Dosen | Melihat course yang diampu serta materi dan tugasnya (termasuk draft); mengelola metadata materi/tugas; melihat dan menghapus submission pada course sendiri; membuat/mengubah/menghapus nilai pada course sendiri. Tidak dapat mengelola pengguna atau course dosen lain. |
+| Mahasiswa | Melihat course yang diikuti dan bukan draft, materi pada course tersebut, tugas `published`, submission sendiri, dan nilai sendiri. Dapat mengirim/memperbarui submission sendiri sesuai status tugas; tidak dapat mengelola course, materi, tugas, submission orang lain, atau nilai. |
+
+Di data demo, `dosen2@kampuslms.test` memiliki course untuk menguji batas
+pengampu, sedangkan `mahasiswa2@kampuslms.test` sengaja tidak terdaftar pada
+course demo. Kedua akun tersebut menguji penolakan akses lintas pemilik dan
+mahasiswa yang tidak terdaftar.
+
 ## Matriks perlindungan IDOR
 
 | Data / percobaan IDOR | Permukaan | Perlindungan server |
