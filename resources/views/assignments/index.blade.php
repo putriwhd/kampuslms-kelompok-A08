@@ -66,7 +66,7 @@
         @endforelse
     </div>
 
-    {{ $assignments->links() }}
+    {{ $assignments->links('vendor.pagination.kampuslms') }}
 
     <p>
         <a href="{{ route($role . '.courses.show', [

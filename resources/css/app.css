@@ -1456,6 +1456,61 @@ textarea {
     padding: 20px 24px;
 }
 
+.pagination-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+}
+
+.pagination-summary {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.pagination-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--blue-dark);
+    font-size: 13px;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.pagination-links a:hover {
+    border-color: var(--blue);
+    background: var(--blue-soft);
+}
+
+.pagination-link.is-current {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: var(--white);
+    font-weight: 700;
+}
+
+.pagination-link.is-disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
 .user-success {
     margin-bottom: 20px;
     padding: 12px 16px;
@@ -2052,6 +2107,10 @@ body {
     border-collapse: separate;
     border-spacing: 0;
     background: var(--white);
+}
+
+.pagination .pagination-control {
+    justify-content: center;
 }
 
 .course-table th,

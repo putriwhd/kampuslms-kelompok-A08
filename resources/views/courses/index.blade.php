@@ -206,6 +206,6 @@
     </div>
 
     <div class="pagination">
-        {{ $courses->links() }}
+        {{ $courses->links('vendor.pagination.kampuslms') }}
     </div>
 </x-layout>
