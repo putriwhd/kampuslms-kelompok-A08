@@ -143,7 +143,7 @@
     </div>
 
     <div class="user-pagination">
-        {{ $users->appends(request()->query())->links() }}
+        {{ $users->appends(request()->query())->links('vendor.pagination.kampuslms') }}
     </div>
 
     <style>
