@@ -340,6 +340,85 @@ textarea {
     color: var(--blue-dark);
 }
 
+/* =========================================================
+   PAGINATION
+   Laravel's default paginator uses Tailwind utility classes.
+   Keep it usable in this project without loading Tailwind.
+   ========================================================= */
+
+nav[aria-label="Pagination Navigation"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+nav[aria-label="Pagination Navigation"] > div:first-child {
+    display: none;
+}
+
+nav[aria-label="Pagination Navigation"] > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+nav[aria-label="Pagination Navigation"] p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+nav[aria-label="Pagination Navigation"] a,
+nav[aria-label="Pagination Navigation"] [aria-current="page"] > span,
+nav[aria-label="Pagination Navigation"] [aria-disabled="true"] > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--blue-dark);
+    text-decoration: none;
+}
+
+nav[aria-label="Pagination Navigation"] a:hover {
+    background: var(--blue-soft);
+}
+
+nav[aria-label="Pagination Navigation"] [aria-current="page"] > span {
+    background: var(--blue);
+    color: var(--white);
+}
+
+nav[aria-label="Pagination Navigation"] [aria-disabled="true"] > span {
+    color: var(--muted);
+}
+
+nav[aria-label="Pagination Navigation"] svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 639px) {
+    nav[aria-label="Pagination Navigation"] > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+    }
+
+    nav[aria-label="Pagination Navigation"] > div:last-child {
+        display: none;
+    }
+}
+
 
 /* =========================================================
    8. DASHBOARD
