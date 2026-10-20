@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -15,37 +17,28 @@ class AuthController extends Controller
      * Autentikasi pengguna dan mengembalikan Sanctum PlainTextToken.
      * Dilindungi rate limiting throttle:5,1 di rute.
      */
-    public function login(Request $request): JsonResponse
+
+  public function login(Request $request)
     {
-        $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string'],
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
-
-        // Pesan error seragam untuk mencegah user enumeration
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['Email atau kata sandi yang Anda masukkan salah.'],
             ]);
         }
 
-        $token = $user->createToken($request->device_name ?? 'api-token')->plainTextToken;
-
-        $userData = class_exists(\App\Http\Resources\UserResource::class)
-            ? new \App\Http\Resources\UserResource($user)
-            : [
-                'id'      => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-                'nim_nip' => $user->nim_nip,
-                'role'    => $user->role,
-            ];
+        $user = $request->user();
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
-            'user'  => $userData,
+            'data' => [
+                'token' => $token,
+                'user' => new UserResource($user),
+            ],
         ]);
     }
 
@@ -64,22 +57,8 @@ class AuthController extends Controller
     /**
      * Mengembalikan data profil dan peran pengguna yang sedang login.
      */
-    public function me(Request $request)
+    public function me(Request $request): UserResource
     {
-        $user = $request->user();
-
-        if (class_exists(\App\Http\Resources\UserResource::class)) {
-            return new \App\Http\Resources\UserResource($user);
-        }
-
-        return response()->json([
-            'data' => [
-                'id'      => $user->id,
-                'name'    => $user->name,
-                'email'   => $user->email,
-                'nim_nip' => $user->nim_nip,
-                'role'    => $user->role,
-            ],
-        ]);
+        return new UserResource($request->user());
     }
 }

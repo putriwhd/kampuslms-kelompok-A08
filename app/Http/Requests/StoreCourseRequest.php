@@ -9,8 +9,7 @@ class StoreCourseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // TODO: Ganti dengan otorisasi berbasis Policy pada Minggu 7
-        return true;
+        return $this->user()?->can('create', \App\Models\Course::class) ?? false;
     }
 
     public function rules(): array
@@ -26,7 +25,7 @@ class StoreCourseRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:150',
+                'max:255',
             ],
 
             'description' => [
@@ -71,13 +70,15 @@ class StoreCourseRequest extends FormRequest
             'sks.required' => 'Jumlah SKS wajib diisi.',
             'sks.integer'  => 'Jumlah SKS harus berupa angka bulat.',
             'sks.between'  => 'Jumlah SKS harus antara :min sampai :max.',
+            'sks.min'      => 'Jumlah SKS minimal adalah :min SKS.',
+            'sks.max'      => 'Jumlah SKS maksimal adalah :max SKS.',
 
             'lecturer_id.required' => 'Dosen pengampu wajib dipilih.',
             'lecturer_id.integer'  => 'Format ID dosen pengampu tidak valid.',
             'lecturer_id.exists'   => 'Dosen pengampu yang dipilih tidak terdaftar atau bukan dosen.',
 
             'status.required' => 'Status mata kuliah wajib dipilih.',
-            'status.in'       => 'Status mata kuliah harus draft, active, atau archived.',
+            'status.in'       => 'Status mata kuliah harus salah satu dari: draft, active, atau archived.',
         ];
     }
 }

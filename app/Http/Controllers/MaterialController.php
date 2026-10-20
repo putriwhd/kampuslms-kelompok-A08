@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\ChecksCourseOwnership;
 use App\Http\Requests\StoreMaterialRequest;
+use App\Http\Requests\UpdateMaterialRequest;
 use App\Models\Course;
 use App\Models\Material;
 use Illuminate\Http\RedirectResponse;
@@ -14,43 +14,51 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
-    use ChecksCourseOwnership;
-
     public function index(Request $request, Course $course)
     {
-        $this->ensureCourseOwnership($request, $course);
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
-        $materials = $course->materials()->latest()->paginate(15)->withQueryString();
+        Gate::authorize('view', $course);
+        Gate::authorize('viewAny', Material::class);
 
-        return view('materials.index', compact('course', 'materials', 'role'));
+        $role = $request->user()->role;
+
+        $materials = $course->materials()
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view(
+            'materials.index',
+            compact('course', 'materials', 'role')
+        );
     }
 
     public function create(Request $request, Course $course)
     {
-        $this->ensureCourseOwnership($request, $course);
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
+        Gate::authorize('create', [Material::class, $course]);
+
+        $role = $request->user()->role;
 
         return view('materials.create', compact('course', 'role'));
     }
 
     public function store(StoreMaterialRequest $request, Course $course): RedirectResponse
     {
-        $this->ensureCourseOwnership($request, $course);
+        Gate::authorize('create', [Material::class, $course]);
 
         $validated = $request->validated();
         $user = $request->user();
 
         $data = [
             'course_id' => $course->id,
-            'uploaded_by' => $user ? $user->id : $course->lecturer_id,
+            'uploaded_by' => $user->id,
             'title' => $validated['title'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'type' => $validated['type'],
         ];
 
         if ($validated['type'] === 'file' && $request->hasFile('file')) {
             $file = $request->file('file');
-            // Simpan berkas fisik ke disk privat 'local' (storage/app/private/materials/{course_id}) dengan nama hash acak
+            // Simpan berkas fisik ke disk privat 'local' dengan nama hash acak
             $path = $file->store("materials/{$course->id}", 'local');
 
             $data['file_path'] = $path;
@@ -68,24 +76,85 @@ class MaterialController extends Controller
 
         Material::create($data);
 
-        return back()->with('success', 'Materi kuliah berhasil ditambahkan.');
+        return redirect()
+            ->route($user->role . '.courses.materials.index', [
+                'course' => $course,
+                'as' => $user->role,
+            ])
+            ->with('success', 'Materi berhasil ditambahkan.');
     }
 
     public function show(Request $request, Material $material)
     {
         $material->load('course');
-        $this->ensureCourseOwnership($request, $material->course);
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
+        Gate::authorize('view', $material);
+
+        $role = $request->user()->role;
 
         return view('materials.show', compact('material', 'role'));
     }
 
-    public function showInCourse(Request $request, Course $course, Material $material)
+    public function edit(Request $request, Material $material)
     {
-        abort_unless($material->course_id === $course->id, 403);
-        $this->ensureCourseOwnership($request, $course);
+        $material->load('course');
+        Gate::authorize('update', $material);
 
-        $role = $request->attributes->get('selected_role', $request->query('as', 'mahasiswa'));
+        $role = $request->user()->role;
+
+        return view('materials.edit', compact('material', 'role'));
+    }
+
+    public function update(
+        UpdateMaterialRequest $request,
+        Material $material
+    ): RedirectResponse {
+        Gate::authorize('update', $material);
+
+        $validated = $request->validated();
+        $validated['external_url'] = $validated['type'] === 'link'
+            ? ($validated['external_url'] ?? null)
+            : null;
+        $material->update($validated);
+
+        $role = $request->user()->role;
+
+        return redirect()
+            ->route($role . '.courses.materials.index', [
+                'course' => $material->course,
+                'as' => $role,
+            ])
+            ->with('success', 'Materi berhasil diperbarui.');
+    }
+
+    public function destroy(Request $request, Material $material): RedirectResponse
+    {
+        Gate::authorize('delete', $material);
+
+        $course = $material->course;
+        $role = $request->user()->role;
+        
+        // Menghapus record (berkas fisik otomatis terhapus via event static::deleting di model Material)
+        $material->delete();
+
+        return redirect()
+            ->route($role . '.courses.materials.index', [
+                'course' => $course,
+                'as' => $role,
+            ])
+            ->with('success', 'Materi berhasil dihapus.');
+    }
+
+    public function showInCourse(
+        Request $request,
+        Course $course,
+        Material $material
+    ) {
+        abort_unless($material->course_id === $course->id, 404);
+
+        Gate::authorize('view', $material);
+
+        $role = $request->user()->role;
+
         $material->load('course');
 
         return view('materials.show', compact('material', 'role'));
@@ -113,17 +182,5 @@ class MaterialController extends Controller
             $material->file_path,
             $material->original_name
         );
-    }
-
-    /**
-     * Menghapus record materi kuliah (berkas fisik otomatis terhapus via event static::deleting).
-     */
-    public function destroy(Request $request, Material $material): RedirectResponse
-    {
-        $this->ensureCourseOwnership($request, $material->course);
-
-        $material->delete();
-
-        return back()->with('success', 'Materi berhasil dihapus.');
     }
 }

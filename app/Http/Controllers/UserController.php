@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserStoreRequest;
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $this->ensureAdmin($request);
+
         $search = $request->query('search');
         $search = is_string($search) ? trim($search) : '';
 
@@ -29,30 +32,30 @@ class UserController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('users.index', compact('users'));
+        $role = $request->user()->role;
+
+        return view('users.index', compact('users', 'role'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        return view('users.create');
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
+
+        return view('users.create', compact('role'));
     }
 
-    public function store(Request $request)
+    public function store(UserStoreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'nim_nip' => 'nullable|string|unique:users,nim_nip',
-            'password' => 'required|string|min:6',
-            'role' => 'required|in:admin,dosen,mahasiswa',
-        ]);
+        $this->ensureAdmin($request);
+        $validated = $request->validated();
 
         $user = new User();
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->nim_nip = $validated['nim_nip'] ?? null;
-        $user->password = Hash::make($validated['password']);
+        $user->password = $validated['password'];
         $user->role = $validated['role'];
 
         $user->save();
@@ -64,46 +67,31 @@ class UserController extends Controller
 
     public function show(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY: 
-        // Hanya izinkan jika sebagai Admin (?as=admin) ATAU membuka profilenya sendiri
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
 
-        return view('users.show', compact('user'));
+        return view('users.show', compact('user', 'role'));
     }
 
     public function edit(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
+        $this->ensureAdmin($request);
+        $role = $request->user()->role;
 
-        return view('users.edit', compact('user'));
+        return view('users.edit', compact('user', 'role'));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UserUpdateRequest $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin' && auth()->id() !== $user->id) {
-            abort(403, 'Akses Ditolak: Anda tidak memiliki akses ke data ini.');
-        }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'nim_nip' => 'nullable|string|unique:users,nim_nip,' . $user->id,
-            'password' => 'nullable|string|min:6',
-            'role' => 'required|in:admin,dosen,mahasiswa',
-        ]);
+        $this->ensureAdmin($request);
+        $validated = $request->validated();
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
         $user->nim_nip = $validated['nim_nip'] ?? null;
 
         if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
+            $user->password = $validated['password'];
         }
 
         $user->role = $validated['role'];
@@ -117,10 +105,7 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
-        // PERBAIKAN IDOR MANUALLY:
-        if ($request->query('as') !== 'admin') {
-            abort(403, 'Akses Ditolak: Hanya Admin yang dapat menghapus pengguna.');
-        }
+        $this->ensureAdmin($request);
 
         if ($user->taughtCourses()->exists()) {
             return redirect()
@@ -133,5 +118,10 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index', ['as' => 'admin'])
             ->with('success', 'Pengguna berhasil dihapus.');
+    }
+
+    private function ensureAdmin(Request $request): void
+    {
+        abort_unless($request->user()?->role === 'admin', 403);
     }
 }

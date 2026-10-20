@@ -1,10 +1,6 @@
 <x-layout>
     <x-slot:title>Edit Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-    @endphp
-
     <div class="user-page-header">
         <div>
             <h1>Edit Pengguna</h1>

@@ -1,11 +1,6 @@
 <x-layout>
     <x-slot:title>Tambah Pengguna</x-slot:title>
 
-    @php
-        $role = request('as', 'admin');
-        $currentRole = $role;
-    @endphp
-
     <div class="user-page-header">
         <div>
             <h1>Tambah Pengguna</h1>
@@ -70,13 +65,14 @@
             </div>
 
             <div class="form-group">
-                <label for="password" class="form-label">Password <span style="font-weight: normal; color: #8f9bba;">(Opsional)</span></label>
+                <label for="password" class="form-label">Password</label>
                 <input
                     type="password"
                     id="password"
                     name="password"
                     class="form-input @error('password') input-error @enderror"
-                    placeholder="Kosongkan jika ingin menggunakan password default"
+                    placeholder="Buat password untuk pengguna ini"
+                    required
                 >
                 @error('password')
                     <span class="error-text">{{ $message }}</span>
