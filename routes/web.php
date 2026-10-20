@@ -41,6 +41,14 @@ Route::prefix('admin')
     ->name('admin.')
     ->group(function () {
 
+        Route::scopeBindings()->group(function () {
+            Route::resource('courses.materials', MaterialController::class)
+                ->only(['index', 'create', 'store', 'show', 'destroy'])
+                ->shallow();
+            Route::get(
+                'courses/{course}/materials/{material}',
+                [MaterialController::class, 'showInCourse']
+            )->name('courses.materials.scoped-show');
         Route::middleware(['auth', 'role:admin'])->group(function () {
             Route::resource('users', UserController::class);
         });
@@ -105,6 +113,7 @@ Route::prefix('dosen')
         Route::scopeBindings()->group(function () {
 
             Route::resource('courses.materials', MaterialController::class)
+                ->only(['index', 'create', 'store', 'show', 'destroy'])
                 ->only([
                     'index',
                     'show',
@@ -177,3 +186,11 @@ Route::prefix('mahasiswa')
 
         });
     });
+
+/*
+|--------------------------------------------------------------------------
+| Rute Unduh Materi Privat (Minggu 9)
+|--------------------------------------------------------------------------
+*/
+Route::get('materials/{material}/download', [MaterialController::class, 'download'])
+    ->name('materials.download');

@@ -6,8 +6,11 @@ use App\Http\Requests\StoreMaterialRequest;
 use App\Http\Requests\UpdateMaterialRequest;
 use App\Models\Course;
 use App\Models\Material;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MaterialController extends Controller
 {
@@ -38,23 +41,45 @@ class MaterialController extends Controller
         return view('materials.create', compact('course', 'role'));
     }
 
-    public function store(StoreMaterialRequest $request, Course $course)
+    public function store(StoreMaterialRequest $request, Course $course): RedirectResponse
     {
         Gate::authorize('create', [Material::class, $course]);
 
         $validated = $request->validated();
-        $course->materials()->create([
-            ...$validated,
-            'external_url' => $validated['type'] === 'link'
-                ? ($validated['external_url'] ?? null)
-                : null,
-            'uploaded_by' => $request->user()->getKey(),
-        ]);
+        $user = $request->user();
+
+        $data = [
+            'course_id' => $course->id,
+            'uploaded_by' => $user->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+        ];
+
+        if ($validated['type'] === 'file' && $request->hasFile('file')) {
+            $file = $request->file('file');
+            // Simpan berkas fisik ke disk privat 'local' dengan nama hash acak
+            $path = $file->store("materials/{$course->id}", 'local');
+
+            $data['file_path'] = $path;
+            $data['original_name'] = $file->getClientOriginalName();
+            $data['file_size'] = $file->getSize();
+            $data['mime_type'] = $file->getClientMimeType();
+            $data['external_url'] = null;
+        } else {
+            $data['external_url'] = $validated['external_url'] ?? null;
+            $data['file_path'] = null;
+            $data['original_name'] = null;
+            $data['file_size'] = null;
+            $data['mime_type'] = null;
+        }
+
+        Material::create($data);
 
         return redirect()
-            ->route($request->user()->role . '.courses.materials.index', [
+            ->route($user->role . '.courses.materials.index', [
                 'course' => $course,
-                'as' => $request->user()->role,
+                'as' => $user->role,
             ])
             ->with('success', 'Materi berhasil ditambahkan.');
     }
@@ -82,7 +107,7 @@ class MaterialController extends Controller
     public function update(
         UpdateMaterialRequest $request,
         Material $material
-    ) {
+    ): RedirectResponse {
         Gate::authorize('update', $material);
 
         $validated = $request->validated();
@@ -101,12 +126,14 @@ class MaterialController extends Controller
             ->with('success', 'Materi berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, Material $material)
+    public function destroy(Request $request, Material $material): RedirectResponse
     {
         Gate::authorize('delete', $material);
 
         $course = $material->course;
         $role = $request->user()->role;
+        
+        // Menghapus record (berkas fisik otomatis terhapus via event static::deleting di model Material)
         $material->delete();
 
         return redirect()
@@ -131,5 +158,29 @@ class MaterialController extends Controller
         $material->load('course');
 
         return view('materials.show', compact('material', 'role'));
+    }
+
+    /**
+     * Mengunduh berkas materi privat dengan pemeriksaan otorisasi Policy.
+     */
+    public function download(Material $material): StreamedResponse
+    {
+        $material->load('course');
+
+        // Otorisasi: hanya mahasiswa terdaftar, dosen pengampu, dan Admin
+        Gate::authorize('view', $material);
+
+        abort_unless($material->type === 'file' && $material->file_path, 404, 'Materi ini bukan berupa berkas.');
+        abort_unless(
+            Storage::disk('local')->exists($material->file_path),
+            404,
+            'Berkas materi tidak ditemukan di server.'
+        );
+
+        // Unduh berkas dari disk privat menggunakan nama asli
+        return Storage::disk('local')->download(
+            $material->file_path,
+            $material->original_name
+        );
     }
 }
