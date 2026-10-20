@@ -158,7 +158,7 @@
                                     <form
                                         action="{{ route('admin.users.destroy', [$user->id, 'as' => $role]) }}"
                                         method="POST"
-                                        class="delete-user-form"
+                                        class="delete-form delete-user-form"
                                         onsubmit="return confirm('Yakin ingin menghapus pengguna ini?')"
                                     >
                                         @csrf

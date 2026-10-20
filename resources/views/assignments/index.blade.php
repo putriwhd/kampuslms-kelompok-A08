@@ -51,6 +51,7 @@
                             'as' => $role,
                         ]) }}"
                         method="POST"
+                        class="delete-form"
                         onsubmit="return confirm('Yakin ingin menghapus tugas ini?')"
                     >
                         @csrf

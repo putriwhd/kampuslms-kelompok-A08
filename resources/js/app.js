@@ -40,9 +40,56 @@ if (roleSelect && roleSelectorForm) {
     });
 }
 
+const csrfToken = document.querySelector('meta[name="csrf-token"]');
+
+if (csrfToken) {
+    const token = csrfToken.getAttribute('content');
+
+    if (token) {
+        fetch.defaults = fetch.defaults || {};
+        const originalFetch = window.fetch;
+
+        window.fetch = (...args) => {
+            const [resource, config = {}] = args;
+
+            if (typeof resource === 'string' || resource instanceof URL) {
+                config.headers = {
+                    ...config.headers,
+                    'X-CSRF-TOKEN': token,
+                    'X-Requested-With': 'XMLHttpRequest',
+                };
+            }
+
+            return originalFetch(resource, config);
+        };
+    }
+}
+
 
 /* =========================================================
-   3. SCROLL TO TOP
+   3. PREVENT DOUBLE DELETE SUBMIT
+   ========================================================= */
+
+const deleteForms = document.querySelectorAll('.delete-form');
+
+if (deleteForms.length) {
+    deleteForms.forEach((form) => {
+        form.addEventListener('submit', () => {
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            if (!submitButton || submitButton.disabled) {
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = 'Menghapus...';
+        });
+    });
+}
+
+
+/* =========================================================
+   4. SCROLL TO TOP
    ========================================================= */
 
 const scrollTop = document.getElementById('scrollTop');

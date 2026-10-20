@@ -1,81 +1,73 @@
 <x-layout>
     <x-slot:title>Tambah Pengguna</x-slot:title>
 
-    <div class="user-page-header">
-        <div>
-            <h1>Tambah Pengguna</h1>
-            <p>Tambahkan data pengguna baru ke dalam sistem KampusLMS.</p>
-        </div>
-    </div>
+    <div class="p-6">
+        <h1 class="text-2xl font-bold mb-6">Tambah Pengguna</h1>
 
-    <div class="user-form-card">
-        <div class="user-form-header">
-            <h2>Informasi Pengguna</h2>
-            <p>Silakan isi data pengguna sesuai kebutuhan.</p>
-        </div>
-
-        <form
-            action="{{ route('admin.users.store', ['as' => $role]) }}"
-            method="POST"
-            class="user-form-body"
-        >
+        <form action="{{ route('users.store') }}" method="POST">
             @csrf
 
-            <div class="form-group">
-                <label for="name" class="form-label">Nama</label>
+            <div class="mb-4">
+                <label for="name" class="block mb-2">
+                    Nama
+                </label>
 
                 <input
                     type="text"
                     id="name"
                     name="name"
                     value="{{ old('name') }}"
-                    class="form-input @error('name') input-error @enderror"
-                    placeholder="Masukkan nama lengkap"
+                    class="border rounded p-2 w-full"
+                    placeholder="Masukkan nama pengguna"
                     required
                 >
 
                 @error('name')
-                    <span class="error-text">{{ $message }}</span>
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label for="email" class="form-label">Email</label>
+            <div class="mb-4">
+                <label for="email" class="block mb-2">
+                    Email
+                </label>
 
                 <input
                     type="email"
                     id="email"
                     name="email"
                     value="{{ old('email') }}"
-                    class="form-input @error('email') input-error @enderror"
-                    placeholder="nama@example.com"
+                    class="border rounded p-2 w-full"
+                    placeholder="Masukkan email"
                     required
                 >
 
                 @error('email')
-                    <span class="error-text">{{ $message }}</span>
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label for="nim_nip" class="form-label">NIM/NIP</label>
+            <div class="mb-4">
+                <label for="nim_nip" class="block mb-2">
+                    NIM/NIP
+                </label>
 
                 <input
                     type="text"
                     id="nim_nip"
                     name="nim_nip"
                     value="{{ old('nim_nip') }}"
-                    class="form-input @error('nim_nip') input-error @enderror"
+                    class="border rounded p-2 w-full"
                     placeholder="Masukkan NIM atau NIP"
                 >
 
                 @error('nim_nip')
-                    <span class="error-text">{{ $message }}</span>
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label for="password" class="form-label">
+            <div class="mb-4">
+                <label for="password" class="block mb-2">
                     Password
                 </label>
 
@@ -83,55 +75,57 @@
                     type="password"
                     id="password"
                     name="password"
-                    class="form-input @error('password') input-error @enderror"
-                    placeholder="Buat kata sandi untuk pengguna"
-                    minlength="6"
+                    class="border rounded p-2 w-full"
+                    placeholder="Masukkan password"
                     required
                 >
 
                 @error('password')
-                    <span class="error-text">{{ $message }}</span>
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="form-group">
-                <label for="user_role" class="form-label">Role</label>
+            <div class="mb-6">
+                <label for="role" class="block mb-2">
+                    Role
+                </label>
 
                 <select
-                    id="user_role"
+                    id="role"
                     name="role"
-                    class="form-select @error('role') input-error @enderror"
+                    class="border rounded p-2 w-full"
                     required
                 >
                     <option value="">-- Pilih Role --</option>
-                    <option value="admin" @selected(old('role') === 'admin')>
+                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>
                         Admin
                     </option>
-                    <option value="dosen" @selected(old('role') === 'dosen')>
+                    <option value="dosen" {{ old('role') === 'dosen' ? 'selected' : '' }}>
                         Dosen
                     </option>
-                    <option value="mahasiswa" @selected(old('role') === 'mahasiswa')>
+                    <option value="mahasiswa" {{ old('role') === 'mahasiswa' ? 'selected' : '' }}>
                         Mahasiswa
                     </option>
                 </select>
 
                 @error('role')
-                    <span class="error-text">{{ $message }}</span>
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn-submit">
-                    Simpan
-                </button>
+            <button
+                type="submit"
+                class="border rounded px-4 py-2"
+            >
+                Simpan
+            </button>
 
-                <a
-                    href="{{ route('admin.users.index', ['as' => $role]) }}"
-                    class="btn-cancel"
-                >
-                    Batal
-                </a>
-            </div>
+            <a
+                href="{{ route('users.index', ['as' => request('as', 'admin')]) }}"
+                class="border rounded px-4 py-2 ml-2"
+            >
+                Batal
+            </a>
         </form>
     </div>
 </x-layout>
