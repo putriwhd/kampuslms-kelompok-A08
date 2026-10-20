@@ -3,12 +3,18 @@
 
     <h1>Materi: {{ $course->name }}</h1>
 
+    @if (session('success'))
+        <p>{{ session('success') }}</p>
+    @endif
+
     @can('create', [\App\Models\Material::class, $course])
         <p>
             <a href="{{ route($role . '.courses.materials.create', [
                 'course' => $course,
                 'as' => $role,
-            ]) }}">Tambah Materi</a>
+            ]) }}">
+                Tambah Materi
+            </a>
         </p>
     @endcan
 
@@ -33,18 +39,69 @@
                     <p>{{ $material->description }}</p>
                 @endif
 
-                @can('update', $material)
+                <p>
+                    <strong>Jenis Materi:</strong>
+                    @if ($material->type === 'file')
+                        <span>Berkas Materi</span>
+                    @elseif ($material->type === 'link')
+                        <span>Tautan Eksternal</span>
+                    @else
+                        <span>{{ ucfirst($material->type) }}</span>
+                    @endif
+                </p>
+
+                @if ($material->type === 'file')
+                    @if ($material->original_name)
+                        <p>
+                            <strong>Nama Berkas:</strong>
+                            {{ $material->original_name }}
+                        </p>
+                    @endif
+
+                    @if ($material->file_size)
+                        <p>
+                            <strong>Ukuran Berkas:</strong>
+                            @if ($material->file_size >= 1048576)
+                                {{ number_format($material->file_size / 1048576, 2) }} MB
+                            @else
+                                {{ number_format($material->file_size / 1024, 2) }} KB
+                            @endif
+                        </p>
+                    @endif
+
+                    @can('view', $material)
+                        <p>
+                            <a href="{{ route('materials.download', [
+                                'material' => $material,
+                            ]) }}">
+                                Unduh Berkas Materi
+                            </a>
+                        </p>
+                    @endcan
+
+                @elseif ($material->type === 'link' && $material->external_url)
+                    <p>Materi tersedia melalui tautan eksternal.</p>
+
                     <p>
-                        <strong>Jenis materi:</strong>
-                        {{ ucfirst($material->type) }}
+                        <a
+                            href="{{ $material->external_url }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Buka Tautan Materi
+                        </a>
                     </p>
-                @endcan
+                @endif
 
                 @can('update', $material)
-                    <a href="{{ route($role . '.materials.edit', [
-                        'material' => $material,
-                        'as' => $role,
-                    ]) }}">Edit</a>
+                    <p>
+                        <a href="{{ route($role . '.materials.edit', [
+                            'material' => $material,
+                            'as' => $role,
+                        ]) }}">
+                            Edit Materi
+                        </a>
+                    </p>
                 @endcan
 
                 @can('delete', $material)
@@ -58,6 +115,7 @@
                     >
                         @csrf
                         @method('DELETE')
+
                         <button type="submit">Hapus</button>
                     </form>
                 @endcan
