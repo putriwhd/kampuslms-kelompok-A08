@@ -11,6 +11,7 @@
                 'as' => $role,
             ]) }}"
             method="POST"
+            enctype="multipart/form-data"
         >
             @csrf
             @method('PUT')

@@ -72,15 +72,15 @@
             </a>
         </div>
 
-        @if ($role === 'admin')
+        @if (in_array($role, ['admin', 'dosen'], true))
             <section class="course-enrollment-card" aria-labelledby="enrollment-heading">
                 <h2 id="enrollment-heading">Pendaftaran Mahasiswa</h2>
                 <p>Pilih mahasiswa yang terdaftar pada mata kuliah ini. Menyimpan pilihan akan menggantikan daftar pendaftaran saat ini.</p>
 
                 <form
-                    action="{{ route('admin.courses.students.update', [
+                    action="{{ route($role . '.courses.students.update', [
                         'course' => $course,
-                        'as' => 'admin',
+                        'as' => $role,
                     ]) }}"
                     method="POST"
                 >
@@ -90,6 +90,9 @@
                     @if ($students->isEmpty())
                         <p>Belum ada akun mahasiswa. Tambahkan akun mahasiswa terlebih dahulu.</p>
                     @else
+                        @error('student_ids')
+                            <p role="alert">{{ $message }}</p>
+                        @enderror
                         <fieldset class="student-enrollment-list">
                             <legend>Mahasiswa yang terdaftar</legend>
                             @foreach ($students as $student)
@@ -98,7 +101,7 @@
                                         type="checkbox"
                                         name="student_ids[]"
                                         value="{{ $student->id }}"
-                                        @checked(in_array($student->id, $enrolledStudentIds, true))
+                                        @checked(in_array($student->id, $enrolledStudentIds))
                                     >
                                     <span>
                                         {{ $student->name }}

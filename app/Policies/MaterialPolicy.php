@@ -2,11 +2,21 @@
 
 namespace App\Policies;
 
+use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
 
 class MaterialPolicy
 {
+    /**
+     * Daftar materi dapat dilihat semua peran yang valid; akses kelas
+     * tertentu tetap dibatasi oleh CoursePolicy di controller.
+     */
+    public function viewAny(User $user): bool
+    {
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
+    }
+
     /**
      * Tentukan apakah pengguna berhak melihat/mengunduh materi kuliah.
      * Hanya mahasiswa terdaftar, dosen pengampu mata kuliah terkait, dan Admin.
@@ -39,7 +49,7 @@ class MaterialPolicy
     /**
      * Tentukan apakah pengguna boleh mengunggah materi ke mata kuliah.
      */
-    public function create(User $user, $course): bool
+    public function create(User $user, Course $course): bool
     {
         if ($user->role === 'admin') {
             return true;
@@ -47,6 +57,23 @@ class MaterialPolicy
 
         if ($user->role === 'dosen') {
             return (int) $course->lecturer_id === (int) $user->id;
+        }
+
+        return false;
+    }
+
+    /**
+     * Tentukan apakah pengguna boleh memperbarui materi kuliah.
+     */
+    public function update(User $user, Material $material): bool
+    {
+        if ($user->role === 'admin') {
+            return true;
+        }
+
+        $course = $material->course;
+        if ($course && (int) $course->lecturer_id === (int) $user->id) {
+            return true;
         }
 
         return false;

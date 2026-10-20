@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -101,6 +102,26 @@ class WeekSevenDeliveryTest extends TestCase
             ->assertDontSee($course->name);
         $this->get("/mahasiswa/courses/{$course->id}")
             ->assertForbidden();
+    }
+
+    public function test_seeded_submission_demo_files_can_be_downloaded(): void
+    {
+        Storage::fake('local');
+        $this->seed(DatabaseSeeder::class);
+
+        $student = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
+        $submission = Submission::where('user_id', $student->id)->firstOrFail();
+
+        Storage::disk('local')->assertExists($submission->file_path);
+        $this->assertStringStartsWith(
+            '%PDF-1.4',
+            Storage::disk('local')->get($submission->file_path)
+        );
+
+        Sanctum::actingAs($student);
+        $this->getJson("/api/v1/submissions/{$submission->id}/download")
+            ->assertOk()
+            ->assertDownload($submission->original_name);
     }
 
     public function test_logout_clears_the_authenticated_session(): void
@@ -335,6 +356,7 @@ class WeekSevenDeliveryTest extends TestCase
 
     public function test_lecturer_can_manage_material_and_assignment_metadata(): void
     {
+        Storage::fake('local');
         $lecturer = User::factory()->dosen()->create();
         $course = Course::factory()->create([
             'lecturer_id' => $lecturer->id,
@@ -395,6 +417,7 @@ class WeekSevenDeliveryTest extends TestCase
             'title' => 'Materi Pengantar Revisi',
             'description' => 'Catatan yang diperbarui.',
             'type' => 'file',
+            'file' => UploadedFile::fake()->create('materi.pdf', 400, 'application/pdf'),
         ])->assertRedirect(route('dosen.courses.materials.index', [
             'course' => $course,
             'as' => 'dosen',
@@ -403,8 +426,31 @@ class WeekSevenDeliveryTest extends TestCase
         $this->assertDatabaseHas('materials', [
             'id' => $material->id,
             'title' => 'Materi Pengantar Revisi',
+            'type' => 'file',
             'external_url' => null,
         ]);
+        $material->refresh();
+        Storage::disk('local')->assertExists($material->file_path);
+
+        $oldFilePath = $material->file_path;
+        $this->put(route('dosen.materials.update', $material), [
+            'title' => 'Materi Tautan',
+            'description' => 'Tautan materi terbaru.',
+            'type' => 'link',
+            'external_url' => 'https://example.test/materi-terbaru',
+        ])->assertRedirect(route('dosen.courses.materials.index', [
+            'course' => $course,
+            'as' => 'dosen',
+        ]));
+
+        Storage::disk('local')->assertMissing($oldFilePath);
+        $this->assertDatabaseHas('materials', [
+            'id' => $material->id,
+            'type' => 'link',
+            'external_url' => 'https://example.test/materi-terbaru',
+            'file_path' => null,
+        ]);
+
         $this->delete(route('dosen.materials.destroy', $material))
             ->assertRedirect(route('dosen.courses.materials.index', [
                 'course' => $course,
@@ -465,6 +511,96 @@ class WeekSevenDeliveryTest extends TestCase
                 'as' => 'dosen',
             ]));
         $this->assertDatabaseMissing('assignments', ['id' => $assignment->id]);
+    }
+
+    public function test_material_views_and_crud_are_limited_to_admin_owner_lecturer_and_enrolled_students(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $outsider = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create([
+            'status' => 'active',
+        ]);
+        $otherCourse = Course::factory()->for($otherLecturer, 'lecturer')->create([
+            'status' => 'active',
+        ]);
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+        $material = \App\Models\Material::factory()
+            ->for($course)
+            ->for($lecturer, 'uploader')
+            ->create([
+                'type' => 'file',
+                'file_path' => 'materials/'.$course->id.'/handout.pdf',
+                'original_name' => 'handout.pdf',
+                'file_size' => 1024,
+                'mime_type' => 'application/pdf',
+            ]);
+        Storage::disk('local')->put($material->file_path, 'private course handout');
+        $otherMaterial = \App\Models\Material::factory()
+            ->for($otherCourse)
+            ->for($otherLecturer, 'uploader')
+            ->create();
+
+        $this->actingAs($lecturer)
+            ->get(route('dosen.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Lihat Materi');
+        $this->get(route('dosen.courses.materials.index', $course))
+            ->assertOk()
+            ->assertSee('Tambah Materi')
+            ->assertSee('handout.pdf')
+            ->assertSee('Edit Materi')
+            ->assertSee('Hapus');
+        $this->get(route('dosen.courses.materials.index', $otherCourse))
+            ->assertForbidden();
+        $this->get(route('dosen.materials.edit', $material))
+            ->assertOk();
+        $this->get(route('dosen.materials.edit', $otherMaterial))
+            ->assertForbidden();
+        $this->delete(route('dosen.materials.destroy', $otherMaterial))
+            ->assertForbidden();
+
+        $this->actingAs($admin)
+            ->get(route('admin.courses.materials.index', $course))
+            ->assertOk()
+            ->assertSee('Tambah Materi')
+            ->assertSee('handout.pdf');
+        $this->get(route('admin.materials.edit', $material))
+            ->assertOk();
+
+        $this->actingAs($student)
+            ->get(route('mahasiswa.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Lihat Materi');
+        $this->get(route('mahasiswa.courses.materials.index', $course))
+            ->assertOk()
+            ->assertSee('handout.pdf')
+            ->assertSee('Unduh Berkas Materi')
+            ->assertDontSee('Tambah Materi')
+            ->assertDontSee('Edit Materi')
+            ->assertDontSee('Hapus');
+        $this->get(route('materials.download', $material))
+            ->assertOk()
+            ->assertDownload('handout.pdf');
+        $this->get(route('admin.materials.edit', $material))
+            ->assertForbidden();
+        $this->delete(route('admin.materials.destroy', $material))
+            ->assertForbidden();
+        $this->post(route('admin.courses.materials.store', $course), [
+            'title' => 'Tidak boleh dibuat',
+            'description' => 'Percobaan',
+            'type' => 'link',
+            'external_url' => 'https://example.test',
+        ])->assertForbidden();
+
+        $this->actingAs($outsider)
+            ->get(route('mahasiswa.courses.materials.index', $course))
+            ->assertForbidden();
+        $this->get(route('materials.download', $material))
+            ->assertForbidden();
     }
 
     public function test_student_course_and_assignment_lists_are_scoped_in_web_and_api(): void

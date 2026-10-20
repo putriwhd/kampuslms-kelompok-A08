@@ -111,10 +111,54 @@ class MaterialController extends Controller
         Gate::authorize('update', $material);
 
         $validated = $request->validated();
-        $validated['external_url'] = $validated['type'] === 'link'
-            ? ($validated['external_url'] ?? null)
-            : null;
-        $material->update($validated);
+        $material->loadMissing('course');
+        $oldFilePath = $material->file_path;
+        $data = [
+            'title' => $validated['title'],
+            'description' => $validated['description'],
+            'type' => $validated['type'],
+        ];
+
+        if ($validated['type'] === 'link') {
+            $data += [
+                'external_url' => $validated['external_url'],
+                'file_path' => null,
+                'original_name' => null,
+                'file_size' => null,
+                'mime_type' => null,
+            ];
+        } else {
+            $data['external_url'] = null;
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $filePath = $file->store(
+                    "materials/{$material->course_id}",
+                    'local'
+                );
+
+                if (! is_string($filePath)) {
+                    throw new \RuntimeException('Gagal menyimpan berkas materi.');
+                }
+
+                $data += [
+                    'file_path' => $filePath,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getClientMimeType(),
+                ];
+            }
+        }
+
+        $material->update($data);
+
+        if (
+            is_string($oldFilePath)
+            && $oldFilePath !== ''
+            && $oldFilePath !== $material->file_path
+            && Storage::disk('local')->exists($oldFilePath)
+        ) {
+            Storage::disk('local')->delete($oldFilePath);
+        }
 
         $role = $request->user()->role;
 

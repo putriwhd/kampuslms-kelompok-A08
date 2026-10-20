@@ -65,10 +65,12 @@ Route::prefix('v1')->group(function () {
             ->middleware('role:admin,dosen');
 
         Route::get('/assignments/{id}/submissions', [AssignmentController::class, 'submissions']);
+        Route::get('/assignments/{id}/recap', [AssignmentController::class, 'recap']);
         Route::post('/assignments/{id}/submissions', [SubmissionController::class, 'storeForAssignment']);
 
         // --- Submissions ---
         Route::post('/submissions', [SubmissionController::class, 'store']);
+        Route::get('/submissions/{id}/download', [SubmissionController::class, 'download']);
         Route::put('/submissions/{id}/grade', [SubmissionController::class, 'grade'])
             ->middleware('role:dosen');
 

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Api\SubmissionController as ApiSubmissionController;
 use App\Http\Requests\StoreAssignmentRequest;
+use App\Http\Requests\StoreSubmissionRequest;
 use App\Http\Requests\UpdateAssignmentRequest;
 use App\Models\Assignment;
 use App\Models\Course;
@@ -11,6 +13,7 @@ use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class AssignmentController extends Controller
 {
@@ -122,6 +125,41 @@ class AssignmentController extends Controller
             ->with('success', 'Tugas berhasil dihapus.');
     }
 
+    /**
+     * Menangani pengumpulan tugas mahasiswa via form HTML web (bukan API JSON).
+     * Bridge ke logic saveSubmission milik SubmissionController API.
+     */
+    public function submitWeb(StoreSubmissionRequest $request, ...$params)
+    {
+        $assignment = null;
+        foreach ($params as $param) {
+            if ($param instanceof Assignment) {
+                $assignment = $param;
+            }
+        }
+        if (! $assignment) {
+            $last = end($params);
+            $assignment = $last instanceof Assignment ? $last : Assignment::findOrFail($last);
+        }
+
+        $assignment->load('course');
+
+        try {
+            (new ApiSubmissionController())->saveSubmission($request, $assignment);
+        } catch (ValidationException $e) {
+            return back()
+                ->withErrors($e->errors())
+                ->withInput();
+        }
+
+        return redirect()
+            ->route('mahasiswa.courses.assignments.scoped-show', [
+                'course'     => $assignment->course,
+                'assignment' => $assignment,
+            ])
+            ->with('success', 'Tugas berhasil dikumpulkan.');
+    }
+
     public function showInCourse(
         Request $request,
         Course $course,
@@ -227,6 +265,14 @@ class AssignmentController extends Controller
                         'submission_status' => $submission ? 'submitted' : 'not_submitted',
                         'submitted_at' => $submission?->submitted_at,
                         'is_late' => (bool) ($submission?->is_late ?? false),
+                        'submission' => $submission,
+                        'original_name' => $submission?->original_name,
+                        'file_size' => $submission?->file_size,
+                        'formatted_file_size' => $submission?->file_size !== null
+                            ? ($submission->file_size >= 1048576
+                                ? number_format($submission->file_size / 1048576, 1) . ' MB'
+                                : number_format($submission->file_size / 1024, 1) . ' KB')
+                            : null,
                     ];
                 });
         } elseif ($role === 'mahasiswa') {
@@ -246,5 +292,62 @@ class AssignmentController extends Controller
                 'ownSubmission'
             )
         );
+    }
+
+    public function submissionsRecap(
+        Request $request,
+        Course $course,
+        Assignment $assignment
+    ) {
+        abort_unless($assignment->course_id === $course->getKey(), 404);
+        Gate::authorize('viewSubmissions', $assignment);
+
+        $role = $request->user()->role;
+        $submissions = $assignment->submissions()
+            ->with(['student', 'grade.grader'])
+            ->orderBy('submitted_at')
+            ->get();
+
+        $submissionRecap = $assignment->course
+            ->students()
+            ->with([
+                'submissions' => fn ($query) => $query
+                    ->where('assignment_id', $assignment->getKey()),
+            ])
+            ->orderBy('users.name')
+            ->get()
+            ->map(function ($student) {
+                $submission = $student->submissions->first();
+
+                return [
+                    'student' => $student,
+                    'student_id' => $student->getKey(),
+                    'student_name' => $student->name,
+                    'student_nim_nip' => $student->nim_nip,
+                    'submission_status' => $submission ? 'submitted' : 'not_submitted',
+                    'submitted_at' => $submission?->submitted_at,
+                    'is_late' => (bool) ($submission?->is_late ?? false),
+                    'submission' => $submission,
+                    'original_name' => $submission?->original_name,
+                    'file_size' => $submission?->file_size,
+                    'formatted_file_size' => $submission?->file_size !== null
+                        ? ($submission->file_size >= 1048576
+                            ? number_format($submission->file_size / 1048576, 1) . ' MB'
+                            : number_format($submission->file_size / 1024, 1) . ' KB')
+                        : null,
+                ];
+            });
+
+        return view(
+            'assignments.submissions',
+            compact('assignment', 'course', 'role', 'submissions', 'submissionRecap')
+        );
+    }
+
+    public function submissionsRecapShallow(Request $request, Assignment $assignment)
+    {
+        $assignment->load('course');
+
+        return $this->submissionsRecap($request, $assignment->course, $assignment);
     }
 }

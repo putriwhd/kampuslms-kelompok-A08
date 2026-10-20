@@ -112,6 +112,54 @@ class AdminWebAccessTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_lecturer_can_enroll_and_unenroll_students_only_in_their_course(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $enrolledStudent = User::factory()->mahasiswa()->create();
+        $availableStudent = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create([
+            'lecturer_id' => $lecturer->id,
+            'status' => 'active',
+        ]);
+        $otherCourse = Course::factory()->create([
+            'lecturer_id' => $otherLecturer->id,
+            'status' => 'active',
+        ]);
+        $course->students()->attach($enrolledStudent, ['enrolled_at' => now()]);
+
+        $this->actingAs($lecturer)
+            ->get(route('dosen.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Pendaftaran Mahasiswa')
+            ->assertSee($availableStudent->email);
+
+        $this->put(route('dosen.courses.students.update', $course), [
+            'student_ids' => [$availableStudent->id],
+        ])->assertRedirect(route('dosen.courses.show', [
+            'course' => $course,
+            'as' => 'dosen',
+        ]));
+
+        $this->assertDatabaseHas('course_user', [
+            'course_id' => $course->id,
+            'user_id' => $availableStudent->id,
+        ]);
+        $this->assertDatabaseMissing('course_user', [
+            'course_id' => $course->id,
+            'user_id' => $enrolledStudent->id,
+        ]);
+
+        $this->put(route('dosen.courses.students.update', $otherCourse), [
+            'student_ids' => [$enrolledStudent->id],
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('course_user', [
+            'course_id' => $otherCourse->id,
+            'user_id' => $enrolledStudent->id,
+        ]);
+    }
+
     public function test_user_pagination_uses_application_styling_without_unstyled_svg_icons(): void
     {
         $admin = User::factory()->admin()->create();

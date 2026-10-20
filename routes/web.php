@@ -50,6 +50,8 @@ Route::prefix('admin')
 
         Route::resource('users', UserController::class);
         Route::resource('courses', CourseController::class);
+        Route::put('courses/{course}/students', [CourseController::class, 'updateStudents'])
+            ->name('courses.students.update');
 
         Route::scopeBindings()->group(function () {
 
@@ -87,6 +89,21 @@ Route::prefix('admin')
                 [AssignmentController::class, 'showInCourse']
             )->name('courses.assignments.scoped-show');
 
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions',
+                [AssignmentController::class, 'submissionsRecap']
+            )->name('courses.assignments.submissions.index');
+
+            Route::get(
+                'assignments/{assignment}/submissions',
+                [AssignmentController::class, 'submissionsRecapShallow']
+            )->name('assignments.submissions');
+
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
+                [AssignmentController::class, 'downloadSubmission']
+            )->name('courses.assignments.submissions.download');
+
         });
     });
 
@@ -103,6 +120,11 @@ Route::prefix('dosen')
 
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show', 'edit', 'update']);
+
+        Route::put(
+            'courses/{course}/students',
+            [CourseController::class, 'updateStudents']
+        )->name('courses.students.update');
 
         Route::scopeBindings()->group(function () {
 
@@ -150,6 +172,16 @@ Route::prefix('dosen')
                 [AssignmentController::class, 'showInCourse']
             )->name('courses.assignments.scoped-show');
 
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions',
+                [AssignmentController::class, 'submissionsRecap']
+            )->name('courses.assignments.submissions.index');
+
+            Route::get(
+                'assignments/{assignment}/submissions',
+                [AssignmentController::class, 'submissionsRecapShallow']
+            )->name('assignments.submissions');
+
         });
     });
 
@@ -191,6 +223,16 @@ Route::prefix('mahasiswa')
                 'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
                 [AssignmentController::class, 'downloadSubmission']
             )->name('courses.assignments.submissions.download');
+
+            Route::post(
+                'courses/{course}/assignments/{assignment}/submissions',
+                [AssignmentController::class, 'submitWeb']
+            )->name('courses.assignments.submissions.store');
+
+            Route::post(
+                'assignments/{assignment}/submit',
+                [AssignmentController::class, 'submitWeb']
+            )->name('assignments.submit');
 
         });
     });

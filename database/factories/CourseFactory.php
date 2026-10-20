@@ -53,11 +53,21 @@ class CourseFactory extends Factory
 
             'lecturer_id' => User::factory()->dosen(),
 
-            'status' => $faker->randomElement([
-                'draft',
-                'active',
-                'archived',
-            ]),
+            'status' => 'active',
         ];
+    }
+
+    public function draft(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'draft',
+        ]);
+    }
+
+    public function archived(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'archived',
+        ]);
     }
 }
