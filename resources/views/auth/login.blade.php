@@ -27,22 +27,4 @@
 
         <p><a href="{{ route('password.request') }}">Lupa kata sandi?</a></p>
     </section>
-
-    <style>
-        .login-panel {
-            width: min(100%, 440px);
-            margin: 48px auto;
-            padding: 28px;
-            background: #fff;
-            border: 1px solid #d8e4f2;
-            border-radius: 8px;
-        }
-
-        .login-panel h1 { margin: 0 0 8px; font-size: 24px; }
-        .login-panel p { margin: 0 0 24px; color: #718096; }
-        .login-panel form { display: grid; gap: 10px; }
-        .login-panel input { min-width: 0; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; }
-        .login-panel button { margin-top: 8px; padding: 11px; border: 0; border-radius: 4px; background: #4f6f9f; color: #fff; cursor: pointer; }
-        .login-error { margin-bottom: 16px; color: #a61b1b; }
-    </style>
 </x-layout>

@@ -111,4 +111,18 @@ class AdminWebAccessTest extends TestCase
             ->get('/admin/users?as=admin')
             ->assertForbidden();
     }
+
+    public function test_user_pagination_uses_application_styling_without_unstyled_svg_icons(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->mahasiswa()->count(16)->create();
+
+        $this->actingAs($admin)
+            ->get('/admin/users')
+            ->assertOk()
+            ->assertSee('pagination-control', false)
+            ->assertSee('Menampilkan 1 - 15 dari 17 data')
+            ->assertSee('Berikutnya')
+            ->assertDontSee('<svg', false);
+    }
 }

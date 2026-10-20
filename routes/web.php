@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\CourseController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
@@ -19,6 +19,12 @@ Route::view('/tentang', 'tentang')->name('tentang');
 
 Route::get('/login', [WebAuthController::class, 'create'])->name('login');
 Route::post('/login', [WebAuthController::class, 'store'])->name('login.store');
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [WebAuthController::class, 'createAccount'])->name('register');
+    Route::post('/register', [WebAuthController::class, 'register'])
+        ->middleware('throttle:5,1')
+        ->name('register.store');
+});
 Route::get('/forgot-password', [WebAuthController::class, 'requestPasswordReset'])
     ->name('password.request');
 Route::post('/forgot-password', [WebAuthController::class, 'sendPasswordResetLink'])
@@ -55,6 +61,8 @@ Route::prefix('admin')
 
         Route::middleware(['auth', 'role:admin'])->group(function () {
             Route::resource('courses', CourseController::class);
+            Route::put('courses/{course}/students', [CourseController::class, 'updateStudents'])
+                ->name('courses.students.update');
 
             Route::scopeBindings()->group(function () {
 
@@ -91,6 +99,11 @@ Route::prefix('admin')
                     'courses/{course}/assignments/{assignment}',
                     [AssignmentController::class, 'showInCourse']
                 )->name('courses.assignments.scoped-show');
+
+                Route::get(
+                    'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
+                    [AssignmentController::class, 'downloadSubmission']
+                )->name('courses.assignments.submissions.download');
 
             });
         });
@@ -142,6 +155,16 @@ Route::prefix('dosen')
                 ])
                 ->shallow();
 
+            Route::post(
+                'courses/{course}/assignments/{assignment}/submissions/{submission}/grade',
+                [AssignmentController::class, 'gradeSubmission']
+            )->name('courses.assignments.submissions.grade');
+
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
+                [AssignmentController::class, 'downloadSubmission']
+            )->name('courses.assignments.submissions.download');
+
             Route::get(
                 'courses/{course}/assignments/{assignment}',
                 [AssignmentController::class, 'showInCourse']
@@ -183,6 +206,11 @@ Route::prefix('mahasiswa')
                 'courses/{course}/assignments/{assignment}',
                 [AssignmentController::class, 'showInCourse']
             )->name('courses.assignments.scoped-show');
+
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
+                [AssignmentController::class, 'downloadSubmission']
+            )->name('courses.assignments.submissions.download');
 
         });
     });

@@ -14,7 +14,23 @@ PASSWORD="${PASSWORD:-password}"
 
 RESPONSE_FILE="$(mktemp)"
 TOKEN_FILE="$(mktemp)"
+CREATED_ASSIGNMENT_ID=""
+CREATED_MATERIAL_ID=""
 cleanup() {
+    if [[ -n "${ADMIN_TOKEN:-}" ]]; then
+        if [[ -n "$CREATED_ASSIGNMENT_ID" ]]; then
+            curl --silent --output /dev/null -X DELETE \
+                "$BASE_URL/assignments/$CREATED_ASSIGNMENT_ID" \
+                -H 'Accept: application/json' \
+                -H "Authorization: Bearer $ADMIN_TOKEN" || true
+        fi
+        if [[ -n "$CREATED_MATERIAL_ID" ]]; then
+            curl --silent --output /dev/null -X DELETE \
+                "$BASE_URL/materials/$CREATED_MATERIAL_ID" \
+                -H 'Accept: application/json' \
+                -H "Authorization: Bearer $ADMIN_TOKEN" || true
+        fi
+    fi
     if [[ -f "$TOKEN_FILE" ]]; then
         while IFS= read -r token; do
             [[ -z "$token" ]] && continue
@@ -144,6 +160,32 @@ OTHER_LECTURER_EMAIL="${OTHER_LECTURER_EMAIL:-$(printf '%s' "$ADMIN_COURSES_BODY
 OTHER_LECTURER_PASSWORD="${OTHER_LECTURER_PASSWORD:-password}"
 OTHER_LECTURER_TOKEN="${OTHER_LECTURER_TOKEN:-$(login_token "$OTHER_LECTURER_EMAIL" "$OTHER_LECTURER_PASSWORD")}"
 AUTH_OTHER_LECTURER=(-H "Authorization: Bearer $OTHER_LECTURER_TOKEN")
+
+request_status 201 'Admin dapat membuat tugas melalui API' \
+    -X POST "$BASE_URL/assignments" "${JSON_HEADERS[@]}" "${AUTH_ADMIN[@]}" \
+    --data "{\"course_id\":$COURSE_ID,\"title\":\"Uji otorisasi admin\",\"instructions\":\"Tugas sementara dari skrip otorisasi.\",\"due_at\":\"2030-12-31T23:59:00\",\"status\":\"draft\"}"
+CREATED_ASSIGNMENT_ID="$(printf '%s' "$LAST_BODY" | php -r '
+    $response = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
+    echo $response["data"]["id"] ?? "";
+')"
+[[ -n "$CREATED_ASSIGNMENT_ID" ]] || fail 'Respons pembuatan tugas Admin tidak memuat ID'
+request_status 204 'Admin dapat menghapus tugas melalui API' \
+    -X DELETE "$BASE_URL/assignments/$CREATED_ASSIGNMENT_ID" \
+    -H 'Accept: application/json' "${AUTH_ADMIN[@]}"
+CREATED_ASSIGNMENT_ID=""
+
+request_status 201 'Admin dapat membuat materi melalui API' \
+    -X POST "$BASE_URL/courses/$COURSE_ID/materials" "${JSON_HEADERS[@]}" "${AUTH_ADMIN[@]}" \
+    --data "{\"title\":\"Uji otorisasi admin\",\"description\":\"Materi sementara dari skrip otorisasi.\",\"type\":\"link\",\"external_url\":\"https://example.test/authz\"}"
+CREATED_MATERIAL_ID="$(printf '%s' "$LAST_BODY" | php -r '
+    $response = json_decode(stream_get_contents(STDIN), true, 512, JSON_THROW_ON_ERROR);
+    echo $response["data"]["id"] ?? "";
+')"
+[[ -n "$CREATED_MATERIAL_ID" ]] || fail 'Respons pembuatan materi Admin tidak memuat ID'
+request_status 204 'Admin dapat menghapus materi melalui API' \
+    -X DELETE "$BASE_URL/materials/$CREATED_MATERIAL_ID" \
+    -H 'Accept: application/json' "${AUTH_ADMIN[@]}"
+CREATED_MATERIAL_ID=""
 
 request_status 200 'Dosen pengampu dapat melihat course sendiri' \
     "$BASE_URL/courses/$COURSE_ID" -H 'Accept: application/json' "${AUTH_LECTURER[@]}"

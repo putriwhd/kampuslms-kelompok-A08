@@ -293,6 +293,77 @@ textarea {
     background: var(--blue);
 }
 
+.course-enrollment-card,
+.submission-list,
+.student-grade-card {
+    margin-top: 28px;
+    padding: 22px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--white);
+}
+
+.student-enrollment-list {
+    display: grid;
+    gap: 10px;
+    max-height: 360px;
+    margin: 18px 0;
+    padding: 14px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.student-enrollment-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.student-enrollment-option small {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+}
+
+.submission-card {
+    margin-top: 16px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: #f8fafc;
+}
+
+.grade-form {
+    display: grid;
+    max-width: 520px;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.grade-form input,
+.grade-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font: inherit;
+}
+
+.grade-form button {
+    justify-self: start;
+    padding: 10px 16px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--blue);
+    color: var(--white);
+    font: inherit;
+    cursor: pointer;
+}
+
 
 /* =========================================================
    7. GENERAL CONTENT / SHARED CARD
@@ -338,6 +409,85 @@ textarea {
 
 .interactive-link:hover {
     color: var(--blue-dark);
+}
+
+/* =========================================================
+   PAGINATION
+   Laravel's default paginator uses Tailwind utility classes.
+   Keep it usable in this project without loading Tailwind.
+   ========================================================= */
+
+nav[aria-label="Pagination Navigation"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+nav[aria-label="Pagination Navigation"] > div:first-child {
+    display: none;
+}
+
+nav[aria-label="Pagination Navigation"] > div:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+nav[aria-label="Pagination Navigation"] p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+nav[aria-label="Pagination Navigation"] a,
+nav[aria-label="Pagination Navigation"] [aria-current="page"] > span,
+nav[aria-label="Pagination Navigation"] [aria-disabled="true"] > span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: var(--blue-dark);
+    text-decoration: none;
+}
+
+nav[aria-label="Pagination Navigation"] a:hover {
+    background: var(--blue-soft);
+}
+
+nav[aria-label="Pagination Navigation"] [aria-current="page"] > span {
+    background: var(--blue);
+    color: var(--white);
+}
+
+nav[aria-label="Pagination Navigation"] [aria-disabled="true"] > span {
+    color: var(--muted);
+}
+
+nav[aria-label="Pagination Navigation"] svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+}
+
+@media (max-width: 639px) {
+    nav[aria-label="Pagination Navigation"] > div:first-child {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 12px;
+    }
+
+    nav[aria-label="Pagination Navigation"] > div:last-child {
+        display: none;
+    }
 }
 
 
@@ -1385,6 +1535,61 @@ textarea {
     padding: 20px 24px;
 }
 
+.pagination-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    width: 100%;
+}
+
+.pagination-summary {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.pagination-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pagination-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 7px 11px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--white);
+    color: var(--blue-dark);
+    font-size: 13px;
+    line-height: 1.2;
+    text-decoration: none;
+}
+
+.pagination-links a:hover {
+    border-color: var(--blue);
+    background: var(--blue-soft);
+}
+
+.pagination-link.is-current {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: var(--white);
+    font-weight: 700;
+}
+
+.pagination-link.is-disabled {
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
 .user-success {
     margin-bottom: 20px;
     padding: 12px 16px;
@@ -1983,6 +2188,10 @@ body {
     background: var(--white);
 }
 
+.pagination .pagination-control {
+    justify-content: center;
+}
+
 .course-table th,
 .user-table th,
 .about-table th {
@@ -2152,5 +2361,60 @@ a:focus-visible {
 
     .welcome-panel {
         border-radius: 16px;
+    }
+}
+
+.login-panel {
+    width: min(100%, 520px);
+    margin: 48px auto;
+    padding: 32px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.login-panel h1 {
+    margin: 0 0 8px;
+    color: var(--blue-dark);
+    font-size: 24px;
+}
+
+.login-panel p {
+    margin: 0 0 18px;
+    color: var(--muted);
+}
+
+.login-panel form {
+    display: grid;
+    gap: 10px;
+}
+
+.login-panel input {
+    width: 100%;
+    min-width: 0;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+}
+
+.login-panel button {
+    margin-top: 8px;
+    padding: 11px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--blue);
+    color: var(--white);
+    cursor: pointer;
+}
+
+.login-error {
+    margin-bottom: 16px;
+    color: #a61b1b;
+}
+
+@media (max-width: 560px) {
+    .login-panel {
+        padding: 24px;
     }
 }
