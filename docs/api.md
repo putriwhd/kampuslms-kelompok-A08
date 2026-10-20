@@ -1,6 +1,6 @@
 # Dokumentasi API KampusLMS
 
-API menggunakan prefix `/api/v1`, token Laravel Sanctum, dan JSON. Koleksi menggunakan bentuk `{ "data": [...], "meta": { "current_page": 1, "last_page": 5, "total": 47 } }`; respons tunggal menggunakan `{ "data": {...} }`. Error validasi memakai status `422` dan pesan `Data yang diberikan tidak valid.`; error akses memakai status `403` dan pesan `Anda tidak memiliki akses ke sumber daya ini.`.
+API menggunakan prefix `/api/v1`, token Laravel Sanctum, dan JSON. Koleksi menggunakan bentuk `{ "data": [...], "meta": { "current_page": 1, "last_page": 5, "total": 47 } }`; respons tunggal menggunakan `{ "data": {...} }`. Error validasi memakai status `422` dan pesan `Data yang diberikan tidak valid.`; error akses memakai status `403` dan pesan `Anda tidak memiliki akses ke sumber daya ini.`; error autentikasi memakai status `401` dan pesan `Tidak terautentikasi.`.
 
 ## Persiapan
 
@@ -11,6 +11,9 @@ php artisan serve
 php artisan db:seed
 ```
 
+> [!WARNING]
+> Menjalankan `php artisan db:seed` berulang kali pada database yang sudah berisi data akan menambah 5 mata kuliah demo baru beserta data terkait pada setiap pemanggilan karena seeder menggunakan factory create. Untuk mereset data pengujian ke kondisi awal yang bersih, gunakan `php artisan migrate:fresh --seed`.
+
 Seeder menyediakan `admin@kampuslms.test`, `admin2@kampuslms.test`,
 `dosen@kampuslms.test`, `dosen2@kampuslms.test`, `mahasiswa@kampuslms.test`,
 dan `mahasiswa2@kampuslms.test`; semuanya memakai kata sandi `password`.
@@ -18,11 +21,20 @@ dan `mahasiswa2@kampuslms.test`; semuanya memakai kata sandi `password`.
 di course demo untuk pengujian penolakan akses. Kedua akun admin memiliki hak
 admin yang sama. Login untuk memperoleh token:
 
+Untuk antarmuka web, rute `/register` tetap tersedia dan aktif secara publik
+untuk pembuatan akun mahasiswa, namun tautannya disembunyikan dari tampilan form
+login (`/login`) sehingga harus diakses langsung melalui URL. Penetapan role
+Admin/Dosen dan pendaftaran mahasiswa ke mata kuliah tetap dikelola Admin.
+Admin mendaftarkan mahasiswa dari detail mata kuliah. Dosen membuat materi dan
+tugas dari daftar materi/tugas pada course yang diampu, lalu memberi nilai di
+detail tugas. Mahasiswa melihat nilai dan umpan balik miliknya di detail tugas
+yang sudah diikuti.
+
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \
   -H 'Accept: application/json' \
   -H 'Content-Type: application/json' \
-  -d '{"email":"dosen@kampuslms.test","password":"password","device_name":"dokumentasi"}'
+  -d '{"email":"dosen@kampuslms.test","password":"password"}'
 ```
 
 Respons sukses `200` berisi token plaintext sekali tampil dan Resource pengguna di dalam `data`:
@@ -60,7 +72,7 @@ Tambahkan header `Accept: application/json` agar Laravel mengembalikan error dal
 | `POST` | `/api/v1/auth/logout` | Pengguna terautentikasi | `200`, pesan berhasil logout |
 | `GET` | `/api/v1/me` | Pengguna terautentikasi | `200`, Resource pengguna |
 
-`POST /auth/login` menerima JSON `email` (wajib dan format email), `password` (wajib), serta `device_name` (opsional; default `api-token`). Kredensial salah menghasilkan `422` dengan pesan generik; validasi input juga menghasilkan `422`.
+`POST /auth/login` menerima JSON `email` (wajib dan format email) serta `password` (wajib). Controller tidak membaca field `device_name` dan selalu membuat token Sanctum dengan nama tetap `auth_token`. Kredensial salah menghasilkan `422` dengan pesan generik; validasi input juga menghasilkan `422`.
 
 Contoh response kredensial salah:
 
@@ -85,7 +97,7 @@ Token yang tidak dikirim atau tidak valid pada endpoint terlindungi menghasilkan
 
 ```json
 {
-  "message": "Unauthenticated."
+  "message": "Tidak terautentikasi."
 }
 ```
 
@@ -121,14 +133,23 @@ Contoh response `GET /me`:
 
 | Method | URI | Akses | Hasil utama |
 |---|---|---|---|
-| `GET` | `/api/v1/courses` | Pengguna terautentikasi | `200`, koleksi terpaginasikan |
-| `GET` | `/api/v1/courses/{id}` | Pengguna terautentikasi | `200`, Resource; `403` lintas dosen; `404` ID tidak ada/course nonaktif |
-| `GET` | `/api/v1/courses/{id}/materials` | Pengguna terdaftar / dosen pemilik | `200`, koleksi materi terpaginasikan |
-| `GET` | `/api/v1/courses/{id}/assignments` | Pengguna terdaftar / dosen pemilik | `200`, koleksi tugas; mendukung `status` dan `page` |
+| `GET` | `/api/v1/courses` | Admin / dosen pengampu / mahasiswa terdaftar | `200`, koleksi terpaginasikan |
+| `GET` | `/api/v1/courses/{id}` | Admin / dosen pengampu / mahasiswa terdaftar | `200`, Resource; `403` jika tak berhak; `404` draft bagi mhs / ID nihil |
+| `GET` | `/api/v1/courses/{id}/materials` | Admin / dosen pengampu / mahasiswa terdaftar | `200`, koleksi materi terpaginasikan |
+| `GET` | `/api/v1/courses/{id}/assignments` | Admin / dosen pengampu / mahasiswa terdaftar | `200`, koleksi tugas; mendukung `status` dan `page` |
 
-Daftar dibatasi ke mata kuliah yang diajar dosen yang login, atau course aktif yang diikuti mahasiswa. Daftar memakai pagination 15 item per halaman serta eager loading dosen dan jumlah materi/tugas.
+Daftar dibatasi berdasarkan peran pengguna:
+- **Admin**: dapat melihat seluruh mata kuliah.
+- **Dosen**: hanya melihat mata kuliah yang diampunya.
+- **Mahasiswa**: hanya melihat mata kuliah yang diikutinya dengan status bukan `draft`.
+Daftar memakai pagination 15 item per halaman serta eager loading dosen dan jumlah materi/tugas.
 
-`GET /courses` menerima parameter query `page` dari paginator. `GET /courses/{id}` menerima ID pada path. Dosen hanya dapat melihat detail course yang dia ampu; role lain hanya dapat melihat course berstatus `active`. Dosen yang meminta course dosen lain menerima `403`, course nonaktif bagi role lain menerima `404`, dan ID yang tidak ditemukan menerima `404`.
+`GET /courses` menerima parameter query `page` dari paginator. `GET /courses/{id}` menerima ID pada path.
+Aturan hak akses detail mata kuliah:
+- **Admin**: dapat melihat detail seluruh mata kuliah (termasuk status draft).
+- **Dosen**: hanya dapat melihat detail mata kuliah yang diampunya; mengakses mata kuliah dosen lain menghasilkan `403`.
+- **Mahasiswa**: hanya dapat melihat detail mata kuliah yang diikutinya dan tidak berstatus `draft`. Jika mahasiswa mengakses mata kuliah berstatus `draft`, server mengembalikan `404`. Jika mahasiswa mengakses mata kuliah yang bukan `draft` tetapi tidak terdaftar di dalamnya, server mengembalikan `403`.
+- ID mata kuliah yang tidak ditemukan mengembalikan `404`.
 
 ```bash
 curl 'http://localhost:8000/api/v1/courses?page=1' \
@@ -177,7 +198,7 @@ Contoh response daftar mengikuti bentuk kontrak:
 
 Metadata koleksi hanya berisi `current_page`, `last_page`, dan `total`.
 
-Detail course memakai Resource yang sama serta menyertakan relasi dosen, materials, assignments, dan counts yang sudah dimuat. Mahasiswa hanya dapat melihat detail course yang diikutinya; mahasiswa yang tidak terdaftar menerima `403`. Daftar materi dan tugas juga tersedia melalui dua endpoint koleksi pada tabel di atas.
+Detail course memakai Resource yang sama serta menyertakan relasi dosen, materials, assignments, dan counts yang sudah dimuat. Mahasiswa hanya dapat melihat detail course yang diikutinya dan bukan draft; mahasiswa yang tidak terdaftar menerima `403`, sedangkan course draft bagi mahasiswa menghasilkan `404`. Daftar materi dan tugas juga tersedia melalui endpoint koleksi pada tabel di atas. Endpoint materi (`GET /courses/{id}/materials`) dapat diakses oleh Admin, dosen pengampu, dan mahasiswa terdaftar pada course tersebut.
 
 ```bash
 curl 'http://localhost:8000/api/v1/courses/1/materials?page=1' \
@@ -219,9 +240,9 @@ Contoh detail course berstatus aktif tanpa material atau assignment:
 }
 ```
 
-Detail course tanpa token menghasilkan `401`; dosen yang bukan pengampu dan mahasiswa yang tidak terdaftar mendapat `403`, sedangkan course nonaktif untuk role selain dosen menghasilkan `404`.
+Detail course tanpa token menghasilkan `401`; dosen yang bukan pengampu dan mahasiswa yang tidak terdaftar mendapat `403`, sedangkan course berstatus draft bagi mahasiswa serta ID course yang tidak ditemukan menghasilkan `404`.
 
-Contoh response dosen lintas course (`403`):
+Contoh response dosen lintas course atau mahasiswa tidak terdaftar (`403`):
 
 ```json
 {
@@ -229,7 +250,7 @@ Contoh response dosen lintas course (`403`):
 }
 ```
 
-Contoh response course nonaktif bagi role selain dosen (`404`):
+Contoh response course draft bagi mahasiswa atau ID tidak ditemukan (`404`):
 
 ```json
 {
@@ -241,24 +262,36 @@ Contoh response course nonaktif bagi role selain dosen (`404`):
 
 | Method | URI | Akses | Hasil utama |
 |---|---|---|---|
-| `GET` | `/api/v1/courses/{id}/assignments` | Mahasiswa terdaftar / dosen pemilik | `200`, koleksi dengan filter `status` dan pagination |
-| `POST` | `/api/v1/assignments` | Dosen pengampu | `201`, Resource tugas |
-| `PUT` atau `PATCH` | `/api/v1/assignments/{id}` | Dosen pengampu tugas | `200`, Resource tugas |
-| `DELETE` | `/api/v1/assignments/{id}` | Dosen pengampu tugas | `204`, tanpa body |
+| `GET` | `/api/v1/courses/{id}/assignments` | Admin / mahasiswa terdaftar / dosen pemilik | `200`, koleksi dengan filter `status` dan pagination |
+| `POST` | `/api/v1/assignments` | Admin; dosen pengampu | `201`, Resource tugas |
+| `PUT` atau `PATCH` | `/api/v1/assignments/{id}` | Admin; dosen pengampu tugas | `200`, Resource tugas |
+| `DELETE` | `/api/v1/assignments/{id}` | Admin; dosen pengampu tugas | `204`, tanpa body |
+
+Admin dapat mengelola tugas di semua course, sedangkan dosen hanya dapat
+mengelola tugas pada course yang diampunya.
 
 Payload `POST`:
 
 | Field | Ketentuan |
 |---|---|
-| `course_id` | Wajib, ID mata kuliah yang diajar dosen |
+| `course_id` | Wajib, ID mata kuliah |
 | `title` | Wajib, string maksimal 255 karakter |
 | `instructions` | Wajib, string |
 | `due_at` | Wajib, tanggal/waktu yang valid |
-| `max_score` | Opsional, integer 0–255; default 100 dari database |
+| `max_score` | Opsional, integer 1–100; default 100 dari database |
 | `allow_late` | Opsional, boolean; default true dari database |
 | `status` | Opsional: `draft` atau `published`; default `published` |
 
 `created_by` diisi oleh server dari pengguna yang login. Contoh membuat tugas:
+
+Materi tersedia melalui `POST /api/v1/courses/{id}/materials`,
+`PUT`/`PATCH /api/v1/materials/{id}`, dan `DELETE /api/v1/materials/{id}`.
+Operasi ini hanya untuk Admin atau dosen pengampu. Payload menerima
+`title`, `description`, `type` (`file` atau `link`), dan
+`external_url` untuk jenis `link`; klien tidak dapat menetapkan path berkas.
+**Catatan penting:** Endpoint API Material hanya menerima dan menyimpan
+metadata (tidak menyediakan fitur pengunggahan berkas fisik via API); unggahan
+berkas fisik materi hanya didukung melalui antarmuka web.
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/assignments \
@@ -317,9 +350,9 @@ Contoh response sukses `201`:
 }
 ```
 
-Untuk `PUT`/`PATCH`, kirim satu atau lebih field yang sama selain `course_id`; field wajib hanya diwajibkan jika disertakan. Mengubah atau menghapus tugas milik dosen lain menghasilkan `403`. Pengguna yang bukan dosen juga mendapat `403`, sedangkan input tidak valid mendapat `422`.
+Untuk `PUT`/`PATCH`, kirim satu atau lebih field yang sama selain `course_id`; field wajib hanya diwajibkan jika disertakan. Admin dapat mengelola tugas di semua course; dosen yang bukan pengampu menerima `403`. Pengguna yang bukan Admin/dosen juga mendapat `403`, sedangkan input tidak valid mendapat `422`.
 
-`PUT` dan `PATCH` menerima `title`, `instructions`, `due_at`, `max_score`, `allow_late`, dan `status` secara opsional. `course_id` tidak dapat diubah melalui endpoint update. Tanpa token, route terlindungi mengembalikan `401`; ID tugas yang tidak ditemukan mengembalikan `404`.
+`PUT` dan `PATCH` menerima `title`, `instructions`, `due_at`, `max_score` (integer 1–100), `allow_late`, dan `status` secara opsional. `course_id` tidak dapat diubah melalui endpoint update. Tanpa token, route terlindungi mengembalikan `401`; ID tugas yang tidak ditemukan mengembalikan `404`.
 
 `PATCH /assignments/{id}` yang berhasil menghasilkan `200` dengan bentuk Resource yang sama seperti contoh create `201`; field tugas pada `data` mencerminkan nilai setelah perubahan. `DELETE /assignments/{id}` yang berhasil mengembalikan `204` dengan body kosong.
 
@@ -334,7 +367,7 @@ Contoh response error validasi untuk `POST /assignments`:
 }
 ```
 
-Contoh response `403` jika role bukan dosen atau dosen bukan pengampu course:
+Contoh response `403` jika role bukan Admin/dosen atau dosen bukan pengampu course:
 
 ```json
 {
@@ -358,12 +391,14 @@ curl -X DELETE http://localhost:8000/api/v1/assignments/1 \
 
 | Method | URI | Akses | Hasil utama |
 |---|---|---|---|
-| `GET` | `/api/v1/assignments/{id}/submissions` | Dosen pemilik | `200`, koleksi submission terpaginasikan |
+| `GET` | `/api/v1/assignments/{id}/submissions` | Admin; dosen pengampu | `200`, koleksi submission terpaginasikan |
 | `POST` | `/api/v1/assignments/{id}/submissions` | Mahasiswa terdaftar | `201`, Resource submission; multipart `file` |
-| `POST` | `/api/v1/submissions` | Mahasiswa | `201`, Resource submission |
+| `POST` | `/api/v1/submissions` | Mahasiswa terdaftar | `201`, Resource submission |
 | `PUT` | `/api/v1/submissions/{id}/grade` | Dosen pengampu mata kuliah | `201` grade baru; `200` penilaian ulang |
 
 Pengumpulan melalui route kontrak `/assignments/{id}/submissions` memakai `multipart/form-data`: `file` wajib dan `note` opsional; ID assignment berasal dari path. Mahasiswa harus terdaftar di mata kuliah tugas tersebut dan hanya dapat membuat satu submission per tugas. Route kompatibilitas `POST /submissions` juga tersedia dan menerima `assignment_id` di body. Berkas disimpan pada disk lokal Laravel di direktori `submissions/`.
+
+**Catatan Operasi Submission:** Endpoint yang tersedia saat ini hanya melayani operasi **pembuatan (pengumpulan)** submission baru. Belum tersedia rute aktif (baik di web maupun API) untuk memperbarui atau mengunggah ulang file submission yang sudah dikirimkan, meskipun `SubmissionPolicy::update` sudah didefinisikan pada level policy.
 
 Contoh response `403` mahasiswa yang tidak terdaftar:
 

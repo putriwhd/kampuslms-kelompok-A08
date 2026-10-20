@@ -10,31 +10,17 @@ use App\Http\Resources\SubmissionResource;
 use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
 {
     public function store(StoreAssignmentRequest $request)
     {
         $user = $request->user();
-
-        // Hanya dosen yang dapat membuat tugas.
-        if ($user->role !== 'dosen') {
-            return response()->json([
-                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
-            ], 403);
-        }
-
         $validated = $request->validated();
 
-        // Pastikan mata kuliah diajar oleh dosen yang login.
         $course = Course::findOrFail($validated['course_id']);
-
-        abort_unless(
-            (int) $course->lecturer_id === (int) $user->id,
-            403,
-            'Anda tidak memiliki akses ke sumber daya ini.'
-        );
+        Gate::authorize('create', [Assignment::class, $course]);
 
         $assignment = Assignment::create([
             ...$validated,
@@ -58,23 +44,8 @@ class AssignmentController extends Controller
 
     public function update(UpdateAssignmentRequest $request, $id)
     {
-        $user = $request->user();
-
-        // Hanya dosen yang dapat mengubah tugas.
-        if ($user->role !== 'dosen') {
-            return response()->json([
-                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
-            ], 403);
-        }
-
         $assignment = Assignment::with('course')->findOrFail($id);
-
-        // Cegah dosen mengubah tugas milik dosen lain.
-        abort_unless(
-            (int) $assignment->course->lecturer_id === (int) $user->id,
-            403,
-            'Anda tidak memiliki akses ke sumber daya ini.'
-        );
+        Gate::authorize('update', $assignment);
 
         $assignment->update($request->validated());
 
@@ -90,41 +61,10 @@ class AssignmentController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'dosen') {
-            return response()->json([
-                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
-            ], 403);
-        }
-
         $assignment = Assignment::with('course')->findOrFail($id);
+        Gate::authorize('delete', $assignment);
 
-        // Cegah dosen menghapus tugas milik dosen lain.
-        abort_unless(
-            (int) $assignment->course->lecturer_id === (int) $user->id,
-            403,
-            'Anda tidak memiliki akses ke sumber daya ini.'
-        );
-
-        $disk = Storage::disk('local');
-
-        $submissionFiles = $assignment->submissions()
-            ->pluck('file_path')
-            ->filter(
-                fn ($path) => is_string($path) && $disk->exists($path)
-            )
-            ->all();
-
-        if (
-            $submissionFiles !== []
-            && ! $disk->delete($submissionFiles)
-        ) {
-            return response()->json([
-                'message' => 'Gagal menghapus berkas submission.',
-            ], 500);
-        }
-
+        $assignment->submissions->each->delete();
         $assignment->delete();
 
         return response()->noContent();
@@ -132,22 +72,8 @@ class AssignmentController extends Controller
 
     public function submissions(Request $request, $id)
     {
-        $user = $request->user();
-
-        if ($user->role !== 'dosen') {
-            return response()->json([
-                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
-            ], 403);
-        }
-
         $assignment = Assignment::with('course')->findOrFail($id);
-
-        // Hanya dosen pengampu yang dapat melihat pengumpulan tugas.
-        abort_unless(
-            (int) $assignment->course->lecturer_id === (int) $user->id,
-            403,
-            'Anda tidak memiliki akses ke sumber daya ini.'
-        );
+        Gate::authorize('viewSubmissions', $assignment);
 
         $submissions = $assignment->submissions()
             ->with([
@@ -160,9 +86,30 @@ class AssignmentController extends Controller
             ])
             ->paginate(15);
 
+        $recap = $assignment->course
+            ->students()
+            ->with([
+                'submissions' => fn ($query) => $query
+                    ->where('assignment_id', $assignment->getKey()),
+            ])
+            ->orderBy('users.name')
+            ->get()
+            ->map(function ($student) {
+                $submission = $student->submissions->first();
+
+                return [
+                    'student_id' => $student->getKey(),
+                    'student_name' => $student->name,
+                    'submission_status' => $submission ? 'submitted' : 'not_submitted',
+                    'submitted_at' => $submission?->submitted_at,
+                    'is_late' => (bool) ($submission?->is_late ?? false),
+                ];
+            });
+
         return response()->json([
             'data' => SubmissionResource::collection($submissions)
                 ->resolve($request),
+            'recap' => $recap,
             'meta' => [
                 'current_page' => $submissions->currentPage(),
                 'last_page' => $submissions->lastPage(),

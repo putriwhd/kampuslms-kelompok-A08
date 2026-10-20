@@ -45,13 +45,21 @@ class SubmissionPolicy
         }
 
         if ($user->role === 'dosen') {
-            return $user->taughtCourses()
-                ->whereHas('assignments.submissions', fn ($query) => $query->whereKey($submission->getKey()))
+            $course = $submission->relationLoaded('assignment') && $submission->assignment?->relationLoaded('course')
+                ? $submission->assignment->course
+                : ($submission->assignment?->course ?? null);
+
+            if ($course) {
+                return (int) $course->lecturer_id === (int) $user->getKey();
+            }
+
+            return $submission->assignment()
+                ->whereHas('course', fn ($query) => $query->where('lecturer_id', $user->getKey()))
                 ->exists();
         }
 
         if ($user->role === 'mahasiswa') {
-            return $submission->student()->whereKey($user->getKey())->exists();
+            return (int) $submission->user_id === (int) $user->getKey();
         }
 
         return false;

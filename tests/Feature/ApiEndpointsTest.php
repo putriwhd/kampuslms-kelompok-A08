@@ -135,6 +135,121 @@ class ApiEndpointsTest extends TestCase
         $this->assertDatabaseMissing('assignments', ['id' => $assignment->id]);
     }
 
+    public function test_admin_and_lecturer_can_manage_assignments_only_within_allowed_courses(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $otherCourse = Course::factory()->for($otherLecturer, 'lecturer')->create();
+
+        $payload = [
+            'course_id' => $course->id,
+            'title' => 'Admin API task',
+            'instructions' => 'Task created by admin.',
+            'due_at' => '2030-12-31 23:59:00',
+            'status' => 'draft',
+        ];
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson('/api/v1/assignments', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.title', 'Admin API task');
+
+        $assignment = Assignment::where('title', 'Admin API task')->firstOrFail();
+
+        $this->patchJson("/api/v1/assignments/{$assignment->id}", [
+            'title' => 'Updated by admin',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.title', 'Updated by admin');
+
+        $this->deleteJson("/api/v1/assignments/{$assignment->id}")
+            ->assertNoContent();
+
+        $lecturerAssignment = Assignment::factory()->for($course)->create();
+        $otherAssignment = Assignment::factory()->for($otherCourse)->create();
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->patchJson("/api/v1/assignments/{$lecturerAssignment->id}", [
+                'title' => 'Updated by lecturer',
+            ])
+            ->assertOk();
+
+        $this->patchJson("/api/v1/assignments/{$otherAssignment->id}", [
+            'title' => 'Should remain unchanged',
+        ])->assertForbidden();
+
+        $this->actingAs($student, 'sanctum')
+            ->postJson('/api/v1/assignments', $payload)
+            ->assertForbidden();
+        $this->patchJson("/api/v1/assignments/{$lecturerAssignment->id}", [
+                'title' => 'Student cannot update',
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_admin_and_lecturer_can_manage_materials_with_policy_scoped_access(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $otherCourse = Course::factory()->for($otherLecturer, 'lecturer')->create();
+
+        $payload = [
+            'title' => 'Admin API material',
+            'description' => 'Material created by admin.',
+            'type' => 'link',
+            'external_url' => 'https://example.test/material',
+            'file_path' => '../../private/admin-document.pdf',
+        ];
+
+        $this->actingAs($admin, 'sanctum')
+            ->postJson("/api/v1/courses/{$otherCourse->id}/materials", $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.title', 'Admin API material');
+
+        $adminMaterial = Material::where('title', 'Admin API material')->firstOrFail();
+        $this->assertNull($adminMaterial->file_path);
+
+        $this->patchJson("/api/v1/materials/{$adminMaterial->id}", [
+            'title' => 'Updated by admin',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.title', 'Updated by admin');
+
+        $this->deleteJson("/api/v1/materials/{$adminMaterial->id}")
+            ->assertNoContent();
+
+        $lecturerMaterial = Material::factory()
+            ->for($course)
+            ->for($lecturer, 'uploader')
+            ->create();
+        $otherMaterial = Material::factory()
+            ->for($otherCourse)
+            ->for($otherLecturer, 'uploader')
+            ->create();
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->postJson("/api/v1/courses/{$course->id}/materials", $payload)
+            ->assertCreated();
+
+        $this->patchJson("/api/v1/materials/{$lecturerMaterial->id}", [
+            'title' => 'Lecturer updated material',
+        ])->assertOk();
+
+        $this->patchJson("/api/v1/materials/{$otherMaterial->id}", [
+            'title' => 'Cross-course change',
+        ])->assertForbidden();
+
+        $this->actingAs($student, 'sanctum')
+            ->postJson("/api/v1/courses/{$course->id}/materials", $payload)
+            ->assertForbidden();
+    }
+
     public function test_submission_and_grade_endpoints_write_to_their_own_tables(): void
     {
         Storage::fake('local');

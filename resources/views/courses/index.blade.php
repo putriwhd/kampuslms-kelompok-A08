@@ -9,9 +9,9 @@
                 @if ($role === 'admin')
                     Sebagai Admin, Anda dapat mengelola data mata kuliah.
                 @elseif ($role === 'dosen')
-                    Berikut daftar mata kuliah yang dapat Anda akses.
+                    Berikut mata kuliah yang ditugaskan kepada Anda sebagai dosen pengampu.
                 @else
-                    Berikut daftar mata kuliah yang dapat Anda akses.
+                    Berikut mata kuliah yang Anda ikuti. Daftar ini hanya memuat mata kuliah tempat Admin mendaftarkan akun Anda.
                 @endif
             </p>
         </div>
@@ -206,6 +206,6 @@
     </div>
 
     <div class="pagination">
-        {{ $courses->links() }}
+        {{ $courses->links('vendor.pagination.kampuslms') }}
     </div>
 </x-layout>

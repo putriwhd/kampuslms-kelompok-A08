@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\AssignmentController;
+use App\Http\Controllers\Api\MaterialController;
 use App\Http\Controllers\Api\SubmissionController;
 use App\Http\Controllers\Api\NotificationController;
 
@@ -39,16 +40,29 @@ Route::prefix('v1')->group(function () {
         Route::get('/courses/{id}', [CourseController::class, 'show']);
         Route::get('/courses/{id}/materials', [CourseController::class, 'materials']);
         Route::get('/courses/{id}/assignments', [CourseController::class, 'assignments']);
+        
+        // Ditambahkan untuk pengujian otorisasi/Policy
+        Route::delete('/courses/{id}', [CourseController::class, 'destroy'])
+            ->middleware('role:admin');
 
-        // --- Assignments (Hanya Dosen yang Boleh Bikin / Edit / Hapus) ---
+        // --- Material dan Assignment (Admin atau dosen pengampu) ---
+        Route::post('/courses/{id}/materials', [MaterialController::class, 'store'])
+            ->middleware('role:admin,dosen');
+
+        Route::match(['put', 'patch'], '/materials/{id}', [MaterialController::class, 'update'])
+            ->middleware('role:admin,dosen');
+
+        Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])
+            ->middleware('role:admin,dosen');
+
         Route::post('/assignments', [AssignmentController::class, 'store'])
-            ->middleware('role:dosen');
+            ->middleware('role:admin,dosen');
 
         Route::match(['put', 'patch'], '/assignments/{id}', [AssignmentController::class, 'update'])
-            ->middleware('role:dosen');
+            ->middleware('role:admin,dosen');
 
         Route::delete('/assignments/{id}', [AssignmentController::class, 'destroy'])
-            ->middleware('role:dosen');
+            ->middleware('role:admin,dosen');
 
         Route::get('/assignments/{id}/submissions', [AssignmentController::class, 'submissions']);
         Route::post('/assignments/{id}/submissions', [SubmissionController::class, 'storeForAssignment']);

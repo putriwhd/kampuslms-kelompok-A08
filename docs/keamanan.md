@@ -8,9 +8,17 @@ controller, middleware, atau pembatasan query.
 
 | Role | Akses yang diizinkan |
 |---|---|
-| Admin (`admin@kampuslms.test`, `admin2@kampuslms.test`) | Melihat semua course, materi, tugas, submission, dan nilai; mengelola pengguna/course/materi/tugas; menghapus submission. Admin tidak membuat atau mengubah nilai. |
+| Admin (`admin@kampuslms.test`, `admin2@kampuslms.test`) | Melihat semua course, materi, tugas, submission, dan nilai; mengelola pengguna/course/materi/tugas dan pendaftaran mahasiswa ke course; menghapus submission. Admin tidak membuat atau mengubah nilai. |
 | Dosen | Melihat course yang diampu serta materi dan tugasnya (termasuk draft); mengelola metadata materi/tugas; melihat dan menghapus submission pada course sendiri; membuat/mengubah/menghapus nilai pada course sendiri. Tidak dapat mengelola pengguna atau course dosen lain. |
-| Mahasiswa | Melihat course yang diikuti dan bukan draft, materi pada course tersebut, tugas `published`, submission sendiri, dan nilai sendiri. Dapat mengirim/memperbarui submission sendiri sesuai status tugas; tidak dapat mengelola course, materi, tugas, submission orang lain, atau nilai. |
+| Mahasiswa | Melihat course yang diikuti dan bukan draft, materi pada course tersebut, tugas `published`, submission sendiri, dan nilai sendiri. Dapat membuat (mengirim) submission sendiri pada tugas `published` yang diikuti (pembaruan submission tidak memiliki endpoint aktif di web maupun API); tidak dapat mengelola course, materi, tugas, submission orang lain, atau nilai. |
+
+Pendaftaran akun mahasiswa dapat dilakukan melalui route `/register` yang aktif
+secara publik, namun tautan pendaftaran telah disembunyikan dari halaman antarmuka
+login (`/login`) sehingga harus diakses langsung via URL. Nilai `role` tidak
+diterima dari input pendaftar (selalu ditetapkan sebagai mahasiswa oleh server);
+pendaftaran mahasiswa ke course dilakukan Admin dari detail course. Dosen hanya
+dapat melihat dan menilai submission pada course yang diampunya. Mahasiswa hanya
+menerima nilai dari submission miliknya.
 
 Di data demo, `dosen2@kampuslms.test` memiliki course untuk menguji batas
 pengampu, sedangkan `mahasiswa2@kampuslms.test` sengaja tidak terdaftar pada
@@ -21,10 +29,11 @@ mahasiswa yang tidak terdaftar.
 
 | Data / percobaan IDOR | Permukaan | Perlindungan server |
 |---|---|---|
-| Mengganti `course` pada daftar atau detail course | Web dan `GET /api/v1/courses/{id}` | `CoursePolicy::view`; `CourseController@index` dan `Api\CourseController@index` membatasi query ke course pengampu/terdaftar. Course draft tidak ditampilkan ke mahasiswa. |
-| Mengganti ID materi atau pasangan course/materi | Web `/.../courses/{course}/materials/{material}` | `scopeBindings()` mengikat materi ke course pada route; `MaterialController::showInCourse` memastikan `course_id` cocok; `MaterialPolicy::view`, `update`, dan `delete` memeriksa peran dan relasi course. |
-| Mengganti ID tugas atau pasangan course/tugas | Web `/.../courses/{course}/assignments/{assignment}` dan API course assignments | `scopeBindings()` serta pemeriksaan course pada controller web; `AssignmentPolicy::view`, `update`, `delete`, dan `viewSubmissions` memeriksa pengampu/keikutsertaan. API memanggil `CoursePolicy::view`; daftar mahasiswa hanya berisi tugas `published`. |
-| Membaca atau mengubah submission milik mahasiswa lain | Web submission/nilai dan API submission | `SubmissionPolicy::view`/`update` membatasi mahasiswa ke submission sendiri; `delete` membatasi ke admin/pengampu dan `grade` ke dosen pengampu. Endpoint API memakai pemeriksaan role, enrollment, dan pengampu langsung di controller. |
+| Mengganti `course` pada daftar atau detail course | Web dan `GET /api/v1/courses/{id}` | `CoursePolicy::view`; `CourseController@index` dan `Api\CourseController@index` membatasi query: Admin melihat semua course, dosen hanya course yang diampu, mahasiswa hanya course yang diikuti dengan status bukan draft. Pada detail course API, request mahasiswa terhadap course berstatus `draft` menghasilkan `404`; mahasiswa yang mengakses course non-draft yang tidak diikutinya menghasilkan `403`; dosen yang mengakses course milik dosen lain menghasilkan `403`. |
+| Mendaftarkan mahasiswa ke course atau mengubah ID pengguna | Web `PUT /admin/courses/{course}/students` | `CoursePolicy::manageStudents` hanya mengizinkan Admin; setiap ID divalidasi agar merupakan akun mahasiswa. |
+| Mengganti ID materi atau pasangan course/materi | Web dan API `/courses/{id}/materials`, `/materials/{id}` | Route web memakai `scopeBindings()`; `MaterialController::showInCourse` memastikan `course_id` cocok; `MaterialPolicy::create`, `update`, dan `delete` hanya mengizinkan Admin atau dosen pengampu, sedangkan `view` mengizinkan Admin, dosen pengampu, dan mahasiswa terdaftar. API memanggil Gate/Policy sebelum operasi tulis, hanya mengelola metadata, dan tidak melayani unggahan berkas fisik via API. |
+| Mengganti ID tugas atau pasangan course/tugas | Web `/.../courses/{course}/assignments/{assignment}` dan API course assignments | `scopeBindings()` serta pemeriksaan course pada controller web; `AssignmentPolicy::create`, `view`, `update`, `delete`, dan `viewSubmissions` memeriksa role dan pengampu/keikutsertaan. API memanggil Gate/Policy; daftar mahasiswa hanya berisi tugas `published`. |
+| Membaca atau mengubah submission milik mahasiswa lain | Web submission/nilai dan API submission | `SubmissionPolicy::view` membatasi akses baca ke admin, dosen pengampu, atau mahasiswa pemilik; `delete` membatasi ke admin/pengampu dan `grade` ke dosen pengampu. Endpoint yang tersedia di web/API saat ini hanya melayani pembuatan submission baru (belum ada rute aktif untuk update submission meskipun policy telah disiapkan). Pemeriksaan role, enrollment, dan pengampu dijalankan langsung di controller dan policy. |
 | Mengubah nilai dengan ID submission/grade milik course lain | Policy Grade dan `PUT /api/v1/submissions/{id}/grade` | `GradePolicy` mendefinisikan hak kelola dosen pengampu; endpoint API memeriksa langsung bahwa dosen adalah pengampu course submission. |
 | Membaca atau menandai notifikasi pengguna lain | `GET /api/v1/notifications` dan `POST /api/v1/notifications/{id}/read` | `Api\NotificationController` mengambil notifikasi melalui relasi notifikasi pengguna yang sedang login; ID asing tidak dapat digunakan untuk menandai notifikasi. |
 | Membuka route admin/dosen/mahasiswa dengan mengganti URL atau query `as` | Route web dan API | Middleware `auth`, `role:*`, dan `auth:sanctum`; parameter query `as` tidak memberikan hak akses. |
@@ -36,8 +45,12 @@ mahasiswa yang tidak terdaftar.
   request per menit.
 - Route web akademik menggunakan middleware autentikasi dan role; aksi terhadap
   resource juga diperiksa oleh Policy/Gate.
-- Endpoint API pembuatan, perubahan, dan penghapusan tugas dibatasi ke dosen
-  dan memeriksa kepemilikan course di controller.
+- Pendaftaran publik membuat role mahasiswa di server. Penetapan dosen/admin
+  hanya tersedia melalui pengelolaan akun oleh Admin.
+- Penilaian web hanya dapat dilakukan dosen pengampu; nilai mahasiswa dibatasi
+  pada submission milik mahasiswa yang sedang login.
+- Endpoint API pembuatan, perubahan, dan penghapusan materi/tugas menerima
+  Admin dan dosen; Gate/Policy tetap membatasi dosen pada course yang diampu.
 - Route `/test-leak` tidak didaftarkan.
 
 ## Celah yang perlu ditangani di luar cakupan Anggota 4
@@ -59,6 +72,9 @@ Siapkan database demo dan jalankan aplikasi:
 php artisan db:seed
 php artisan serve
 ```
+
+> [!WARNING]
+> Menjalankan `php artisan db:seed` berulang kali pada database yang sudah berisi data akan menambah 5 mata kuliah demo baru beserta data terkait pada setiap pemanggilan karena seeder menggunakan factory create. Untuk mereset basis data ke kondisi awal yang bersih, gunakan `php artisan migrate:fresh --seed`.
 
 Di terminal lain, jalankan:
 
