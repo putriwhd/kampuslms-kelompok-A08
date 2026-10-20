@@ -41,6 +41,35 @@
             <section class="submission-list" aria-labelledby="submissions-heading">
                 <h2 id="submissions-heading">Pengumpulan Mahasiswa</h2>
 
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mahasiswa</th>
+                            <th>Status</th>
+                            <th>Waktu pengumpulan</th>
+                            <th>Status keterlambatan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($submissionRecap as $row)
+                            <tr>
+                                <td>{{ $row['student']->name }}</td>
+                                <td>
+                                    {{ $row['submission_status'] === 'submitted' ? 'Sudah mengumpulkan' : 'Belum mengumpulkan' }}
+                                </td>
+                                <td>{{ $row['submitted_at']?->format('d M Y H:i') ?? '-' }}</td>
+                                <td>
+                                    {{ $row['submission_status'] === 'not_submitted' ? '-' : ($row['is_late'] ? 'Terlambat' : 'Tepat waktu') }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4">Belum ada mahasiswa yang terdaftar di kelas ini.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+
                 @forelse ($submissions as $submission)
                     <article class="submission-card">
                         <h3>{{ $submission->student->name }}</h3>

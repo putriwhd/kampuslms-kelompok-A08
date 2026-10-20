@@ -40,6 +40,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/courses/{id}', [CourseController::class, 'show']);
         Route::get('/courses/{id}/materials', [CourseController::class, 'materials']);
         Route::get('/courses/{id}/assignments', [CourseController::class, 'assignments']);
+        
+        // Ditambahkan untuk pengujian otorisasi/Policy
+        Route::delete('/courses/{id}', [CourseController::class, 'destroy'])
+            ->middleware('role:admin');
 
         // --- Material dan Assignment (Admin atau dosen pengampu) ---
         Route::post('/courses/{id}/materials', [MaterialController::class, 'store'])

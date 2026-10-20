@@ -6,10 +6,24 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class Submission extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Submission $submission): void {
+            if (! empty($submission->file_path)) {
+                $disk = Storage::disk('local');
+                if ($disk->exists($submission->file_path)) {
+                    $disk->delete($submission->file_path);
+                }
+            }
+        });
+    }
 
     protected $fillable = [
         'assignment_id',

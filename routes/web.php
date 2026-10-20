@@ -207,6 +207,11 @@ Route::prefix('mahasiswa')
                 [AssignmentController::class, 'showInCourse']
             )->name('courses.assignments.scoped-show');
 
+            Route::get(
+                'courses/{course}/assignments/{assignment}/submissions/{submission}/download',
+                [AssignmentController::class, 'downloadSubmission']
+            )->name('courses.assignments.submissions.download');
+
         });
     });
 

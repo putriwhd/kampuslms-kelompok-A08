@@ -11,7 +11,6 @@ use App\Models\Assignment;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 
 class AssignmentController extends Controller
 {
@@ -65,24 +64,7 @@ class AssignmentController extends Controller
         $assignment = Assignment::with('course')->findOrFail($id);
         Gate::authorize('delete', $assignment);
 
-        $disk = Storage::disk('local');
-
-        $submissionFiles = $assignment->submissions()
-            ->pluck('file_path')
-            ->filter(
-                fn ($path) => is_string($path) && $disk->exists($path)
-            )
-            ->all();
-
-        if (
-            $submissionFiles !== []
-            && ! $disk->delete($submissionFiles)
-        ) {
-            return response()->json([
-                'message' => 'Gagal menghapus berkas submission.',
-            ], 500);
-        }
-
+        $assignment->submissions->each->delete();
         $assignment->delete();
 
         return response()->noContent();
@@ -104,9 +86,30 @@ class AssignmentController extends Controller
             ])
             ->paginate(15);
 
+        $recap = $assignment->course
+            ->students()
+            ->with([
+                'submissions' => fn ($query) => $query
+                    ->where('assignment_id', $assignment->getKey()),
+            ])
+            ->orderBy('users.name')
+            ->get()
+            ->map(function ($student) {
+                $submission = $student->submissions->first();
+
+                return [
+                    'student_id' => $student->getKey(),
+                    'student_name' => $student->name,
+                    'submission_status' => $submission ? 'submitted' : 'not_submitted',
+                    'submitted_at' => $submission?->submitted_at,
+                    'is_late' => (bool) ($submission?->is_late ?? false),
+                ];
+            });
+
         return response()->json([
             'data' => SubmissionResource::collection($submissions)
                 ->resolve($request),
+            'recap' => $recap,
             'meta' => [
                 'current_page' => $submissions->currentPage(),
                 'last_page' => $submissions->lastPage(),

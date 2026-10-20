@@ -111,6 +111,7 @@ class AssignmentController extends Controller
 
         $course = $assignment->course;
         $role = $request->user()->role;
+        $assignment->submissions->each->delete();
         $assignment->delete();
 
         return redirect()
@@ -197,6 +198,7 @@ class AssignmentController extends Controller
 
         $role = $user->role;
         $submissions = collect();
+        $submissionRecap = collect();
         $ownSubmission = null;
 
         if (in_array($role, ['admin', 'dosen'], true)) {
@@ -205,6 +207,28 @@ class AssignmentController extends Controller
                 ->with(['student', 'grade.grader'])
                 ->orderBy('submitted_at')
                 ->get();
+
+            $submissionRecap = $assignment->course
+                ->students()
+                ->with([
+                    'submissions' => fn ($query) => $query
+                        ->where('assignment_id', $assignment->getKey()),
+                ])
+                ->orderBy('users.name')
+                ->get()
+                ->map(function ($student) {
+                    $submission = $student->submissions->first();
+
+                    return [
+                        'student' => $student,
+                        'student_id' => $student->getKey(),
+                        'student_name' => $student->name,
+                        'student_nim_nip' => $student->nim_nip,
+                        'submission_status' => $submission ? 'submitted' : 'not_submitted',
+                        'submitted_at' => $submission?->submitted_at,
+                        'is_late' => (bool) ($submission?->is_late ?? false),
+                    ];
+                });
         } elseif ($role === 'mahasiswa') {
             $ownSubmission = $assignment->submissions()
                 ->where('user_id', $user->getKey())
@@ -214,7 +238,13 @@ class AssignmentController extends Controller
 
         return view(
             'assignments.show',
-            compact('assignment', 'role', 'submissions', 'ownSubmission')
+            compact(
+                'assignment',
+                'role',
+                'submissions',
+                'submissionRecap',
+                'ownSubmission'
+            )
         );
     }
 }
