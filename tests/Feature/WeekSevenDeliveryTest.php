@@ -4,11 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\Grade;
+use App\Models\Submission;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -25,7 +29,9 @@ class WeekSevenDeliveryTest extends TestCase
             ->assertOk()
             ->assertSee('Masuk ke KampusLMS')
             ->assertSee(route('login.store'), false)
-            ->assertSee(route('password.request'), false);
+            ->assertSee(route('password.request'), false)
+            ->assertDontSee(route('register'), false)
+            ->assertDontSee('Daftar sebagai mahasiswa');
 
         $this->getJson('/api/login')
             ->assertUnauthorized()
@@ -63,7 +69,7 @@ class WeekSevenDeliveryTest extends TestCase
 
     public function test_demo_role_accounts_follow_the_role_policy_boundaries(): void
     {
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         $admin = User::where('email', 'admin2@kampuslms.test')->firstOrFail();
         $lecturer = User::where('email', 'dosen2@kampuslms.test')->firstOrFail();
@@ -108,13 +114,195 @@ class WeekSevenDeliveryTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_account_registration_is_only_available_through_admin_routes(): void
+    public function test_public_registration_creates_a_student_and_cannot_create_an_admin(): void
     {
-        $this->get('/register')->assertNotFound();
+        $this->get('/register')
+            ->assertOk()
+            ->assertSee('Daftar Akun Mahasiswa')
+            ->assertDontSee('name="role"', false);
+
+        $this->post('/register', [
+            'name' => 'Pendaftar Baru',
+            'email' => 'pendaftar-baru@kampuslms.test',
+            'nim_nip' => 'MHSBARU01',
+            'password' => 'student-password',
+            'password_confirmation' => 'student-password',
+            'role' => 'admin',
+        ])
+            ->assertRedirect(route('dashboard'))
+            ->assertSessionHas('success');
+
+        $newStudent = User::where('email', 'pendaftar-baru@kampuslms.test')->firstOrFail();
+        $this->assertSame('mahasiswa', $newStudent->role);
+        $this->assertAuthenticatedAs($newStudent);
 
         $lecturer = User::factory()->dosen()->create();
         $this->actingAs($lecturer)
             ->get('/admin/users/create')
+            ->assertForbidden();
+    }
+
+    public function test_admin_enrolls_students_and_role_views_keep_courses_separate(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $otherStudent = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create([
+            'name' => 'Kelas yang Dikelola Admin',
+            'lecturer_id' => $lecturer->id,
+            'status' => 'active',
+        ]);
+        $otherCourse = Course::factory()->create([
+            'name' => 'Kelas Dosen Lain',
+            'lecturer_id' => User::factory()->dosen()->create()->id,
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Pendaftaran Mahasiswa')
+            ->assertSee($student->email);
+
+        $this->put(route('admin.courses.students.update', $course), [
+            'student_ids' => [$student->id],
+        ])
+            ->assertRedirect(route('admin.courses.show', [
+                'course' => $course,
+                'as' => 'admin',
+            ]));
+
+        $this->assertDatabaseHas('course_user', [
+            'course_id' => $course->id,
+            'user_id' => $student->id,
+        ]);
+        $this->assertDatabaseMissing('course_user', [
+            'course_id' => $course->id,
+            'user_id' => $otherStudent->id,
+        ]);
+
+        $this->actingAs($lecturer)
+            ->get(route('dosen.courses.index'))
+            ->assertOk()
+            ->assertSee($course->name)
+            ->assertDontSee($otherCourse->name);
+
+        $this->actingAs($student)
+            ->get(route('mahasiswa.courses.index'))
+            ->assertOk()
+            ->assertSee($course->name)
+            ->assertDontSee($otherCourse->name);
+
+        $this->actingAs($otherStudent)
+            ->get(route('mahasiswa.courses.index'))
+            ->assertOk()
+            ->assertDontSee($course->name)
+            ->assertDontSee($otherCourse->name);
+
+        $this->actingAs($lecturer)
+            ->put(route('admin.courses.students.update', $course), [
+                'student_ids' => [$otherStudent->id],
+            ])
+            ->assertForbidden();
+    }
+
+    public function test_lecturer_can_grade_submissions_and_student_can_only_see_own_grade(): void
+    {
+        Storage::fake('local');
+        $lecturer = User::factory()->dosen()->create();
+        $otherLecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $otherStudent = User::factory()->mahasiswa()->create();
+        $outsider = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create([
+            'lecturer_id' => $lecturer->id,
+            'status' => 'active',
+        ]);
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+        $course->students()->attach($otherStudent, ['enrolled_at' => now()]);
+        $assignment = Assignment::factory()->create([
+            'course_id' => $course->id,
+            'created_by' => $lecturer->id,
+            'status' => 'published',
+            'max_score' => 100,
+        ]);
+        $submission = Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $student->id,
+            'file_path' => 'submissions/test-answer.pdf',
+            'original_name' => 'jawaban.pdf',
+            'file_size' => 1024,
+            'submitted_at' => now(),
+            'is_late' => false,
+        ]);
+        Storage::disk('local')->put('submissions/test-answer.pdf', 'Isi jawaban demo');
+        $otherSubmission = Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $otherStudent->id,
+            'file_path' => 'submissions/test-answer-other.pdf',
+            'original_name' => 'jawaban-lain.pdf',
+            'file_size' => 1024,
+            'submitted_at' => now(),
+            'is_late' => false,
+        ]);
+        Grade::create([
+            'submission_id' => $otherSubmission->id,
+            'graded_by' => $lecturer->id,
+            'score' => 42,
+            'feedback' => 'Nilai milik mahasiswa lain.',
+            'graded_at' => now(),
+        ]);
+
+        $this->actingAs($lecturer)
+            ->get(route('dosen.assignments.show', $assignment))
+            ->assertOk()
+            ->assertSee('Pengumpulan Mahasiswa')
+            ->assertSee('Simpan Nilai');
+
+        $this->get(route('dosen.courses.assignments.submissions.download', [
+            'course' => $course,
+            'assignment' => $assignment,
+            'submission' => $submission,
+        ]))
+            ->assertOk()
+            ->assertHeader('content-disposition', 'attachment; filename=jawaban.pdf');
+
+        $this->actingAs($otherLecturer)
+            ->get(route('dosen.courses.assignments.submissions.download', [
+                'course' => $course,
+                'assignment' => $assignment,
+                'submission' => $submission,
+            ]))
+            ->assertForbidden();
+
+        $this->actingAs($lecturer);
+        $this->post(route('dosen.courses.assignments.submissions.grade', [
+            'course' => $course,
+            'assignment' => $assignment,
+            'submission' => $submission,
+        ]), [
+            'score' => 87.5,
+            'feedback' => 'Pemahaman materi sangat baik.',
+        ])
+            ->assertRedirect(route('dosen.assignments.show', $assignment));
+
+        $this->assertDatabaseHas('grades', [
+            'submission_id' => $submission->id,
+            'graded_by' => $lecturer->id,
+            'score' => 87.5,
+            'feedback' => 'Pemahaman materi sangat baik.',
+        ]);
+
+        $this->actingAs($student)
+            ->get(route('mahasiswa.assignments.show', $assignment))
+            ->assertOk()
+            ->assertSeeText('87.50')
+            ->assertSeeText('Pemahaman materi sangat baik.')
+            ->assertDontSeeText('Nilai milik mahasiswa lain.');
+
+        $this->actingAs($outsider)
+            ->get(route('mahasiswa.assignments.show', $assignment))
             ->assertForbidden();
     }
 
@@ -183,9 +371,9 @@ class WeekSevenDeliveryTest extends TestCase
             'type' => 'link',
             'external_url' => 'https://example.test/materi',
         ])->assertRedirect(route('dosen.courses.materials.index', [
-                'course' => $course,
-                'as' => 'dosen',
-            ]));
+            'course' => $course,
+            'as' => 'dosen',
+        ]));
 
         $this->assertDatabaseHas('materials', [
             'course_id' => $course->id,

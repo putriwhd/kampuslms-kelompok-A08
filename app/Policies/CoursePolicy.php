@@ -5,16 +5,6 @@ namespace App\Policies;
 use App\Models\Course;
 use App\Models\User;
 
-/**
- * Kontrak ability:
- * - viewAny(): daftar mata kuliah.
- * - view(Course $course): sesuai role dan hak akses.
- * - create(): hanya admin.
- * - update(Course $course): admin atau dosen pengampu.
- * - delete(Course $course): hanya admin.
- * - manage(Course $course): hanya admin.
- * - viewDraft(Course $course): admin atau dosen pengampu.
- */
 class CoursePolicy
 {
     /**
@@ -151,9 +141,7 @@ class CoursePolicy
                 && $user->taughtCourses()->whereKey($course->getKey())->exists());
     }
 
-    /**
-     * Menentukan apakah pengguna dapat mendaftarkan mahasiswa ke mata kuliah.
-     */
+
     public function enroll(User $user, Course $course, User $student): bool
     {
         return $student->role === 'mahasiswa'
@@ -170,4 +158,9 @@ class CoursePolicy
             && $this->manageEnrollment($user, $course)
             && $course->students()->whereKey($student->getKey())->exists();
     }
+
+   public function manageStudents(User $user, Course $course): bool
+{
+    return $user->role === 'admin';
+}
 }
