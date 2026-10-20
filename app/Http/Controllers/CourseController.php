@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
@@ -84,13 +85,56 @@ class CourseController extends Controller
 
         $role = $this->selectedRole($request);
 
-        $course->load([
-            'lecturer',
-            'materials',
-            'assignments',
+        $canManageStudents = in_array($role, ['admin', 'dosen'], true);
+        $students = $canManageStudents
+            ? User::query()->where('role', 'mahasiswa')->orderBy('name')->get()
+            : collect();
+        $enrolledStudentIds = $canManageStudents
+            ? $course->students()->pluck('users.id')->all()
+            : [];
+
+        return view(
+            'courses.show',
+            compact('course', 'role', 'students', 'enrolledStudentIds')
+        );
+    }
+
+    public function updateStudents(Request $request, Course $course)
+    {
+        Gate::authorize('manageStudents', $course);
+
+        $validated = $request->validate([
+            'student_ids' => ['sometimes', 'array'],
+            'student_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('users', 'id')->where(
+                    fn ($query) => $query->where('role', 'mahasiswa')
+                ),
+            ],
         ]);
 
-        return view('courses.show', compact('course', 'role'));
+        $studentIds = $validated['student_ids'] ?? [];
+        $role = $request->user()->role;
+        $syncData = collect($studentIds)
+            ->mapWithKeys(fn (int $studentId) => [
+                $studentId => ['enrolled_at' => now()],
+            ])
+            ->all();
+
+        $currentlyEnrolledIds = $course->students()->pluck('users.id')->all();
+        $course->students()->syncWithoutDetaching($syncData);
+        $course->students()->detach(
+            array_diff($currentlyEnrolledIds, $studentIds)
+        );
+
+        return redirect()
+            ->route($role . '.courses.show', [
+                'course' => $course,
+                'as' => $role,
+            ])
+            ->with('success', 'Pendaftaran mahasiswa pada mata kuliah berhasil diperbarui.');
     }
 
     public function edit(Request $request, Course $course)
@@ -124,6 +168,12 @@ class CourseController extends Controller
         Gate::authorize('delete', $course);
 
         // FIXED 2: Hapus method ensureCourseOwnership yang tidak ada
+
+        // Hapus submission melalui model agar event deleting membersihkan file privat sebelum cascade database.
+        $course->assignments()
+            ->with('submissions')
+            ->get()
+            ->each(fn ($assignment) => $assignment->submissions->each->delete());
 
         // Bersihkan berkas materi fisik secara eksplisit sebelum cascadeOnDelete MySQL menghapus datanya
         foreach ($course->materials as $material) {

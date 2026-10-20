@@ -45,56 +45,139 @@
 
         @if (in_array($role, ['admin', 'dosen'], true))
             <section class="submission-list" aria-labelledby="submissions-heading">
-                <h2 id="submissions-heading">Pengumpulan Mahasiswa</h2>
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
+                    <h2 id="submissions-heading" style="margin:0;">Pengumpulan Mahasiswa</h2>
+                    <a
+                        href="{{ route($role . '.courses.assignments.submissions.index', [
+                            'course' => $assignment->course,
+                            'assignment' => $assignment,
+                        ]) }}"
+                        style="display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .85rem;border-radius:6px;text-decoration:none;font-size:.9rem;background:#2563eb;color:#fff;font-weight:500;"
+                    >
+                        <span>Lihat Halaman Rekapitulasi Lengkap &rarr;</span>
+                    </a>
+                </div>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mahasiswa</th>
-                            <th>Status</th>
-                            <th>Waktu pengumpulan</th>
-                            <th>Status keterlambatan</th>
-                        </tr>
-                    </thead>
+                @php
+                    $totalStudents     = $submissionRecap->count();
+                    $totalSubmitted    = $submissionRecap->where('submission_status', 'submitted')->count();
+                    $totalNotSubmitted = $totalStudents - $totalSubmitted;
+                    $totalLate         = $submissionRecap->where('is_late', true)->count();
+                @endphp
 
-                    <tbody>
-                        @forelse ($submissionRecap as $row)
+                {{-- Komponen Ringkasan Statistik --}}
+                <div
+                    class="submission-stats"
+                    style="display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0;padding:.85rem;background:rgba(0,0,0,.03);border-radius:8px;"
+                >
+                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+                        <p style="font-size:1.6rem;font-weight:700;margin:0;">{{ $totalStudents }}</p>
+                        <p style="margin:0;font-size:.8rem;color:#555;">Total Mahasiswa</p>
+                    </div>
+                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#16a34a;">{{ $totalSubmitted }}</p>
+                        <p style="margin:0;font-size:.8rem;color:#555;">Sudah Mengumpulkan</p>
+                    </div>
+                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#dc2626;">{{ $totalNotSubmitted }}</p>
+                        <p style="margin:0;font-size:.8rem;color:#555;">Belum Mengumpulkan</p>
+                    </div>
+                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#ea580c;">{{ $totalLate }}</p>
+                        <p style="margin:0;font-size:.8rem;color:#555;">Terlambat</p>
+                    </div>
+                </div>
+
+                <p style="font-weight:600;margin-bottom:.75rem;">
+                    Jumlah yang sudah mengumpulkan:
+                    <strong>{{ $totalSubmitted }} dari {{ $totalStudents }} mahasiswa</strong>
+                </p>
+
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
                             <tr>
-                                <td>{{ $row['student']->name }}</td>
-
-                                <td>
-                                    {{ $row['submission_status'] === 'submitted'
-                                        ? 'Sudah mengumpulkan'
-                                        : 'Belum mengumpulkan' }}
-                                </td>
-
-                                <td>
-                                    {{ $row['submitted_at']?->format('d M Y H:i') ?? '-' }}
-                                </td>
-
-                                <td>
-                                    @if ($row['submission_status'] === 'not_submitted')
-                                        -
-                                    @elseif ($row['is_late'])
-                                        <span class="status-badge status-draft">
-                                            Terlambat
-                                        </span>
-                                    @else
-                                        <span class="status-badge status-success">
-                                            Tepat waktu
-                                        </span>
-                                    @endif
-                                </td>
+                                <th>No.</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Status Pengumpulan</th>
+                                <th>Waktu Submit</th>
+                                <th>Badge Keterlambatan</th>
+                                <th>original_name</th>
+                                <th>Ukuran Berkas</th>
+                                <th>Aksi</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4">
-                                    Belum ada mahasiswa yang terdaftar di kelas ini.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+
+                        <tbody>
+                            @forelse ($submissionRecap as $index => $row)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td><strong>{{ $row['student_name'] }}</strong></td>
+                                    <td><code>{{ $row['student_nim_nip'] ?? '-' }}</code></td>
+                                    <td>
+                                        @if ($row['submission_status'] === 'submitted')
+                                            <span class="status-badge status-success">Sudah mengumpulkan</span>
+                                        @else
+                                            <span class="status-badge status-draft" style="background:#fee2e2;color:#991b1b;">Belum mengumpulkan</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $row['submitted_at']?->format('d M Y H:i') ?? '-' }}</td>
+                                    <td>
+                                        @if ($row['submission_status'] === 'not_submitted')
+                                            -
+                                        @elseif ($row['is_late'])
+                                            <span class="status-badge status-draft" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;">
+                                                Terlambat
+                                            </span>
+                                        @else
+                                            <span class="status-badge status-success" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac;">
+                                                Tepat waktu
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($row['original_name'])
+                                            <span title="{{ $row['original_name'] }}">{{ Str::limit($row['original_name'], 25) }}</span>
+                                        @else
+                                            <span style="color:#999;">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($row['formatted_file_size'])
+                                            {{ $row['formatted_file_size'] }}
+                                        @else
+                                            <span style="color:#999;">—</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($row['submission'])
+                                            <a
+                                                href="{{ route($role . '.courses.assignments.submissions.download', [
+                                                    'course'     => $assignment->course,
+                                                    'assignment' => $assignment,
+                                                    'submission' => $row['submission'],
+                                                ]) }}"
+                                                class="btn btn-sm"
+                                                style="display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .55rem;border-radius:4px;font-size:.8rem;background:#2563eb;color:#fff;text-decoration:none;"
+                                            >
+                                                Unduh
+                                            </a>
+                                        @else
+                                            <span style="color:#aaa;font-size:.85rem;">—</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="9" style="text-align:center;padding:1.5rem;color:#666;">
+                                        Belum ada mahasiswa yang terdaftar di kelas ini.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
                 @forelse ($submissions as $submission)
                     <article class="submission-card">
@@ -250,7 +333,10 @@
                 @endif
 
                 <form
-                    action="{{ url('/api/v1/assignments/' . $assignment->id . '/submissions') }}"
+                    action="{{ route('mahasiswa.courses.assignments.submissions.store', [
+                        'course'     => $assignment->course,
+                        'assignment' => $assignment,
+                    ]) }}"
                     method="POST"
                     enctype="multipart/form-data"
                 >
@@ -265,7 +351,7 @@
                             type="file"
                             accept=".pdf,.doc,.docx"
                             {{ $formLocked ? 'disabled' : '' }}
-                            {{ !$ownSubmission ? 'required' : '' }}
+                            required
                         >
 
                         @error('file')
@@ -274,7 +360,7 @@
 
                         @if ($ownSubmission)
                             <small>
-                                Jika ingin mengumpulkan ulang, pilih berkas baru.
+                                Pengumpulan ulang mengganti berkas sebelumnya. Pilih berkas baru untuk mengirim.
                             </small>
                         @endif
                     </div>

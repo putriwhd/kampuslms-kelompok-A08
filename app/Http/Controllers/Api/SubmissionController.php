@@ -137,4 +137,15 @@ class SubmissionController extends Controller
             ->response()
             ->setStatusCode($statusCode);
     }
+
+    public function download($id)
+    {
+        $submission = Submission::with('assignment.course')->findOrFail($id);
+        Gate::authorize('view', $submission);
+
+        $disk = Storage::disk('local');
+        abort_unless($submission->file_path && $disk->exists($submission->file_path), 404);
+
+        return $disk->download($submission->file_path, $submission->original_name);
+    }
 }

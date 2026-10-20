@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Http\Requests\StoreSubmissionRequest;
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -360,6 +361,49 @@ class SubmissionBackendTest extends TestCase
         $this->assertDatabaseMissing('submissions', ['id' => $subA->id]);
     }
 
+    public function test_course_destroy_cleans_material_and_submission_files_before_database_cascade(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->admin()->create();
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create([
+            'status' => 'active',
+        ]);
+        $assignment = Assignment::factory()->for($course)->create();
+        $material = Material::create([
+            'course_id' => $course->id,
+            'uploaded_by' => $lecturer->id,
+            'title' => 'Materi untuk uji cascade',
+            'description' => 'File harus dibersihkan saat kelas dihapus.',
+            'type' => 'file',
+            'file_path' => 'materials/'.$course->id.'/cascade-material.pdf',
+            'original_name' => 'cascade-material.pdf',
+            'file_size' => 1024,
+            'mime_type' => 'application/pdf',
+        ]);
+        $submission = Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $student->id,
+            'file_path' => 'submissions/cascade-submission.pdf',
+            'original_name' => 'cascade-submission.pdf',
+            'file_size' => 1024,
+            'submitted_at' => now(),
+            'is_late' => false,
+        ]);
+        Storage::disk('local')->put($material->file_path, 'material');
+        Storage::disk('local')->put($submission->file_path, 'submission');
+
+        $this->actingAs($admin)
+            ->delete(route('admin.courses.destroy', $course))
+            ->assertRedirect();
+
+        Storage::disk('local')->assertMissing($material->file_path);
+        Storage::disk('local')->assertMissing($submission->file_path);
+        $this->assertDatabaseMissing('courses', ['id' => $course->id]);
+        $this->assertDatabaseMissing('submissions', ['id' => $submission->id]);
+    }
+
     public function test_lecturer_recap_data_provides_student_list_status_and_lateness(): void
     {
         $lecturer = User::factory()->dosen()->create();
@@ -471,5 +515,14 @@ class SubmissionBackendTest extends TestCase
             'user_id' => $student->id,
             'original_name' => 'web_answer.pdf',
         ]);
+
+        $this->get(route('mahasiswa.courses.assignments.scoped-show', [
+            'course' => $course,
+            'assignment' => $assignment,
+        ]))
+            ->assertOk()
+            ->assertSee('name="file"', false)
+            ->assertSee('required', false)
+            ->assertSee('Pengumpulan ulang mengganti berkas sebelumnya.');
     }
 }
