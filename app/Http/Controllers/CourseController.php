@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
@@ -97,6 +98,15 @@ class CourseController extends Controller
     public function destroy(Request $request, Course $course)
     {
         $this->ensureCourseOwnership($request, $course);
+
+        // Bersihkan berkas materi fisik secara eksplisit sebelum cascadeOnDelete MySQL menghapus datanya
+        foreach ($course->materials as $material) {
+            if ($material->file_path && Storage::disk('local')->exists($material->file_path)) {
+                Storage::disk('local')->delete($material->file_path);
+            }
+        }
+        Storage::disk('local')->deleteDirectory("materials/{$course->id}");
+
         $course->delete();
         $role = $this->selectedRole($request);
 
