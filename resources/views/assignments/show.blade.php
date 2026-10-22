@@ -287,11 +287,10 @@
 
         @elseif ($role === 'mahasiswa')
             @php
-                $deadlinePassed = $assignment->due_at
-                    && now()->gt($assignment->due_at);
-
-                $formLocked = $deadlinePassed
-                    && !$assignment->allow_late;
+                $nowWita = now('Asia/Makassar');
+                $dueAtWita = $assignment->due_at?->copy()->setTimezone('Asia/Makassar');
+                $deadlinePassed = $dueAtWita && $nowWita->gt($dueAtWita);
+                $formLocked = $deadlinePassed && !$assignment->allow_late;
             @endphp
 
             <section
