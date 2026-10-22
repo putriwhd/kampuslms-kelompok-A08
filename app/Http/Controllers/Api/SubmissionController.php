@@ -36,8 +36,9 @@ class SubmissionController extends Controller
         $user = $request->user();
         Gate::authorize('create', [Submission::class, $assignment]);
 
-        $submittedAt = now();
-        $isLate = $submittedAt->gt($assignment->due_at);
+        $submittedAt = now('Asia/Makassar');
+        $dueAt = $assignment->due_at ? $assignment->due_at->copy()->setTimezone('Asia/Makassar') : null;
+        $isLate = $dueAt ? $submittedAt->gt($dueAt) : false;
 
         if ($isLate && ! $assignment->allow_late) {
             throw ValidationException::withMessages([
