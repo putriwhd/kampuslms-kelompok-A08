@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GradeRecapController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebAuthController;
@@ -118,6 +120,9 @@ Route::prefix('dosen')
     ->middleware(['auth', 'role:dosen'])
     ->group(function () {
 
+        Route::get('/grade-recap', [GradeRecapController::class, 'lecturer'])
+            ->name('grade-recap.index');
+
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show', 'edit', 'update']);
 
@@ -196,6 +201,9 @@ Route::prefix('mahasiswa')
     ->middleware(['auth', 'role:mahasiswa'])
     ->group(function () {
 
+        Route::get('/grade-recap', [GradeRecapController::class, 'student'])
+            ->name('grade-recap.index');
+
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show']);
 
@@ -246,3 +254,16 @@ Route::prefix('mahasiswa')
 Route::get('materials/{material}/download', [MaterialController::class, 'download'])
     ->middleware('auth')
     ->name('materials.download');
+
+Route::prefix('notifications')
+    ->name('notifications.')
+    ->middleware(['auth', 'role:admin,dosen,mahasiswa'])
+    ->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount'])
+            ->name('unread-count');
+        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])
+            ->name('read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])
+            ->name('read-all');
+    });

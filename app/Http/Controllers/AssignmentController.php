@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AssignmentPublished;
+use App\Events\SubmissionGraded;
 use App\Http\Controllers\Api\SubmissionController as ApiSubmissionController;
 use App\Http\Requests\StoreAssignmentRequest;
 use App\Http\Requests\StoreSubmissionRequest;
@@ -58,11 +60,15 @@ class AssignmentController extends Controller
         $validated = $request->validated();
         unset($validated['course_id']);
 
-        $course->assignments()->create([
+        $assignment = $course->assignments()->create([
             ...$validated,
             'created_by' => $request->user()->getKey(),
             'status' => $validated['status'] ?? 'draft',
         ]);
+
+        if ($assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         $role = $request->user()->role;
 
@@ -96,7 +102,12 @@ class AssignmentController extends Controller
         Assignment $assignment
     ) {
         Gate::authorize('update', $assignment);
+        $wasPublished = $assignment->status === 'published';
         $assignment->update($request->validated());
+
+        if (! $wasPublished && $assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         $role = $request->user()->role;
 
@@ -145,7 +156,7 @@ class AssignmentController extends Controller
         $assignment->load('course');
 
         try {
-            (new ApiSubmissionController())->saveSubmission($request, $assignment);
+            (new ApiSubmissionController)->saveSubmission($request, $assignment);
         } catch (ValidationException $e) {
             return back()
                 ->withErrors($e->errors())
@@ -154,7 +165,7 @@ class AssignmentController extends Controller
 
         return redirect()
             ->route('mahasiswa.courses.assignments.scoped-show', [
-                'course'     => $assignment->course,
+                'course' => $assignment->course,
                 'assignment' => $assignment,
             ])
             ->with('success', 'Tugas berhasil dikumpulkan.');
@@ -201,6 +212,7 @@ class AssignmentController extends Controller
                 'graded_at' => now(),
             ]
         );
+        SubmissionGraded::dispatch($submission);
 
         return redirect()
             ->route('dosen.assignments.show', $assignment)
@@ -270,8 +282,8 @@ class AssignmentController extends Controller
                         'file_size' => $submission?->file_size,
                         'formatted_file_size' => $submission?->file_size !== null
                             ? ($submission->file_size >= 1048576
-                                ? number_format($submission->file_size / 1048576, 1) . ' MB'
-                                : number_format($submission->file_size / 1024, 1) . ' KB')
+                                ? number_format($submission->file_size / 1048576, 1).' MB'
+                                : number_format($submission->file_size / 1024, 1).' KB')
                             : null,
                     ];
                 });
@@ -332,8 +344,8 @@ class AssignmentController extends Controller
                     'file_size' => $submission?->file_size,
                     'formatted_file_size' => $submission?->file_size !== null
                         ? ($submission->file_size >= 1048576
-                            ? number_format($submission->file_size / 1048576, 1) . ' MB'
-                            : number_format($submission->file_size / 1024, 1) . ' KB')
+                            ? number_format($submission->file_size / 1048576, 1).' MB'
+                            : number_format($submission->file_size / 1024, 1).' KB')
                         : null,
                 ];
             });

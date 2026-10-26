@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\AssignmentPublished;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreAssignmentRequest;
 use App\Http\Requests\UpdateAssignmentRequest;
@@ -30,6 +31,10 @@ class AssignmentController extends Controller
             'status' => $validated['status'] ?? 'published',
         ]);
 
+        if ($assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
+
         return (new AssignmentResource(
             $assignment->load([
                 'course' => fn ($query) => $query
@@ -47,7 +52,12 @@ class AssignmentController extends Controller
         $assignment = Assignment::with('course')->findOrFail($id);
         Gate::authorize('update', $assignment);
 
+        $wasPublished = $assignment->status === 'published';
         $assignment->update($request->validated());
+
+        if (! $wasPublished && $assignment->status === 'published') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return new AssignmentResource(
             $assignment->load([

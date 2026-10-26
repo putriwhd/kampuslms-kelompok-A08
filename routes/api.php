@@ -1,12 +1,13 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CourseController;
-use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\MaterialController;
-use App\Http\Controllers\Api\SubmissionController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\SubmissionController;
+use App\Http\Controllers\GradeRecapController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +19,7 @@ use App\Http\Controllers\Api\NotificationController;
 // Rute fallback login API
 Route::get('/login', function () {
     return response()->json([
-        'message' => 'Tidak terautentikasi.'
+        'message' => 'Tidak terautentikasi.',
     ], 401);
 })->name('api.login');
 
@@ -40,7 +41,7 @@ Route::prefix('v1')->group(function () {
         Route::get('/courses/{id}', [CourseController::class, 'show']);
         Route::get('/courses/{id}/materials', [CourseController::class, 'materials']);
         Route::get('/courses/{id}/assignments', [CourseController::class, 'assignments']);
-        
+
         // Ditambahkan untuk pengujian otorisasi/Policy
         Route::delete('/courses/{id}', [CourseController::class, 'destroy'])
             ->middleware('role:admin');
@@ -76,6 +77,13 @@ Route::prefix('v1')->group(function () {
 
         // --- Notifications ---
         Route::get('/notifications', [NotificationController::class, 'index']);
-        Route::post('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+
+        Route::get('/grade-recap/lecturer', [GradeRecapController::class, 'lecturer'])
+            ->middleware('role:dosen');
+        Route::get('/grade-recap/student', [GradeRecapController::class, 'student'])
+            ->middleware('role:mahasiswa');
     });
 });

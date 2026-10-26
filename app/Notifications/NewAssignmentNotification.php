@@ -18,9 +18,7 @@ class NewAssignmentNotification extends Notification implements ShouldQueue
      * ke masing-masing mahasiswa menjadi job individual di antrean
      * (1 job per mahasiswa). Jika satu gagal, 39 lainnya tetap terkirim.
      */
-    public function __construct(public Assignment $assignment)
-    {
-    }
+    public function __construct(public Assignment $assignment) {}
 
     /**
      * Saluran pengiriman: hanya database.
@@ -40,10 +38,10 @@ class NewAssignmentNotification extends Notification implements ShouldQueue
     {
         return [
             'assignment_id' => $this->assignment->id,
-            'course_name'   => $this->assignment->course->name,
-            'title'         => $this->assignment->title,
-            'due_at'        => $this->assignment->due_at?->toIso8601String(),
-            'url'           => route('assignments.show', $this->assignment),
+            'course_name' => $this->assignment->course->name,
+            'title' => $this->assignment->title,
+            'due_at' => $this->assignment->due_at?->toIso8601String(),
+            'url' => route('mahasiswa.assignments.show', $this->assignment),
         ];
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Events\AssignmentPublished;
+use App\Events\SubmissionGraded;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Grade;
@@ -10,6 +12,7 @@ use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -185,8 +188,8 @@ class ApiEndpointsTest extends TestCase
             ->postJson('/api/v1/assignments', $payload)
             ->assertForbidden();
         $this->patchJson("/api/v1/assignments/{$lecturerAssignment->id}", [
-                'title' => 'Student cannot update',
-            ])
+            'title' => 'Student cannot update',
+        ])
             ->assertForbidden();
     }
 
@@ -383,5 +386,104 @@ class ApiEndpointsTest extends TestCase
             ->assertJsonPath('data.id', $notificationId);
 
         $this->assertNotNull($student->notifications()->find($notificationId)->read_at);
+    }
+
+    public function test_assignment_and_submission_events_are_dispatched_and_notifications_are_managed_safely(): void
+    {
+        Event::fake();
+
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->postJson('/api/v1/assignments', [
+                'course_id' => $course->id,
+                'title' => 'Published assignment',
+                'instructions' => 'Complete this assignment.',
+                'due_at' => now()->addDays(3)->toDateTimeString(),
+                'status' => 'published',
+            ])
+            ->assertCreated();
+
+        Event::assertDispatched(AssignmentPublished::class);
+        $assignment = Assignment::firstOrFail();
+
+        $draft = Assignment::factory()->for($course)->create([
+            'created_by' => $lecturer->id,
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->patchJson("/api/v1/assignments/{$draft->id}", ['status' => 'published'])
+            ->assertOk();
+
+        Event::assertDispatchedTimes(AssignmentPublished::class, 2);
+
+        $this->actingAs($student, 'sanctum')
+            ->getJson('/api/v1/grade-recap/student')
+            ->assertOk()
+            ->assertJsonFragment([
+                'assignment_id' => $assignment->id,
+                'score' => null,
+            ]);
+
+        $submission = Submission::factory()->for($assignment)->create([
+            'user_id' => $student->id,
+        ]);
+
+        $this->actingAs($lecturer, 'sanctum')
+            ->putJson("/api/v1/submissions/{$submission->id}/grade", [
+                'score' => 88,
+                'feedback' => 'Good work.',
+            ])
+            ->assertCreated();
+
+        Event::assertDispatched(SubmissionGraded::class);
+        $this->getJson('/api/v1/grade-recap/lecturer')
+            ->assertOk()
+            ->assertJsonFragment([
+                'assignment_id' => $assignment->id,
+                'score' => '88.00',
+            ]);
+
+        $otherStudent = User::factory()->mahasiswa()->create();
+        $ownedNotificationId = (string) Str::uuid();
+        $foreignNotificationId = (string) Str::uuid();
+        $student->notifications()->create([
+            'id' => $ownedNotificationId,
+            'type' => 'test',
+            'data' => ['message' => 'Owned'],
+        ]);
+        $otherStudent->notifications()->create([
+            'id' => $foreignNotificationId,
+            'type' => 'test',
+            'data' => ['message' => 'Foreign'],
+        ]);
+
+        $this->actingAs($student, 'sanctum')
+            ->getJson('/api/v1/notifications/unread-count')
+            ->assertOk()
+            ->assertJsonPath('count', 1);
+
+        $this->postJson("/api/v1/notifications/{$foreignNotificationId}/read")
+            ->assertForbidden();
+
+        $this->postJson("/api/v1/notifications/{$ownedNotificationId}/read")
+            ->assertOk();
+
+        $student->notifications()->create([
+            'id' => (string) Str::uuid(),
+            'type' => 'test',
+            'data' => ['message' => 'Another owned notification'],
+        ]);
+
+        $this->postJson('/api/v1/notifications/read-all')
+            ->assertOk()
+            ->assertJsonPath('updated', 1);
+
+        $this->assertSame(0, $student->unreadNotifications()->count());
+        $this->assertSame(1, $otherStudent->unreadNotifications()->count());
     }
 }
