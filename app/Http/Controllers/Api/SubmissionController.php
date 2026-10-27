@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\SubmissionGraded;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSubmissionRequest;
 use App\Http\Resources\SubmissionResource;
@@ -9,9 +10,9 @@ use App\Models\Assignment;
 use App\Models\Grade;
 use App\Models\Submission;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class SubmissionController extends Controller
 {
@@ -109,7 +110,7 @@ class SubmissionController extends Controller
         }
 
         $validated = $request->validate([
-            'score'    => ['required', 'numeric', 'min:0', 'max:100'],
+            'score' => ['required', 'numeric', 'min:0', 'max:100'],
             'feedback' => ['nullable', 'string'],
         ]);
 
@@ -120,11 +121,12 @@ class SubmissionController extends Controller
             ['submission_id' => $submission->id],
             [
                 'graded_by' => $user->id,
-                'score'     => $validated['score'],
-                'feedback'  => $validated['feedback'] ?? null,
+                'score' => $validated['score'],
+                'feedback' => $validated['feedback'] ?? null,
                 'graded_at' => now(),
             ]
         );
+        SubmissionGraded::dispatch($submission);
 
         $statusCode = $isNew ? 201 : 200;
 

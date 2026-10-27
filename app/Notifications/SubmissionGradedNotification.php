@@ -17,9 +17,7 @@ class SubmissionGradedNotification extends Notification implements ShouldQueue
      * Implements ShouldQueue + use Queueable agar pengiriman
      * berjalan sebagai job individual di antrean.
      */
-    public function __construct(public Submission $submission)
-    {
-    }
+    public function __construct(public Submission $submission) {}
 
     /**
      * Saluran pengiriman: hanya database.
@@ -39,11 +37,11 @@ class SubmissionGradedNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
-            'submission_id'    => $this->submission->id,
-            'assignment_id'    => $this->submission->assignment_id,
+            'submission_id' => $this->submission->id,
+            'assignment_id' => $this->submission->assignment_id,
             'assignment_title' => $this->submission->assignment->title,
-            'course_name'      => $this->submission->assignment->course->name,
-            'url'              => route('assignments.show', $this->submission->assignment_id),
+            'course_name' => $this->submission->assignment->course->name,
+            'url' => route('mahasiswa.assignments.show', $this->submission->assignment_id),
         ];
     }
 }

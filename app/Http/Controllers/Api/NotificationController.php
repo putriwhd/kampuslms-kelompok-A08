@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 
 class NotificationController extends Controller
 {
@@ -23,23 +24,42 @@ class NotificationController extends Controller
         ]);
     }
 
-    // POST /api/v1/notifications/{id}/read
-    public function markRead(Request $request, $id)
+    // GET /api/v1/notifications/unread-count
+    public function unreadCount(Request $request)
     {
-        $user = $request->user();
+        return response()->json([
+            'count' => $request->user()->unreadNotifications()->count(),
+        ]);
+    }
 
-        $notification = $user->notifications()->where('id', $id)->first();
+    // POST /api/v1/notifications/{id}/read
+    public function markAsRead(Request $request, string $id)
+    {
+        $notification = DatabaseNotification::findOrFail($id);
 
-        if (! $notification) {
-            return response()->json([
-                'message' => 'Anda tidak memiliki akses ke sumber daya ini.',
-            ], 403);
+        if (
+            $notification->notifiable_id !== auth()->id()
+            || $notification->notifiable_type !== $request->user()->getMorphClass()
+        ) {
+            abort(403, 'Anda tidak memiliki akses ke sumber daya ini.');
         }
 
         $notification->markAsRead();
 
         return response()->json([
             'data' => (new NotificationResource($notification))->resolve($request),
+        ]);
+    }
+
+    // POST /api/v1/notifications/read-all
+    public function markAllAsRead(Request $request)
+    {
+        $updated = $request->user()
+            ->unreadNotifications()
+            ->update(['read_at' => now()]);
+
+        return response()->json([
+            'updated' => $updated,
         ]);
     }
 }
