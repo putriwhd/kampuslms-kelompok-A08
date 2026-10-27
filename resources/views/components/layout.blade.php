@@ -10,7 +10,6 @@
 </head>
 
 <body>
-
     @php
         $currentUser = auth()->user();
         $selectedRole = $currentUser?->role;
@@ -18,7 +17,6 @@
 
     {{-- HEADER --}}
     <header class="site-header">
-
         <div class="nav-container">
 
             {{-- LOGO --}}
@@ -42,6 +40,7 @@
             {{-- NAVIGATION --}}
             <nav class="site-nav" id="siteNav">
 
+                {{-- DASHBOARD --}}
                 <a
                     href="{{ route('dashboard') }}"
                     @class(['is-active' => request()->routeIs('dashboard')])
@@ -51,6 +50,8 @@
                 </a>
 
                 @if ($currentUser)
+
+                    {{-- MATA KULIAH --}}
                     <a
                         href="{{ route($selectedRole . '.courses.index') }}"
                         @class(['is-active' => request()->routeIs('*.courses.*')])
@@ -59,6 +60,7 @@
                         📚 Mata Kuliah
                     </a>
 
+                    {{-- PENGGUNA KHUSUS ADMIN --}}
                     @if ($selectedRole === 'admin')
                         <a
                             href="{{ route('admin.users.index') }}"
@@ -69,6 +71,7 @@
                         </a>
                     @endif
 
+                    {{-- TENTANG --}}
                     <a
                         href="{{ route('tentang') }}"
                         @class(['is-active' => request()->routeIs('tentang')])
@@ -76,8 +79,58 @@
                     >
                         ℹ️ Tentang
                     </a>
+
+                    {{-- NOTIFICATION BELL --}}
+                    <div
+                        class="notification-wrapper"
+                        id="notificationWrapper"
+                        data-endpoint="{{ url('/api/v1/notifications') }}"
+                    >
+                        <button
+                            type="button"
+                            class="notification-bell"
+                            id="notificationBell"
+                            aria-label="Buka notifikasi"
+                            aria-expanded="false"
+                            aria-controls="notificationDropdown"
+                        >
+                            <span aria-hidden="true">🔔</span>
+
+                            <span
+                                class="notification-badge"
+                                id="notificationBadge"
+                                hidden
+                            >0</span>
+                        </button>
+
+                        {{-- DROPDOWN NOTIFIKASI --}}
+                        <div
+                            class="notification-dropdown"
+                            id="notificationDropdown"
+                            hidden
+                        >
+                            <div class="notification-dropdown-header">
+                                <strong>Notifikasi</strong>
+
+                                <a href="{{ route('notifications.index') }}">
+                                    Lihat semua
+                                </a>
+                            </div>
+
+                            <div
+                                id="notificationPreview"
+                                aria-live="polite"
+                            >
+                                <p class="notification-empty">
+                                    Memuat notifikasi...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                 @endif
 
+                {{-- LOGIN / USER --}}
                 @guest
                     <a
                         href="{{ route('login') }}"
@@ -89,31 +142,42 @@
                 @else
                     <span class="nav-user">
                         {{ $currentUser->name }}
-                        <span class="nav-user-role">{{ ucfirst($selectedRole) }}</span>
+
+                        <span class="nav-user-role">
+                            {{ ucfirst($selectedRole) }}
+                        </span>
                     </span>
+
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
-                        <button type="submit" class="nav-logout">Keluar</button>
+
+                        <button type="submit" class="nav-logout">
+                            Keluar
+                        </button>
                     </form>
                 @endguest
 
             </nav>
-
         </div>
-
     </header>
 
     {{-- ISI HALAMAN --}}
     <main class="site-main">
 
         @if (session('success'))
-            <div class="global-alert global-alert-success" role="status">
+            <div
+                class="global-alert global-alert-success"
+                role="status"
+            >
                 {{ session('success') }}
             </div>
         @endif
 
         @if (session('error'))
-            <div class="global-alert global-alert-error" role="alert">
+            <div
+                class="global-alert global-alert-error"
+                role="alert"
+            >
                 {{ session('error') }}
             </div>
         @endif
@@ -124,7 +188,6 @@
 
     {{-- FOOTER --}}
     <footer class="site-footer">
-
         <div class="footer-container">
 
             <div>
@@ -142,9 +205,7 @@
             </small>
 
         </div>
-
     </footer>
 
-    {{-- SCROLL TO TOP --}}
 </body>
 </html>
