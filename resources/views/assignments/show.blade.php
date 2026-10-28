@@ -1,434 +1,367 @@
 <x-layout>
     <x-slot:title>{{ $assignment->title }}</x-slot:title>
-    <article class="content-card">
-        <h1>{{ $assignment->title }}</h1>
-        <p>Mata kuliah: {{ $assignment->course->name }}</p>
-        <p>
-            Batas pengumpulan:
-            {{ $assignment->due_at?->format('d M Y H:i') ?? '-' }}
-        </p>
-        <p>Nilai maksimal: {{ $assignment->max_score }}</p>
+
+    <div class="page-header assignment-detail-page-header">
         <div>
-            <h2>Instruksi</h2>
-            <p>{{ $assignment->instructions }}</p>
+            <h1 class="page-title">{{ $assignment->title }}</h1>
+            <p class="page-lead">
+                Detail tugas untuk mata kuliah
+                <strong>{{ $assignment->course->name }}</strong>.
+            </p>
         </div>
+    </div>
+
+    <article class="content-card assignment-detail-card">
+        <header class="assignment-detail-header">
+            <div>
+                <span class="assignment-detail-label">Mata Kuliah</span>
+                <h2>{{ $assignment->course->name }}</h2>
+            </div>
+
+            @can('update', $assignment)
+                <span class="assignment-status {{ $assignment->status === 'published' ? 'is-published' : 'is-draft' }}">
+                    {{ $assignment->status === 'published' ? 'Dipublikasikan' : 'Draft' }}
+                </span>
+            @endcan
+        </header>
+
+        <div class="assignment-detail-info">
+            <div class="assignment-info-item">
+                <span>Batas Pengumpulan</span>
+                <strong>{{ $assignment->due_at?->format('d M Y, H:i') ?? '—' }}</strong>
+            </div>
+            <div class="assignment-info-item">
+                <span>Nilai Maksimal</span>
+                <strong>{{ $assignment->max_score }}</strong>
+            </div>
+        </div>
+
+        <section class="assignment-instructions">
+            <h2>Instruksi Tugas</h2>
+            <p>{{ $assignment->instructions }}</p>
+        </section>
+
         @can('update', $assignment)
-            <p>Status: {{ ucfirst($assignment->status) }}</p>
-            <a href="{{ route($role . '.assignments.edit', [
-                'assignment' => $assignment,
-                'as' => $role,
-            ]) }}">Edit Tugas</a>
+            <div class="assignment-detail-actions">
+                <a
+                    href="{{ route($role . '.assignments.edit', [
+                        'assignment' => $assignment,
+                        'as' => $role,
+                    ]) }}"
+                    class="primary-btn"
+                >
+                    Edit Tugas
+                </a>
+
+                @can('delete', $assignment)
+                    <form
+                        action="{{ route($role . '.assignments.destroy', [
+                            'assignment' => $assignment,
+                            'as' => $role,
+                        ]) }}"
+                        method="POST"
+                        onsubmit="return confirm('Yakin ingin menghapus tugas ini?')"
+                    >
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="danger-btn">Hapus Tugas</button>
+                    </form>
+                @endcan
+            </div>
         @endcan
-        @can('delete', $assignment)
-            <form
-                action="{{ route($role . '.assignments.destroy', [
-                    'assignment' => $assignment,
-                    'as' => $role,
-                ]) }}"
-                method="POST"
-                onsubmit="return confirm('Yakin ingin menghapus tugas ini?')"
-            >
-                @csrf
-                @method('DELETE')
-                <button type="submit">Hapus Tugas</button>
-            </form>
+
+        @can('viewSubmissions', $assignment)
+            <section class="assignment-submission-summary">
+                <div>
+                    <h2>Pengumpulan Mahasiswa</h2>
+                    <p>
+                        {{ $submissions->count() }} berkas dikumpulkan dari
+                        {{ $submissionRecap->count() }} mahasiswa terdaftar.
+                    </p>
+                </div>
+                <a
+                    href="{{ route($role . '.courses.assignments.submissions.index', [
+                        'course' => $assignment->course,
+                        'assignment' => $assignment,
+                    ]) }}"
+                    class="primary-btn"
+                >
+                    Lihat Rekap Pengumpulan
+                </a>
+            </section>
+
+            @php
+                $submissionByStudent = $submissions->keyBy('user_id');
+            @endphp
+            <div class="assignment-detail-table-wrapper">
+                <table class="assignment-detail-table">
+                    <thead>
+                        <tr>
+                            <th>Mahasiswa</th>
+                            <th>Status</th>
+                            <th>Berkas</th>
+                            @if ($role === 'dosen')
+                                <th>Penilaian</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($submissionRecap as $row)
+                            @php
+                                $submission = $submissionByStudent->get($row['student_id']);
+                            @endphp
+                            <tr>
+                                <td>
+                                    <strong>{{ $row['student_name'] }}</strong>
+                                    @if ($row['student_nim_nip'])
+                                        <small>{{ $row['student_nim_nip'] }}</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($submission)
+                                        <span>Sudah mengumpulkan</span>
+                                        <small>{{ $submission->submitted_at?->format('d M Y, H:i') ?? '—' }}</small>
+                                        <small>{{ $submission->is_late ? 'Terlambat' : 'Tepat waktu' }}</small>
+                                    @else
+                                        Belum mengumpulkan
+                                    @endif
+                                </td>
+                                <td>
+                                    @if ($submission && $submission->file_path)
+                                        <a href="{{ route($role . '.courses.assignments.submissions.download', [
+                                            'course' => $assignment->course,
+                                            'assignment' => $assignment,
+                                            'submission' => $submission,
+                                        ]) }}">
+                                            {{ $submission->original_name }}
+                                        </a>
+                                    @else
+                                        —
+                                    @endif
+                                </td>
+                                @if ($role === 'dosen')
+                                    <td>
+                                        @if ($submission)
+                                            <form
+                                                action="{{ route('dosen.courses.assignments.submissions.grade', [
+                                                    'course' => $assignment->course,
+                                                    'assignment' => $assignment,
+                                                    'submission' => $submission,
+                                                ]) }}"
+                                                method="POST"
+                                                class="assignment-grade-form"
+                                            >
+                                                @csrf
+                                                <label>
+                                                    <span class="sr-only">Nilai {{ $row['student_name'] }}</span>
+                                                    <input
+                                                        type="number"
+                                                        name="score"
+                                                        min="0"
+                                                        max="{{ $assignment->max_score }}"
+                                                        step="0.01"
+                                                        value="{{ old('score', $submission->grade?->score) }}"
+                                                        placeholder="Nilai / {{ $assignment->max_score }}"
+                                                        required
+                                                    >
+                                                </label>
+                                                <label>
+                                                    <span class="sr-only">Umpan balik {{ $row['student_name'] }}</span>
+                                                    <input
+                                                        type="text"
+                                                        name="feedback"
+                                                        maxlength="5000"
+                                                        value="{{ old('feedback', $submission->grade?->feedback) }}"
+                                                        placeholder="Umpan balik (opsional)"
+                                                    >
+                                                </label>
+                                                <button type="submit" class="primary-btn">
+                                                    Simpan Nilai
+                                                </button>
+                                            </form>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ $role === 'dosen' ? 4 : 3 }}">
+                                    Belum ada mahasiswa yang terdaftar di kelas ini.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         @endcan
-        @if (in_array($role, ['admin', 'dosen'], true))
-            <section class="submission-list" aria-labelledby="submissions-heading">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1rem;">
-                    <h2 id="submissions-heading" style="margin:0;">Pengumpulan Mahasiswa</h2>
-                    <a
-                        href="{{ route($role . '.courses.assignments.submissions.index', [
+
+        @if ($role === 'mahasiswa')
+            @if ($ownSubmission)
+                <section class="assignment-own-submission">
+                    <h2>Pengumpulan Saya</h2>
+                    <dl class="assignment-submission-info">
+                        <div>
+                            <dt>Nama Berkas</dt>
+                            <dd>{{ $ownSubmission->original_name }}</dd>
+                        </div>
+                        <div>
+                            <dt>Waktu Pengumpulan</dt>
+                            <dd>{{ $ownSubmission->submitted_at?->format('d M Y, H:i') ?? '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>Status</dt>
+                            <dd>{{ $ownSubmission->is_late ? 'Terlambat' : 'Tepat waktu' }}</dd>
+                        </div>
+                        @if ($ownSubmission->note)
+                            <div>
+                                <dt>Catatan</dt>
+                                <dd>{{ $ownSubmission->note }}</dd>
+                            </div>
+                        @endif
+                    </dl>
+
+                    @if ($ownSubmission->grade)
+                        <div class="assignment-grade-result">
+                            <h3>Hasil Penilaian</h3>
+                            <p>
+                                Nilai:
+                                <strong>{{ $ownSubmission->grade->score }} / {{ $assignment->max_score }}</strong>
+                            </p>
+                            @if ($ownSubmission->grade->feedback)
+                                <p>{{ $ownSubmission->grade->feedback }}</p>
+                            @endif
+                        </div>
+                    @else
+                        <p class="assignment-pending-grade">Berkas sudah dikumpulkan dan menunggu penilaian.</p>
+                    @endif
+
+                    @if (auth()->user()->can('create', [\App\Models\Submission::class, $assignment]))
+                        <div class="assignment-resubmit">
+                            <h3>Kirim Ulang Tugas</h3>
+                            <p>Pengumpulan ulang mengganti berkas sebelumnya.</p>
+                            @if ($errors->any())
+                                <div class="form-error assignment-submit-errors" role="alert">
+                                    <strong>Tugas belum dapat dikumpulkan.</strong>
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                            <form
+                                action="{{ route('mahasiswa.courses.assignments.submissions.store', [
+                                    'course' => $assignment->course,
+                                    'assignment' => $assignment,
+                                ]) }}"
+                                method="POST"
+                                enctype="multipart/form-data"
+                                class="assignment-submit-form"
+                            >
+                                @csrf
+                                <div class="form-group">
+                                    <label for="submission-file" class="form-label">Berkas baru (PDF, DOC, atau DOCX, maksimal 5 MB)</label>
+                                    <input
+                                        id="submission-file"
+                                        name="file"
+                                        type="file"
+                                        class="form-input"
+                                        accept=".pdf,.doc,.docx"
+                                        required
+                                    >
+                                    @error('file')
+                                        <small class="form-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <div class="form-group">
+                                    <label for="submission-note" class="form-label">Catatan (opsional)</label>
+                                    <textarea
+                                        id="submission-note"
+                                        name="note"
+                                        class="form-input"
+                                        rows="3"
+                                        maxlength="5000"
+                                    >{{ old('note') }}</textarea>
+                                    @error('note')
+                                        <small class="form-error">{{ $message }}</small>
+                                    @enderror
+                                </div>
+                                <button type="submit" class="primary-btn">Kirim Ulang Tugas</button>
+                            </form>
+                        </div>
+                    @endif
+                </section>
+            @elseif (auth()->user()->can('create', [\App\Models\Submission::class, $assignment]))
+                <section class="assignment-submit-section">
+                    <h2>Kumpulkan Tugas</h2>
+                    @if ($errors->any())
+                        <div class="form-error assignment-submit-errors" role="alert">
+                            <strong>Tugas belum dapat dikumpulkan.</strong>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <form
+                        action="{{ route('mahasiswa.courses.assignments.submissions.store', [
                             'course' => $assignment->course,
                             'assignment' => $assignment,
                         ]) }}"
-                        style="display:inline-flex;align-items:center;gap:.4rem;padding:.4rem .85rem;border-radius:6px;text-decoration:none;font-size:.9rem;background:#2563eb;color:#fff;font-weight:500;"
+                        method="POST"
+                        enctype="multipart/form-data"
+                        class="assignment-submit-form"
                     >
-                        <span>Lihat Halaman Rekapitulasi Lengkap &rarr;</span>
-                    </a>
-                </div>
-                @php
-                    $totalStudents     = $submissionRecap->count();
-                    $totalSubmitted    = $submissionRecap->where('submission_status', 'submitted')->count();
-                    $totalNotSubmitted = $totalStudents - $totalSubmitted;
-                    $totalLate         = $submissionRecap->where('is_late', true)->count();
-                @endphp
-                {{-- Komponen Ringkasan Statistik --}}
-                <div
-                    class="submission-stats"
-                    style="display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0;padding:.85rem;background:rgba(0,0,0,.03);border-radius:8px;"
-                >
-                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-                        <p style="font-size:1.6rem;font-weight:700;margin:0;">{{ $totalStudents }}</p>
-                        <p style="margin:0;font-size:.8rem;color:#555;">Total Mahasiswa</p>
-                    </div>
-                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#16a34a;">{{ $totalSubmitted }}</p>
-                        <p style="margin:0;font-size:.8rem;color:#555;">Sudah Mengumpulkan</p>
-                    </div>
-                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#dc2626;">{{ $totalNotSubmitted }}</p>
-                        <p style="margin:0;font-size:.8rem;color:#555;">Belum Mengumpulkan</p>
-                    </div>
-                    <div style="flex:1;min-width:120px;text-align:center;padding:.6rem;background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-                        <p style="font-size:1.6rem;font-weight:700;margin:0;color:#ea580c;">{{ $totalLate }}</p>
-                        <p style="margin:0;font-size:.8rem;color:#555;">Terlambat</p>
-                    </div>
-                </div>
-                <p style="font-weight:600;margin-bottom:.75rem;">
-                    Jumlah yang sudah mengumpulkan:
-                    <strong>{{ $totalSubmitted }} dari {{ $totalStudents }} mahasiswa</strong>
-                </p>
-                <div style="overflow-x:auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>No.</th>
-                                <th>Nama</th>
-                                <th>NIM</th>
-                                <th>Status Pengumpulan</th>
-                                <th>Waktu Submit</th>
-                                <th>Badge Keterlambatan</th>
-                                <th>Nama Berkas</th>
-                                <th>Ukuran Berkas</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($submissionRecap as $index => $row)
-                                <tr>
-                                    <td>{{ $index + 1 }}</td>
-                                    <td><strong>{{ $row['student_name'] }}</strong></td>
-                                    <td><code>{{ $row['student_nim_nip'] ?? '-' }}</code></td>
-                                    <td>
-                                        @if ($row['submission_status'] === 'submitted')
-                                            <span class="status-badge status-success">Sudah mengumpulkan</span>
-                                        @else
-                                            <span class="status-badge status-draft" style="background:#fee2e2;color:#991b1b;">Belum mengumpulkan</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $row['submitted_at']?->format('d M Y H:i') ?? '-' }}</td>
-                                    <td>
-                                        @if ($row['submission_status'] === 'not_submitted')
-                                            -
-                                        @elseif ($row['is_late'])
-                                            <span class="status-badge status-draft" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5;">
-                                                Terlambat
-                                            </span>
-                                        @else
-                                            <span class="status-badge status-success" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac;">
-                                                Tepat waktu
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($row['original_name'])
-                                            <span title="{{ $row['original_name'] }}">{{ Str::limit($row['original_name'], 25) }}</span>
-                                        @else
-                                            <span style="color:#999;">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($row['formatted_file_size'])
-                                            {{ $row['formatted_file_size'] }}
-                                        @else
-                                            <span style="color:#999;">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if ($row['submission'])
-                                            <a
-                                                href="{{ route($role . '.courses.assignments.submissions.download', [
-                                                    'course'     => $assignment->course,
-                                                    'assignment' => $assignment,
-                                                    'submission' => $row['submission'],
-                                                ]) }}"
-                                                class="btn btn-sm"
-                                                style="display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .55rem;border-radius:4px;font-size:.8rem;background:#2563eb;color:#fff;text-decoration:none;"
-                                            >
-                                                Unduh
-                                            </a>
-                                        @else
-                                            <span style="color:#aaa;font-size:.85rem;">—</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" style="text-align:center;padding:1.5rem;color:#666;">
-                                        Belum ada mahasiswa yang terdaftar di kelas ini.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @forelse ($submissions as $submission)
-                    <article class="submission-card">
-                        <h3>{{ $submission->student->name }}</h3>
-                        <p>
-                            Dikumpulkan:
-                            {{ $submission->submitted_at?->format('d M Y H:i') ?? '-' }}
-                            @if ($submission->is_late)
-                                <span class="status-badge status-draft">Terlambat</span>
-                            @else
-                                <span class="status-badge status-success">Tepat waktu</span>
-                            @endif
-                        </p>
-                        <p>
-                            Berkas:
-                            <a href="{{ route($role . '.courses.assignments.submissions.download', [
-                                'course' => $assignment->course,
-                                'assignment' => $assignment,
-                                'submission' => $submission,
-                            ]) }}">
-                                {{ $submission->original_name }}
-                            </a>
-                        </p>
-                        @if ($submission->file_size !== null)
-                            <p>
-                                Ukuran:
-                                @if ($submission->file_size >= 1048576)
-                                    {{ number_format($submission->file_size / 1048576, 1) }} MB
-                                @else
-                                    {{ number_format($submission->file_size / 1024, 1) }} KB
-                                @endif
-                            </p>
-                        @endif
-                        @if ($submission->note)
-                            <p>Catatan: {{ $submission->note }}</p>
-                        @endif
-                        @if ($submission->grade)
-                            <p>
-                                Nilai:
-                                <strong>
-                                    {{ number_format((float) $submission->grade->score, 2) }}
-                                </strong>
-                                / {{ $assignment->max_score }}
-                            </p>
-                            @if ($submission->grade->feedback)
-                                <p>
-                                    Umpan balik:
-                                    {{ $submission->grade->feedback }}
-                                </p>
-                            @endif
-                        @else
-                            <p>Belum dinilai.</p>
-                        @endif
-                        @can('grade', $submission)
-                            <form
-                                action="{{ route('dosen.courses.assignments.submissions.grade', [
-                                    'course' => $assignment->course,
-                                    'assignment' => $assignment,
-                                    'submission' => $submission,
-                                ]) }}"
-
-                                method="POST"
-                                class="grade-form"
+                        @csrf
+                        <div class="form-group">
+                            <label for="submission-file" class="form-label">Berkas (PDF, DOC, atau DOCX, maksimal 5 MB)</label>
+                            <input
+                                id="submission-file"
+                                name="file"
+                                type="file"
+                                class="form-input"
+                                accept=".pdf,.doc,.docx"
+                                required
                             >
-                                @csrf
-                                <label for="score-{{ $submission->id }}">
-                                    Nilai (maks. {{ $assignment->max_score }})
-                                </label>
-                                <input
-                                    id="score-{{ $submission->id }}"
-                                    name="score"
-                                    type="number"
-                                    min="0"
-                                    max="{{ $assignment->max_score }}"
-                                    step="0.01"
-                                    value="{{ old('score', $submission->grade?->score) }}"
-                                    required
-                                >
-                                <label for="feedback-{{ $submission->id }}">
-                                    Umpan balik
-                                </label>
-                                <textarea
-                                    id="feedback-{{ $submission->id }}"
-                                    name="feedback"
-                                    rows="3"
-                                >{{ old('feedback', $submission->grade?->feedback) }}</textarea>
-                                <button type="submit">Simpan Nilai</button>
-                            </form>
-                        @endcan
-                    </article>
-                @empty
-                    <p>Belum ada mahasiswa yang mengumpulkan tugas ini.</p>
-                @endforelse
-            </section>
-        @elseif ($role === 'mahasiswa')
-            @php
-                $nowWita = now('Asia/Makassar');
-                $dueAtWita = $assignment->due_at?->copy()->setTimezone('Asia/Makassar');
-                $deadlinePassed = $dueAtWita && $nowWita->gt($dueAtWita);
-                $formLocked = $deadlinePassed && !$assignment->allow_late;
-            @endphp
-            <section
-                class="submission-form-card"
-                aria-labelledby="submission-form-heading"
-            >
-                <h2 id="submission-form-heading">Pengumpulan Tugas</h2>
-                <p>
-                    Format berkas: PDF, DOC, DOCX.
-                    Ukuran maksimal 5 MB.
-                </p>
-                @if ($formLocked)
-                    <p class="status-badge status-draft">
-                        Batas pengumpulan telah berakhir.
-                        Tugas tidak menerima pengumpulan terlambat.
-                    </p>
-                @elseif ($deadlinePassed)
-                    <p>
-                        Deadline telah lewat, tetapi pengumpulan terlambat
-                        masih diperbolehkan.
-                    </p>
-                @endif
-                @if (session('success'))
-                    <p role="status">{{ session('success') }}</p>
-                @endif
-                @if ($errors->any())
-                    <div role="alert">
-                        <p>Pengumpulan gagal. Periksa kembali:</p>
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-                <form
-                    action="{{ route('mahasiswa.courses.assignments.submissions.store', [
-                        'course'     => $assignment->course,
-                        'assignment' => $assignment,
-                    ]) }}"
-                    method="POST"
-                    enctype="multipart/form-data"
-                >
-                    @csrf
-                    <div>
-                        <label for="file">Berkas Tugas</label>
-                        <input
-                            id="file"
-                            name="file"
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            @disabled($formLocked)
-                            required
-                        >
-                        @error('file')
-                            <p role="alert">{{ $message }}</p>
-                        @enderror
-                        @if ($ownSubmission)
-                            <small>
-                                Pengumpulan ulang mengganti berkas sebelumnya. Pilih berkas baru untuk mengirim.
-                            </small>
-                        @endif
-                    </div>
-                    <div>
-                        <label for="note">Catatan (opsional)</label>
-                        <textarea
-                            id="note"
-                            name="note"
-                            rows="3"
-                            @disabled($formLocked)
-                        >{{ old('note', $ownSubmission?->note) }}</textarea>
-                        @error('note')
-                            <p role="alert">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <button
-                        type="submit"
-                        @disabled($formLocked)
-                    >
-                        {{ $ownSubmission ? 'Perbarui Pengumpulan' : 'Kirim Tugas' }}
-                    </button>
-                </form>
-            </section>
-            <section
-                class="submission-history"
-                aria-labelledby="submission-history-heading"
-            >
-                <h2 id="submission-history-heading">Pengumpulan Saya</h2>
-                @if ($ownSubmission)
-                    <article class="submission-card">
-                        <p>
-                            <strong>Nama berkas:</strong>
-                            {{ $ownSubmission->original_name }}
-                        </p>
-                        <p>
-                            <strong>Ukuran berkas:</strong>
-                            @php
-                                $bytes = (int) $ownSubmission->file_size;
-                            @endphp
-                            @if ($bytes >= 1048576)
-                                {{ number_format($bytes / 1048576, 1) }} MB
-                            @else
-                                {{ number_format($bytes / 1024, 1) }} KB
-                            @endif
-                        </p>
-                        <p>
-                            <strong>Waktu pengumpulan:</strong>
-                            {{ $ownSubmission->submitted_at?->format('d M Y H:i') ?? '-' }}
-                        </p>
-                        <p>
-                            <strong>Status:</strong>
-                            @if ($ownSubmission->is_late)
-                                <span class="status-badge status-draft">Terlambat</span>
-                            @else
-                                <span class="status-badge status-success">Tepat Waktu</span>
-                            @endif
-                        </p>
-                        @if ($ownSubmission->note)
-                            <p>
-                                <strong>Catatan:</strong>
-                                {{ $ownSubmission->note }}
-                            </p>
-                        @endif
-                        <a href="{{ route($role . '.courses.assignments.submissions.download', [
-                            'course' => $assignment->course,
-                            'assignment' => $assignment,
-                            'submission' => $ownSubmission,
-                        ]) }}">
-                            Unduh Berkas Saya
-                        </a>
-                    </article>
-                @else
-                    <p>Belum ada berkas yang dikumpulkan.</p>
-                @endif
-            </section>
-            <section
-                class="student-grade-card"
-                aria-labelledby="student-grade-heading"
-            >
-                <h2 id="student-grade-heading">Nilai Saya</h2>
-                @if ($ownSubmission?->grade)
-                    <p>
-                        Nilai:
-                        <strong>
-                            {{ number_format((float) $ownSubmission->grade->score, 2) }}
-                        </strong>
-                        / {{ $assignment->max_score }}
-                    </p>
-                    @if ($ownSubmission->grade->feedback)
-                        <p>
-                            Umpan balik dosen:
-                            {{ $ownSubmission->grade->feedback }}
-                        </p>
-                    @endif
-                @elseif ($ownSubmission)
-                    <p>Tugas sudah dikumpulkan dan menunggu penilaian dosen.</p>
-                @else
-                    <p>Belum ada pengumpulan atau nilai untuk tugas ini.</p>
-                @endif
-            </section>
+                            @error('file')
+                                <small class="form-error">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label for="submission-note" class="form-label">Catatan (opsional)</label>
+                            <textarea
+                                id="submission-note"
+                                name="note"
+                                class="form-input"
+                                rows="3"
+                                maxlength="5000"
+                            >{{ old('note') }}</textarea>
+                            @error('note')
+                                <small class="form-error">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <button type="submit" class="primary-btn">Kirim Tugas</button>
+                    </form>
+                </section>
+            @else
+                <p class="assignment-pending-grade">Pengumpulan belum tersedia untuk tugas atau mata kuliah ini.</p>
+            @endif
         @endif
-        <p>
-            <a href="{{ route($role . '.courses.assignments.index', [
-                'course' => $assignment->course,
-                'as' => $role,
-            ]) }}">
+
+        <footer class="assignment-detail-footer">
+            <a
+                href="{{ route($role . '.courses.assignments.index', [
+                    'course' => $assignment->course,
+                    'as' => $role,
+                ]) }}"
+                class="secondary-btn"
+            >
                 Kembali ke Daftar Tugas
             </a>
-        </p>
+        </footer>
     </article>
 </x-layout>

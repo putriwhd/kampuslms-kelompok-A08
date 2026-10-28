@@ -61,6 +61,10 @@ class MaterialController extends Controller
             // Simpan berkas fisik ke disk privat 'local' dengan nama hash acak
             $path = $file->store("materials/{$course->id}", 'local');
 
+            if (! is_string($path)) {
+                throw new \RuntimeException('Gagal menyimpan berkas materi.');
+            }
+
             $data['file_path'] = $path;
             $data['original_name'] = $file->getClientOriginalName();
             $data['file_size'] = $file->getSize();

@@ -1,19 +1,21 @@
 ﻿<x-layout>
     <x-slot:title>Edit Mata Kuliah</x-slot:title>
 
-    <div class="course-edit-header">
-        <h1>Edit Mata Kuliah</h1>
-        <p>Perbarui informasi mata kuliah yang tersedia di KampusLMS.</p>
+    <div class="page-header">
+        <h1 class="page-title">Edit Mata Kuliah</h1>
+        <p class="page-lead">
+            Perbarui informasi mata kuliah yang tersedia di KampusLMS.
+        </p>
     </div>
 
-    <div class="course-edit-card">
-        <div class="course-edit-card-header">
+    <section class="content-card course-create-card">
+        <div class="course-create-card-header">
             <h2>Informasi Mata Kuliah</h2>
-            <p>Silakan ubah data mata kuliah sesuai kebutuhan.</p>
+            <p>Periksa dan ubah data mata kuliah sesuai kebutuhan.</p>
         </div>
 
         @if ($errors->any())
-            <div class="form-error" role="alert">
+            <div class="form-error course-create-error" role="alert">
                 <strong>Perubahan belum dapat disimpan.</strong>
                 <p>Periksa kembali isian berikut:</p>
                 <ul>
@@ -30,45 +32,60 @@
                 'as' => $role,
             ]) }}"
             method="POST"
-            class="course-edit-form"
+            class="course-create-form"
         >
             @csrf
             @method('PUT')
 
             <div class="form-group">
-                <label for="code">Kode Mata Kuliah</label>
+                <label for="code" class="form-label">Kode Mata Kuliah</label>
                 <input
-                    type="text"
                     id="code"
                     name="code"
+                    type="text"
+                    class="form-input"
                     value="{{ old('code', $course->code) }}"
                     maxlength="20"
+                    placeholder="Contoh: IF101"
                     required
+                    @if ($errors->has('code')) aria-invalid="true" @endif
                 >
                 @error('code')
-                    <small class="form-error">{{ $message }}</small>
+                    <small class="course-field-error">{{ $message }}</small>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="name">Nama Mata Kuliah</label>
+                <label for="name" class="form-label">Nama Mata Kuliah</label>
                 <input
-                    type="text"
                     id="name"
                     name="name"
+                    type="text"
+                    class="form-input"
                     value="{{ old('name', $course->name) }}"
                     maxlength="255"
+                    placeholder="Masukkan nama mata kuliah"
                     required
+                    @if ($errors->has('name')) aria-invalid="true" @endif
                 >
                 @error('name')
-                    <small class="form-error">{{ $message }}</small>
+                    <small class="course-field-error">{{ $message }}</small>
                 @enderror
             </div>
 
             @if ($role === 'admin')
                 <div class="form-group">
-                    <label for="lecturer_id">Dosen Pengampu</label>
-                    <select id="lecturer_id" name="lecturer_id" required>
+                    <label for="lecturer_id" class="form-label">
+                        Dosen Pengampu
+                    </label>
+
+                    <select
+                        id="lecturer_id"
+                        name="lecturer_id"
+                        class="form-select"
+                        required
+                        @if ($errors->has('lecturer_id')) aria-invalid="true" @endif
+                    >
                         <option value="">-- Pilih Dosen Pengampu --</option>
 
                         @foreach ($lecturers as $lecturer)
@@ -80,58 +97,81 @@
                             </option>
                         @endforeach
                     </select>
+
                     @error('lecturer_id')
-                        <small class="form-error">{{ $message }}</small>
+                        <small class="course-field-error">{{ $message }}</small>
                     @enderror
                 </div>
             @else
-                <p>Dosen Pengampu: {{ $course->lecturer?->name ?? '-' }}</p>
+                <div class="form-group">
+                    <label class="form-label">Dosen Pengampu</label>
+                    <div class="course-readonly-field">
+                        {{ $course->lecturer?->name ?? '-' }}
+                    </div>
+                </div>
             @endif
 
             <div class="form-group">
-                <label for="sks">SKS</label>
+                <label for="sks" class="form-label">Jumlah SKS</label>
                 <input
-                    type="number"
                     id="sks"
                     name="sks"
+                    type="number"
+                    class="form-input"
                     min="1"
                     max="6"
                     value="{{ old('sks', $course->sks) }}"
                     required
+                    @if ($errors->has('sks')) aria-invalid="true" @endif
                 >
                 @error('sks')
-                    <small class="form-error">{{ $message }}</small>
+                    <small class="course-field-error">{{ $message }}</small>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="description">Deskripsi</label>
+                <label for="description" class="form-label">Deskripsi</label>
                 <textarea
                     id="description"
                     name="description"
+                    class="form-input course-description-input"
                     rows="5"
                     maxlength="2000"
+                    placeholder="Jelaskan gambaran singkat mata kuliah"
+                    @if ($errors->has('description')) aria-invalid="true" @endif
                 >{{ old('description', $course->description) }}</textarea>
+
                 @error('description')
-                    <small class="form-error">{{ $message }}</small>
+                    <small class="course-field-error">{{ $message }}</small>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="status">Status Mata Kuliah</label>
-                <select id="status" name="status" required>
+                <label for="status" class="form-label">
+                    Status Mata Kuliah
+                </label>
+
+                <select
+                    id="status"
+                    name="status"
+                    class="form-select"
+                    required
+                    @if ($errors->has('status')) aria-invalid="true" @endif
+                >
                     <option
                         value="active"
                         @selected(old('status', $course->status) === 'active')
                     >
                         Aktif
                     </option>
+
                     <option
                         value="draft"
                         @selected(old('status', $course->status) === 'draft')
                     >
-                        Draft
+                        Draf
                     </option>
+
                     <option
                         value="archived"
                         @selected(old('status', $course->status) === 'archived')
@@ -139,23 +179,24 @@
                         Arsip
                     </option>
                 </select>
+
                 @error('status')
-                    <small class="form-error">{{ $message }}</small>
+                    <small class="course-field-error">{{ $message }}</small>
                 @enderror
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="primary-btn">
-                    Simpan Perubahan
-                </button>
-
+            <div class="form-actions course-create-actions">
                 <a
                     href="{{ route($role . '.courses.index', ['as' => $role]) }}"
                     class="secondary-btn"
                 >
                     Batal
                 </a>
+
+                <button type="submit" class="primary-btn">
+                    Simpan Perubahan
+                </button>
             </div>
         </form>
-    </div>
+    </section>
 </x-layout>

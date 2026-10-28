@@ -1,187 +1,219 @@
 <x-layout>
     <x-slot:title>Rekapitulasi Pengumpulan — {{ $assignment->title }}</x-slot:title>
 
-    <article class="content-card">
-        <h1>Rekapitulasi Pengumpulan Tugas</h1>
-
-        <p>
-            <strong>Tugas:</strong> {{ $assignment->title }}<br>
-            <strong>Mata Kuliah:</strong> {{ $assignment->course->name }}<br>
-            <strong>Batas Pengumpulan:</strong>
-            {{ $assignment->due_at?->format('d M Y H:i') ?? '—' }}
+    <div class="page-header">
+        <h1 class="page-title">Rekapitulasi Pengumpulan</h1>
+        <p class="page-lead">
+            Pantau status pengumpulan tugas mahasiswa untuk mata kuliah
+            <strong>{{ $assignment->course->name }}</strong>.
         </p>
+    </div>
+
+    <article class="content-card assignment-recap-card">
+        <div class="assignment-recap-header">
+            <div>
+                <span class="assignment-recap-label">Tugas</span>
+                <h2>{{ $assignment->title }}</h2>
+                <p>
+                    <span>Mata Kuliah:</span>
+                    <strong>{{ $assignment->course->name }}</strong>
+                </p>
+                <p>
+                    <span>Batas Pengumpulan:</span>
+                    <strong>
+                        {{ $assignment->due_at?->format('d M Y, H:i') ?? '—' }}
+                    </strong>
+                </p>
+            </div>
+        </div>
 
         @if (session('success'))
-            <p role="status" style="color:green">{{ session('success') }}</p>
+            <div class="assignment-recap-alert" role="status">
+                {{ session('success') }}
+            </div>
         @endif
 
-        {{-- ============================================================ --}}
-        {{-- KOMPONEN RINGKASAN STATISTIK                                  --}}
-        {{-- ============================================================ --}}
         @php
-            $totalStudents     = $submissionRecap->count();
-            $totalSubmitted    = $submissionRecap->where('submission_status', 'submitted')->count();
+            $totalStudents = $submissionRecap->count();
+            $totalSubmitted = $submissionRecap
+                ->where('submission_status', 'submitted')
+                ->count();
             $totalNotSubmitted = $totalStudents - $totalSubmitted;
-            $totalLate         = $submissionRecap->where('is_late', true)->count();
+            $totalLate = $submissionRecap
+                ->where('is_late', true)
+                ->count();
+
+            $submissionMap = $submissions->keyBy('user_id');
         @endphp
 
-        <section
-            class="submission-stats"
-            aria-labelledby="stats-heading"
-            style="display:flex;gap:1rem;flex-wrap:wrap;margin:1.25rem 0;padding:1rem;background:rgba(0,0,0,.03);border-radius:10px;"
-        >
-            <h2 id="stats-heading" class="sr-only">Ringkasan Statistik Pengumpulan</h2>
+        <section class="recap-stats" aria-labelledby="stats-heading">
+            <h2 id="stats-heading" class="sr-only">
+                Ringkasan Statistik Pengumpulan
+            </h2>
 
-            <div style="flex:1;min-width:140px;text-align:center;padding:.75rem;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-                <p style="font-size:2rem;font-weight:700;margin:0;">{{ $totalStudents }}</p>
-                <p style="margin:0;font-size:.85rem;color:#555;">Total Mahasiswa</p>
+            <div class="recap-stat-item">
+                <span class="recap-stat-icon">01</span>
+                <p class="recap-stat-value">{{ $totalStudents }}</p>
+                <p class="recap-stat-label">Total Mahasiswa</p>
             </div>
 
-            <div style="flex:1;min-width:140px;text-align:center;padding:.75rem;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-                <p style="font-size:2rem;font-weight:700;margin:0;color:#16a34a;">{{ $totalSubmitted }}</p>
-                <p style="margin:0;font-size:.85rem;color:#555;">Sudah Mengumpulkan</p>
+            <div class="recap-stat-item">
+                <span class="recap-stat-icon">02</span>
+                <p class="recap-stat-value">{{ $totalSubmitted }}</p>
+                <p class="recap-stat-label">Sudah Mengumpulkan</p>
             </div>
 
-            <div style="flex:1;min-width:140px;text-align:center;padding:.75rem;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-                <p style="font-size:2rem;font-weight:700;margin:0;color:#dc2626;">{{ $totalNotSubmitted }}</p>
-                <p style="margin:0;font-size:.85rem;color:#555;">Belum Mengumpulkan</p>
+            <div class="recap-stat-item">
+                <span class="recap-stat-icon">03</span>
+                <p class="recap-stat-value">{{ $totalNotSubmitted }}</p>
+                <p class="recap-stat-label">Belum Mengumpulkan</p>
             </div>
 
-            <div style="flex:1;min-width:140px;text-align:center;padding:.75rem;background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-                <p style="font-size:2rem;font-weight:700;margin:0;color:#ea580c;">{{ $totalLate }}</p>
-                <p style="margin:0;font-size:.85rem;color:#555;">Terlambat</p>
+            <div class="recap-stat-item">
+                <span class="recap-stat-icon">04</span>
+                <p class="recap-stat-value">{{ $totalLate }}</p>
+                <p class="recap-stat-label">Terlambat</p>
             </div>
         </section>
 
-        <p style="font-weight:600;margin-bottom:.5rem;">
-            Jumlah yang sudah mengumpulkan:
-            <strong>{{ $totalSubmitted }} dari {{ $totalStudents }} mahasiswa</strong>
-        </p>
+        <div class="recap-progress">
+            <div>
+                <p>Progres Pengumpulan</p>
+                <strong>
+                    {{ $totalSubmitted }} dari {{ $totalStudents }} mahasiswa
+                </strong>
+            </div>
 
-        {{-- ============================================================ --}}
-        {{-- TABEL REKAPITULASI LENGKAP                                    --}}
-        {{-- ============================================================ --}}
-        <section aria-labelledby="recap-table-heading">
-            <h2 id="recap-table-heading" style="margin-top:1.5rem;">Daftar Mahasiswa &amp; Status Pengumpulan</h2>
+            <span>
+                {{ $totalStudents > 0 ? round(($totalSubmitted / $totalStudents) * 100) : 0 }}%
+            </span>
+        </div>
 
-            @php
-                $submissionMap = $submissions->keyBy('user_id');
-            @endphp
+        <section class="recap-table-section" aria-labelledby="recap-table-heading">
+            <div class="recap-table-header">
+                <div>
+                    <h2 id="recap-table-heading">Daftar Mahasiswa</h2>
+                    <p>Status pengumpulan dan informasi berkas tugas mahasiswa.</p>
+                </div>
 
-            <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:.95rem;">
+                <span class="recap-total-badge">
+                    {{ $totalStudents }} mahasiswa
+                </span>
+            </div>
+
+            <div class="recap-table-wrapper">
+                <table class="recap-table">
                     <thead>
-                        <tr style="background:rgba(0,0,0,.05);text-align:left;">
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">No.</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Nama Mahasiswa</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">NIM</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Status Pengumpulan</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Waktu Submit</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Keterlambatan</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Nama Berkas</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Ukuran</th>
-                            <th style="padding:.6rem .75rem;white-space:nowrap;">Aksi</th>
+                        <tr>
+                            <th>No.</th>
+                            <th>Nama Mahasiswa</th>
+                            <th>NIM</th>
+                            <th>Status Pengumpulan</th>
+                            <th>Waktu Submit</th>
+                            <th>Keterlambatan</th>
+                            <th>Nama Berkas</th>
+                            <th>Ukuran</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @forelse ($submissionRecap as $index => $row)
                             @php
                                 $submission = $submissionMap->get($row['student_id']);
-                                $submitted  = $row['submission_status'] === 'submitted';
+                                $submitted = $row['submission_status'] === 'submitted';
                             @endphp
-                            <tr style="border-bottom:1px solid rgba(0,0,0,.07);">
 
-                                <td style="padding:.6rem .75rem;color:#888;">{{ $index + 1 }}</td>
+                            <tr>
+                                <td class="recap-number">{{ $index + 1 }}</td>
 
-                                <td style="padding:.6rem .75rem;font-weight:500;">
+                                <td class="recap-student-name">
                                     {{ $row['student_name'] }}
                                 </td>
 
-                                <td style="padding:.6rem .75rem;font-family:monospace;">
-                                    {{ $row['student_nim_nip'] ?? '—' }}
+                                <td>
+                                    <code class="recap-student-id">
+                                        {{ $row['student_nim_nip'] ?? '—' }}
+                                    </code>
                                 </td>
 
-                                <td style="padding:.6rem .75rem;">
+                                <td>
                                     @if ($submitted)
-                                        <span class="status-badge status-success"
-                                              style="display:inline-flex;align-items:center;gap:.3rem;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span class="recap-status recap-status-success">
                                             Sudah Mengumpulkan
                                         </span>
                                     @else
-                                        <span class="status-badge status-draft"
-                                              style="display:inline-flex;align-items:center;gap:.3rem;">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                        <span class="recap-status recap-status-danger">
                                             Belum Mengumpulkan
                                         </span>
                                     @endif
                                 </td>
 
-                                <td style="padding:.6rem .75rem;white-space:nowrap;">
+                                <td class="recap-date">
                                     {{ $row['submitted_at']?->format('d M Y, H:i') ?? '—' }}
                                 </td>
 
-                                <td style="padding:.6rem .75rem;">
+                                <td>
                                     @if (! $submitted)
-                                        <span style="color:#aaa;">—</span>
+                                        <span class="recap-empty-value">—</span>
                                     @elseif ($row['is_late'])
-                                        <span class="status-badge"
-                                              style="background:#fee2e2;color:#dc2626;border:1px solid #fca5a5;padding:.2rem .5rem;border-radius:4px;font-size:.8rem;">
+                                        <span class="recap-status recap-status-late">
                                             Terlambat
                                         </span>
                                     @else
-                                        <span class="status-badge"
-                                              style="background:#dcfce7;color:#16a34a;border:1px solid #86efac;padding:.2rem .5rem;border-radius:4px;font-size:.8rem;">
+                                        <span class="recap-status recap-status-success">
                                             Tepat Waktu
                                         </span>
                                     @endif
                                 </td>
 
-                                <td style="padding:.6rem .75rem;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                <td class="recap-file-name">
                                     @if ($submission && $submission->original_name)
                                         <span title="{{ $submission->original_name }}">
                                             {{ $submission->original_name }}
                                         </span>
                                     @else
-                                        <span style="color:#aaa;">—</span>
+                                        <span class="recap-empty-value">—</span>
                                     @endif
                                 </td>
 
-                                <td style="padding:.6rem .75rem;white-space:nowrap;">
+                                <td class="recap-date">
                                     @if ($submission && $submission->file_size)
-                                        @php $bytes = (int) $submission->file_size; @endphp
+                                        @php
+                                            $bytes = (int) $submission->file_size;
+                                        @endphp
+
                                         @if ($bytes >= 1048576)
                                             {{ number_format($bytes / 1048576, 1) }} MB
                                         @else
                                             {{ number_format($bytes / 1024, 1) }} KB
                                         @endif
                                     @else
-                                        <span style="color:#aaa;">—</span>
+                                        <span class="recap-empty-value">—</span>
                                     @endif
                                 </td>
 
-                                <td style="padding:.6rem .75rem;white-space:nowrap;">
+                                <td>
                                     @if ($submission && $submission->file_path)
                                         <a
                                             href="{{ route($role . '.courses.assignments.submissions.download', [
-                                                'course'     => $assignment->course,
+                                                'course' => $assignment->course,
                                                 'assignment' => $assignment,
                                                 'submission' => $submission,
                                             ]) }}"
-                                            style="display:inline-flex;align-items:center;gap:.3rem;font-size:.875rem;"
+                                            class="recap-download-btn"
                                             title="Unduh berkas {{ $submission->original_name }}"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                             Unduh
                                         </a>
                                     @else
-                                        <span style="color:#aaa;font-size:.875rem;">—</span>
+                                        <span class="recap-empty-value">—</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" style="padding:1.5rem;text-align:center;color:#888;">
+                                <td colspan="9" class="recap-empty-row">
                                     Belum ada mahasiswa yang terdaftar di kelas ini.
                                 </td>
                             </tr>
@@ -191,18 +223,25 @@
             </div>
         </section>
 
-        <div style="margin-top:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
-            <a href="{{ route($role . '.courses.assignments.scoped-show', [
-                'course'     => $assignment->course,
-                'assignment' => $assignment,
-            ]) }}">
-                &#8592; Kembali ke Detail Tugas
+        <div class="assignment-recap-footer">
+            <a
+                href="{{ route($role . '.courses.assignments.scoped-show', [
+                    'course' => $assignment->course,
+                    'assignment' => $assignment,
+                ]) }}"
+                class="secondary-btn"
+            >
+                Kembali ke Detail Tugas
             </a>
-            <a href="{{ route($role . '.courses.assignments.index', [
-                'course' => $assignment->course,
-                'as'     => $role,
-            ]) }}">
-                Daftar Tugas Mata Kuliah
+
+            <a
+                href="{{ route($role . '.courses.assignments.index', [
+                    'course' => $assignment->course,
+                    'as' => $role,
+                ]) }}"
+                class="primary-btn"
+            >
+                Daftar Tugas
             </a>
         </div>
     </article>

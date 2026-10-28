@@ -1,25 +1,55 @@
 <x-layout>
     <x-slot:title>Edit Pengguna</x-slot:title>
 
-    <div class="user-page-header">
+    <div class="page-header user-page-header">
         <div>
-            <h1>Edit Pengguna</h1>
-            <p>Perbarui informasi data pengguna yang terdaftar di KampusLMS.</p>
+            <h1 class="page-title">Edit Pengguna</h1>
+            <p class="page-lead">
+                Perbarui informasi data pengguna yang terdaftar di KampusLMS.
+            </p>
         </div>
     </div>
 
-    <div class="user-form-card">
-        <div class="user-form-header">
-            <h2>Informasi Pengguna</h2>
-            <p>Silakan ubah data pengguna sesuai kebutuhan.</p>
-        </div>
+    <section class="content-card user-form-card">
+        <header class="user-form-header">
+            <div class="user-form-header-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 20h9"/>
+                    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/>
+                    <path d="M15 5l4 4"/>
+                </svg>
+            </div>
 
-        <form action="{{ route('admin.users.update', [$user->id, 'as' => $role]) }}" method="POST" class="user-form-body" novalidate>
+            <div>
+                <h2>Informasi Pengguna</h2>
+                <p>Ubah data pengguna sesuai kebutuhan. Password dapat dikosongkan jika tidak ingin menggantinya.</p>
+            </div>
+        </header>
+
+        @if ($errors->any())
+            <div class="user-form-error-summary" role="alert">
+                <strong>Data belum dapat diperbarui.</strong>
+                <p>Periksa kembali isian berikut:</p>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form
+            action="{{ route('admin.users.update', [$user->id, 'as' => $role]) }}"
+            method="POST"
+            class="user-form-body"
+        >
             @csrf
             @method('PUT')
 
             <div class="form-group">
-                <label for="name" class="form-label">Nama</label>
+                <label for="name" class="form-label">Nama Lengkap</label>
                 <input
                     type="text"
                     id="name"
@@ -27,6 +57,10 @@
                     value="{{ old('name', $user->name) }}"
                     class="form-input @error('name') input-error @enderror"
                     placeholder="Masukkan nama lengkap"
+                    autocomplete="name"
+                    maxlength="255"
+                    required
+                    @error('name') aria-invalid="true" @enderror
                 >
                 @error('name')
                     <span class="error-text">{{ $message }}</span>
@@ -34,7 +68,7 @@
             </div>
 
             <div class="form-group">
-                <label for="email" class="form-label">Email</label>
+                <label for="email" class="form-label">Alamat Email</label>
                 <input
                     type="email"
                     id="email"
@@ -42,6 +76,10 @@
                     value="{{ old('email', $user->email) }}"
                     class="form-input @error('email') input-error @enderror"
                     placeholder="nama@example.com"
+                    autocomplete="email"
+                    maxlength="255"
+                    required
+                    @error('email') aria-invalid="true" @enderror
                 >
                 @error('email')
                     <span class="error-text">{{ $message }}</span>
@@ -49,7 +87,10 @@
             </div>
 
             <div class="form-group">
-                <label for="nim_nip" class="form-label">NIM/NIP</label>
+                <label for="nim_nip" class="form-label">
+                    NIM/NIP
+                    <span class="user-field-optional">(Opsional)</span>
+                </label>
                 <input
                     type="text"
                     id="nim_nip"
@@ -57,6 +98,8 @@
                     value="{{ old('nim_nip', $user->nim_nip ?? $user->identity_number) }}"
                     class="form-input @error('nim_nip') input-error @enderror"
                     placeholder="Masukkan NIM atau NIP"
+                    maxlength="50"
+                    @error('nim_nip') aria-invalid="true" @enderror
                 >
                 @error('nim_nip')
                     <span class="error-text">{{ $message }}</span>
@@ -64,159 +107,72 @@
             </div>
 
             <div class="form-group">
-                <label for="password" class="form-label">Password Baru <span class="label-optional">(opsional)</span></label>
+                <label for="password" class="form-label">
+                    Password Baru
+                    <span class="user-field-optional">(Opsional)</span>
+                </label>
                 <input
                     type="password"
                     id="password"
                     name="password"
                     class="form-input @error('password') input-error @enderror"
                     placeholder="Kosongkan jika tidak ingin mengubah password"
+                    autocomplete="new-password"
+                    @error('password') aria-invalid="true" @enderror
                 >
+                <small class="user-field-help">
+                    Isi hanya jika ingin mengganti password pengguna.
+                </small>
                 @error('password')
                     <span class="error-text">{{ $message }}</span>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="user_role" class="form-label">Role</label>
-                <select id="user_role" name="role" class="form-select @error('role') input-error @enderror">
-                    <option value="">-- Pilih Role --</option>
-                    <option value="admin" @selected(old('role', $user->role) === 'admin')>Admin</option>
-                    <option value="dosen" @selected(old('role', $user->role) === 'dosen')>Dosen</option>
-                    <option value="mahasiswa" @selected(old('role', $user->role) === 'mahasiswa')>Mahasiswa</option>
+                <label for="user_role" class="form-label">Peran Pengguna</label>
+                <select
+                    id="user_role"
+                    name="role"
+                    class="form-select @error('role') input-error @enderror"
+                    required
+                    @error('role') aria-invalid="true" @enderror
+                >
+                    <option value="">Pilih peran pengguna</option>
+                    <option value="admin" @selected(old('role', $user->role) === 'admin')>
+                        Admin
+                    </option>
+                    <option value="dosen" @selected(old('role', $user->role) === 'dosen')>
+                        Dosen
+                    </option>
+                    <option value="mahasiswa" @selected(old('role', $user->role) === 'mahasiswa')>
+                        Mahasiswa
+                    </option>
                 </select>
                 @error('role')
                     <span class="error-text">{{ $message }}</span>
                 @enderror
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn-submit">Perbarui</button>
-                <a href="{{ route('admin.users.index', ['as' => $role]) }}" class="btn-cancel">Batal</a>
+            <div class="user-form-actions">
+                <button type="submit" class="primary-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        aria-hidden="true">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/>
+                        <path d="M17 21v-8H7v8"/>
+                        <path d="M7 3v5h8"/>
+                    </svg>
+                    Simpan Perubahan
+                </button>
+
+                <a
+                    href="{{ route('admin.users.index', ['as' => $role]) }}"
+                    class="secondary-btn"
+                >
+                    Batal
+                </a>
             </div>
         </form>
-    </div>
-
-    <style>
-        .user-page-header {
-            margin-bottom: 24px;
-        }
-
-        .user-page-header h1 {
-            margin: 0 0 6px;
-            color: #2b3674;
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .user-page-header p {
-            margin: 0;
-            color: #8f9bba;
-            font-size: 14px;
-        }
-
-        .user-form-card {
-            background: #ffffff;
-            border: 1px solid #e0e7ff;
-            border-radius: 14px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-            overflow: hidden;
-            max-width: 900px;
-        }
-
-        .user-form-header {
-            padding: 24px 28px;
-            border-bottom: 1px solid #f4f7fe;
-        }
-
-        .user-form-header h2 {
-            margin: 0 0 6px;
-            color: #2b3674;
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .user-form-header p {
-            margin: 0;
-            color: #8f9bba;
-            font-size: 13px;
-        }
-
-        .user-form-body {
-            padding: 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-label {
-            color: #2b3674;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .label-optional {
-            color: #8f9bba;
-            font-weight: 400;
-        }
-
-        .form-input, .form-select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e0e7ff;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #2b3674;
-            outline: none;
-            background: #ffffff;
-            box-sizing: border-box;
-        }
-
-        .form-input:focus, .form-select:focus {
-            border-color: #335cff;
-        }
-
-        .input-error {
-            border-color: #ee5d50;
-        }
-
-        .error-text {
-            color: #ee5d50;
-            font-size: 12px;
-        }
-
-        .form-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 10px;
-        }
-
-        .btn-submit {
-            padding: 10px 24px;
-            background: #335cff;
-            color: #ffffff;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-cancel {
-            padding: 10px 20px;
-            background: #f4f7fe;
-            color: #2b3674;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        }
-    </style>
+    </section>
 </x-layout>

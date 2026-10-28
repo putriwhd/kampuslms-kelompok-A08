@@ -46,9 +46,13 @@ class NotificationController extends Controller
 
         $notification->markAsRead();
 
-        return response()->json([
-            'data' => (new NotificationResource($notification))->resolve($request),
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'data' => (new NotificationResource($notification))->resolve($request),
+            ]);
+        }
+
+        return back()->with('success', 'Notifikasi berhasil ditandai sudah dibaca.');
     }
 
     // POST /api/v1/notifications/read-all
@@ -58,8 +62,12 @@ class NotificationController extends Controller
             ->unreadNotifications()
             ->update(['read_at' => now()]);
 
-        return response()->json([
-            'updated' => $updated,
-        ]);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'updated' => $updated,
+            ]);
+        }
+
+        return back()->with('success', 'Semua notifikasi berhasil ditandai sudah dibaca.');
     }
 }

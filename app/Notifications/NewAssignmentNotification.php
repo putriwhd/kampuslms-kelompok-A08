@@ -3,22 +3,13 @@
 namespace App\Notifications;
 
 use App\Models\Assignment;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class NewAssignmentNotification extends Notification implements ShouldQueue
+class NewAssignmentNotification extends Notification
 {
-    use Queueable;
-
-    /**
-     * Notifikasi tugas baru untuk mahasiswa.
-     *
-     * Implements ShouldQueue + use Queueable agar setiap pengiriman
-     * ke masing-masing mahasiswa menjadi job individual di antrean
-     * (1 job per mahasiswa). Jika satu gagal, 39 lainnya tetap terkirim.
-     */
-    public function __construct(public Assignment $assignment) {}
+    public function __construct(public Assignment $assignment)
+    {
+    }
 
     /**
      * Saluran pengiriman: hanya database.
@@ -41,7 +32,7 @@ class NewAssignmentNotification extends Notification implements ShouldQueue
             'course_name' => $this->assignment->course->name,
             'title' => $this->assignment->title,
             'due_at' => $this->assignment->due_at?->toIso8601String(),
-            'url' => route('mahasiswa.assignments.show', $this->assignment),
+            'url' => route('mahasiswa.assignments.show', $this->assignment, false),
         ];
     }
 }
