@@ -219,15 +219,24 @@ class MaterialController extends Controller
         Gate::authorize('view', $material);
 
         abort_unless($material->type === 'file' && $material->file_path, 404, 'Materi ini bukan berupa berkas.');
-        abort_unless(
-            Storage::disk('local')->exists($material->file_path),
-            404,
-            'Berkas materi tidak ditemukan di server.'
-        );
 
-        // Unduh berkas dari disk privat menggunakan nama asli
+        $pathInDb = $material->file_path;
+        $pathWithFolder = "materials/{$material->course_id}/{$material->file_path}";
+
+        // Tentukan path mana yang benar-benar ada di storage fisik
+        $finalPath = null;
+        if (Storage::disk('local')->exists($pathInDb)) {
+            $finalPath = $pathInDb;
+        } elseif (Storage::disk('local')->exists($pathWithFolder)) {
+            $finalPath = $pathWithFolder;
+        }
+
+        // Jika berkas tidak ditemukan di kedua jalur tersebut, kembalikan 404
+        abort_unless($finalPath !== null, 404, 'Berkas materi tidak ditemukan di server.');
+
+        // Unduh berkas dari disk privat menggunakan nama asli berkas
         return Storage::disk('local')->download(
-            $material->file_path,
+            $finalPath,
             $material->original_name
         );
     }

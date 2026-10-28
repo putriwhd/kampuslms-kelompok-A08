@@ -155,6 +155,16 @@ class AssignmentController extends Controller
 
         $assignment->load('course');
 
+        $alreadySubmitted = $assignment->submissions()
+            ->where('user_id', $request->user()->getKey())
+            ->exists();
+
+        if ($alreadySubmitted) {
+            return back()
+                ->withErrors(['file' => 'Anda sudah mengumpulkan tugas ini dan tidak dapat mengumpulkan ulang.'])
+                ->withInput();
+        }
+
         try {
             (new ApiSubmissionController)->saveSubmission($request, $assignment);
         } catch (ValidationException $e) {

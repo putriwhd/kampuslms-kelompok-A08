@@ -521,8 +521,18 @@ class SubmissionBackendTest extends TestCase
             'assignment' => $assignment,
         ]))
             ->assertOk()
-            ->assertSee('name="file"', false)
-            ->assertSee('required', false)
-            ->assertSee('Pengumpulan ulang mengganti berkas sebelumnya.');
+            ->assertSee('Pengumpulan Saya')
+            ->assertSee('web_answer.pdf')
+            ->assertDontSee('Kirim Ulang Tugas')
+            ->assertDontSee('name="file"', false);
+
+        $this->actingAs($student)
+            ->post(route('mahasiswa.courses.assignments.submissions.store', [
+                'course' => $course,
+                'assignment' => $assignment,
+            ]), [
+                'file' => UploadedFile::fake()->create('web_answer_v2.pdf', 300, 'application/pdf'),
+            ])
+            ->assertSessionHasErrors('file');
     }
 }
