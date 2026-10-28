@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dropdown.hidden = !isOpening;
         bell.setAttribute('aria-expanded', String(isOpening));
+        bell.setAttribute('aria-label', isOpening ? 'Tutup notifikasi' : 'Buka notifikasi');
 
         if (isOpening) loadNotifications();
     });
@@ -23,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!wrapper.contains(event.target)) {
             dropdown.hidden = true;
             bell.setAttribute('aria-expanded', 'false');
+            bell.setAttribute('aria-label', 'Buka notifikasi');
         }
     });
 
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         items.slice(0, 5).forEach((item) => {
+            const data = item.data && typeof item.data === 'object' ? item.data : {};
             const link = document.createElement('a');
             link.className = 'notification-item';
 
@@ -54,17 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Gunakan URL internal yang disediakan backend.
             // Jangan memasukkan HTML mentah dari respons API.
-            link.href = typeof item.url === 'string'
-                && item.url.startsWith('/')
-                && !item.url.startsWith('//')
-                ? item.url
+            link.href = typeof data.url === 'string'
+                && data.url.startsWith('/')
+                && !data.url.startsWith('//')
+                ? data.url
                 : '#';
 
             const title = document.createElement('strong');
-            title.textContent = item.title || 'Notifikasi';
+            title.textContent = data.title || data.assignment_title || 'Notifikasi';
 
             const message = document.createElement('p');
-            message.textContent = item.message || item.body || '';
+            message.textContent = data.message
+                || data.body
+                || (data.course_name ? `Mata kuliah: ${data.course_name}` : 'Ada informasi baru untuk kamu.');
 
             const time = document.createElement('small');
             time.textContent = item.created_at || '';
@@ -96,9 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Sesuaikan dengan bentuk respons API dari backend.
             const items = result.data ?? result.notifications ?? [];
-            const unreadCount = result.unread_count
-                ?? result.meta?.unread_count
-                ?? 0;
+            const unreadCount = result.unread_count ?? 0;
 
             updateBadge(unreadCount);
             renderNotifications(items);
@@ -112,4 +115,3 @@ document.addEventListener('DOMContentLoaded', () => {
     loadNotifications();
     window.setInterval(loadNotifications, 15000);
 });
-import './notifications';

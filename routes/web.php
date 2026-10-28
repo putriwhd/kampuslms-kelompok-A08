@@ -5,7 +5,9 @@ use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeRecapController;
+use App\Http\Controllers\GradeRecapPageController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\NotificationPageController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebAuthController;
 use Illuminate\Support\Facades\Route;
@@ -122,6 +124,8 @@ Route::prefix('dosen')
 
         Route::get('/grade-recap', [GradeRecapController::class, 'lecturer'])
             ->name('grade-recap.index');
+        Route::get('/grade-recap/overview', [GradeRecapPageController::class, 'lecturer'])
+            ->name('grade-recap.page');
 
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show', 'edit', 'update']);
@@ -203,6 +207,8 @@ Route::prefix('mahasiswa')
 
         Route::get('/grade-recap', [GradeRecapController::class, 'student'])
             ->name('grade-recap.index');
+        Route::get('/grade-recap/overview', [GradeRecapPageController::class, 'student'])
+            ->name('grade-recap.page');
 
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show']);
@@ -259,10 +265,12 @@ Route::prefix('notifications')
     ->name('notifications.')
     ->middleware(['auth', 'role:admin,dosen,mahasiswa'])
     ->group(function () {
-        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/', [NotificationPageController::class, 'index'])->name('index');
+        Route::get('/preview', [NotificationPageController::class, 'preview'])
+            ->name('preview');
         Route::get('/unread-count', [NotificationController::class, 'unreadCount'])
             ->name('unread-count');
-        Route::patch('/{id}/read', [NotificationController::class, 'markAsRead'])
+        Route::match(['patch', 'post'], '/{id}/read', [NotificationController::class, 'markAsRead'])
             ->name('read');
         Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])
             ->name('read-all');
