@@ -4,6 +4,8 @@ namespace App\Listeners;
 
 use App\Events\AssignmentPublished;
 use App\Notifications\NewAssignmentNotification;
+use App\Notifications\AdminActivityNotification;
+use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
@@ -37,7 +39,8 @@ class SendAssignmentNotification implements ShouldQueue
     public function handle(AssignmentPublished $event): void
     {
         // Eager load relasi yang dibutuhkan (Anti N+1)
-        $assignment = $event->assignment->loadMissing('course.students');
+        $assignment = $event->assignment->loadMissing(['course.students', 'creator']);
+
 
         // Ambil seluruh mahasiswa yang terdaftar di mata kuliah
         $students = $assignment->course->students;
@@ -45,6 +48,18 @@ class SendAssignmentNotification implements ShouldQueue
         // Kirim notifikasi ke seluruh mahasiswa sekaligus
         if ($students->isNotEmpty()) {
             Notification::send($students, new NewAssignmentNotification($assignment));
+        }
+
+        $admins = User::where('role', 'admin')->get();
+        if ($admins->isNotEmpty() && (! $assignment->creator || $assignment->creator->role === 'dosen')) {
+            Notification::send($admins, new AdminActivityNotification(
+                'Tugas baru dipublikasikan',
+                'Dosen telah memublikasikan tugas baru pada mata kuliah ' . $assignment->course->name . '.',
+                route('admin.courses.assignments.index', [
+                    'course' => $assignment->course,
+                    'as' => 'admin',
+                ], false)
+            ));
         }
     }
 

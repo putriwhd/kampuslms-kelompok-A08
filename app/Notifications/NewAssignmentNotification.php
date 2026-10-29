@@ -28,6 +28,8 @@ class NewAssignmentNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
+            'title' => $this->assignment->title,
+            'message' => 'Tugas baru pada mata kuliah ' . $this->assignment->course->name . '.',
             'assignment_id' => $this->assignment->id,
             'course_name' => $this->assignment->course->name,
             'title' => $this->assignment->title,

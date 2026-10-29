@@ -21,6 +21,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
+        // CSRF token expired or session cookie was lost.
+        $exceptions->respond(function ($response, $exception, $request) {
+            if ($response->getStatusCode() !== 419) {
+                return $response;
+            }
+
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Sesi atau token CSRF tidak valid. Muat ulang halaman lalu coba lagi.',
+                ], 419);
+            }
+
+            return redirect()->back()
+                ->withInput($request->except(['_token', 'password', 'password_confirmation']))
+                ->with('error', 'Sesi Anda telah berakhir. Muat ulang halaman lalu coba kembali.');
+        });
+
         // Handle Error 401 (Unauthenticated)
         $exceptions->render(function (AuthenticationException $e, $request) {
             if ($request->is('api/*')) {
