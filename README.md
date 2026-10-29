@@ -99,7 +99,7 @@ Aplikasi sekarang dapat diakses melalui browser pada alamat:
 
 ---
 
-## ⚙️ Menjalankan Queue Worker (Wajib untuk Notifikasi)
+## Menjalankan Queue Worker (Wajib untuk Notifikasi)
 
 KampusLMS menggunakan **antrean database** (`QUEUE_CONNECTION=database`) untuk memproses notifikasi secara asinkron. Tanpa worker yang aktif, notifikasi **tidak akan pernah terkirim** — dan tidak ada pesan error yang muncul (silent failure).
 
@@ -111,7 +111,7 @@ Buka terminal **terpisah** (jangan ditutup) dan jalankan:
 php artisan queue:work
 ```
 
-> ⚠️ **Penting:** Worker harus tetap berjalan selama aplikasi digunakan. Jika terminal ditutup atau worker mati, job hanya menumpuk di tabel `jobs` dan tidak ada notifikasi yang dikirim. Ini bukan bug — ini memang cara kerja queue.
+> **Penting:** Worker harus tetap berjalan selama aplikasi digunakan. Jika terminal ditutup atau worker mati, job hanya menumpuk di tabel `jobs` dan tidak ada notifikasi yang dikirim. Ini bukan bug — ini memang cara kerja queue.
 
 ### Memeriksa dan Mengelola Job Gagal (Failed Jobs)
 
@@ -140,7 +140,7 @@ Tabel `jobs`, `job_batches`, `failed_jobs`, dan `notifications` sudah tersedia d
 php artisan migrate
 ```
 
-> ⚠️ **Jangan** jalankan `php artisan make:queue-table`, `php artisan make:queue-failed-table`, atau `php artisan make:notifications-table`. Perintah-perintah tersebut akan membuat migrasi duplikat dan menyebabkan error saat `migrate`.
+>**Jangan** jalankan `php artisan make:queue-table`, `php artisan make:queue-failed-table`, atau `php artisan make:notifications-table`. Perintah-perintah tersebut akan membuat migrasi duplikat dan menyebabkan error saat `migrate`.
 
 ---
 
