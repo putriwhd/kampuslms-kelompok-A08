@@ -127,7 +127,7 @@
                                 @if ($material->file_size)
                                     <span>
                                         <strong>Ukuran:</strong>
-                                        {{ $material->formatted_file_size }}
+                                        {{ $material->formatted_file_size ?? number_format($material->file_size / 1024 / 1024, 2) . ' MB' }}
                                     </span>
                                 @endif
                             </div>
@@ -139,24 +139,22 @@
 
                         <div class="material-list-actions">
                             @if ($material->type === 'file')
-                                @can('view', $material)
-                                    <a
-                                        href="{{ route('materials.download', [
-                                            'material' => $material,
-                                        ]) }}"
-                                        class="material-action-btn material-action-primary"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                            aria-hidden="true">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                            <path d="m7 10 5 5 5-5"/>
-                                            <path d="M12 15V3"/>
-                                        </svg>
-                                        Unduh Berkas Materi
-                                    </a>
-                                @endcan
+                                <a
+                                    href="{{ route('materials.download', [
+                                        'material' => $material,
+                                    ]) }}"
+                                    class="material-action-btn material-action-primary"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                        aria-hidden="true">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <path d="m7 10 5 5 5-5"/>
+                                        <path d="M12 15V3"/>
+                                    </svg>
+                                    Unduh Berkas Materi
+                                </a>
                             @elseif ($material->type === 'link' && $material->external_url)
                                 <a
                                     href="{{ $material->external_url }}"

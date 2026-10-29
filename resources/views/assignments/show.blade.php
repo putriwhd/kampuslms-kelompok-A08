@@ -236,62 +236,6 @@
                     @else
                         <p class="assignment-pending-grade">Berkas sudah dikumpulkan dan menunggu penilaian.</p>
                     @endif
-
-                    @if (auth()->user()->can('create', [\App\Models\Submission::class, $assignment]))
-                        <div class="assignment-resubmit">
-                            <h3>Kirim Ulang Tugas</h3>
-                            <p>Pengumpulan ulang mengganti berkas sebelumnya.</p>
-                            @if ($errors->any())
-                                <div class="form-error assignment-submit-errors" role="alert">
-                                    <strong>Tugas belum dapat dikumpulkan.</strong>
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-                            <form
-                                action="{{ route('mahasiswa.courses.assignments.submissions.store', [
-                                    'course' => $assignment->course,
-                                    'assignment' => $assignment,
-                                ]) }}"
-                                method="POST"
-                                enctype="multipart/form-data"
-                                class="assignment-submit-form"
-                            >
-                                @csrf
-                                <div class="form-group">
-                                    <label for="submission-file" class="form-label">Berkas baru (PDF, DOC, atau DOCX, maksimal 5 MB)</label>
-                                    <input
-                                        id="submission-file"
-                                        name="file"
-                                        type="file"
-                                        class="form-input"
-                                        accept=".pdf,.doc,.docx"
-                                        required
-                                    >
-                                    @error('file')
-                                        <small class="form-error">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                                <div class="form-group">
-                                    <label for="submission-note" class="form-label">Catatan (opsional)</label>
-                                    <textarea
-                                        id="submission-note"
-                                        name="note"
-                                        class="form-input"
-                                        rows="3"
-                                        maxlength="5000"
-                                    >{{ old('note') }}</textarea>
-                                    @error('note')
-                                        <small class="form-error">{{ $message }}</small>
-                                    @enderror
-                                </div>
-                                <button type="submit" class="primary-btn">Kirim Ulang Tugas</button>
-                            </form>
-                        </div>
-                    @endif
                 </section>
             @elseif (auth()->user()->can('create', [\App\Models\Submission::class, $assignment]))
                 <section class="assignment-submit-section">
