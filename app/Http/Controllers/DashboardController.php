@@ -9,6 +9,7 @@ use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -25,14 +26,14 @@ class DashboardController extends Controller
 
         $role = $user->role;
         [$stats, $courses] = match ($role) {
-            'admin' => [[
+            'admin' => [$this->rememberStats('admin', fn () => [
                 'Pengguna' => User::query()->count(),
                 'Mata Kuliah' => Course::query()->count(),
                 'Materi' => Material::query()->count(),
                 'Tugas' => Assignment::query()->count(),
                 'Submission' => Submission::query()->count(),
                 'Nilai' => Grade::query()->count(),
-            ], collect()],
+            ]), collect()],
             'dosen' => $this->lecturerDashboard($user),
             'mahasiswa' => $this->studentDashboard($user),
             default => abort(403),
@@ -48,7 +49,7 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $stats = [
+        $stats = $this->rememberStats("dosen:{$user->getKey()}", fn () => [
             'Mata Kuliah Diampu' => $courses->count(),
             'Materi' => Material::query()
                 ->whereHas('course', fn ($query) => $query->where('lecturer_id', $user->getKey()))
@@ -62,7 +63,7 @@ class DashboardController extends Controller
             'Nilai' => Grade::query()
                 ->whereHas('submission.assignment.course', fn ($query) => $query->where('lecturer_id', $user->getKey()))
                 ->count(),
-        ];
+        ]);
 
         return [$stats, $courses];
     }
@@ -78,7 +79,7 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        $stats = [
+        $stats = $this->rememberStats("mahasiswa:{$user->getKey()}", fn () => [
             'Mata Kuliah Diikuti' => $courses->count(),
             'Tugas Published' => Assignment::query()
                 ->where('status', 'published')
@@ -96,8 +97,25 @@ class DashboardController extends Controller
             'Nilai Saya' => Grade::query()
                 ->whereHas('submission', fn ($query) => $query->where('user_id', $user->getKey()))
                 ->count(),
-        ];
+        ]);
 
         return [$stats, $courses];
+    }
+
+    private function rememberStats(string $scope, callable $stats): array
+    {
+        $version = Cache::get('dashboard_stats_version', 1);
+
+        return Cache::remember(
+            "dashboard_stats:{$version}:{$scope}",
+            now()->addMinutes(10),
+            fn () => $stats()
+        );
+    }
+
+    public static function invalidateCache(): void
+    {
+        $version = (int) Cache::get('dashboard_stats_version', 1);
+        Cache::forever('dashboard_stats_version', $version + 1);
     }
 }
