@@ -121,6 +121,7 @@ class AdminWebAccessTest extends TestCase
         $course = Course::factory()->create([
             'lecturer_id' => $lecturer->id,
             'status' => 'active',
+            'sks' => 3,
         ]);
         $otherCourse = Course::factory()->create([
             'lecturer_id' => $otherLecturer->id,
@@ -132,10 +133,12 @@ class AdminWebAccessTest extends TestCase
             ->get(route('dosen.courses.show', $course))
             ->assertOk()
             ->assertSee('Pendaftaran Mahasiswa')
+            ->assertSee('student-search')
+            ->assertSee('type="checkbox"', false)
             ->assertSee($availableStudent->email);
 
         $this->put(route('dosen.courses.students.update', $course), [
-            'student_ids' => [$availableStudent->id],
+            'student_ids' => [$enrolledStudent->id, $availableStudent->id],
         ])->assertRedirect(route('dosen.courses.show', [
             'course' => $course,
             'as' => 'dosen',
@@ -145,6 +148,27 @@ class AdminWebAccessTest extends TestCase
             'course_id' => $course->id,
             'user_id' => $availableStudent->id,
         ]);
+        $this->assertDatabaseHas('course_user', [
+            'course_id' => $course->id,
+            'user_id' => $enrolledStudent->id,
+        ]);
+        $this->assertDatabaseHas('enrollment_requests', [
+            'course_id' => $course->id,
+            'user_id' => $availableStudent->id,
+            'status' => 'approved',
+        ]);
+
+        $this->actingAs($availableStudent)
+            ->get(route('mahasiswa.catalog.index'))
+            ->assertOk()
+            ->assertSee('3 / 24 SKS')
+            ->assertSee('✓ Terdaftar')
+            ->assertSee('Buka Kelas');
+
+        $this->actingAs($lecturer)
+            ->put(route('dosen.courses.students.update', $course), [
+                'student_ids' => [$availableStudent->id],
+            ])->assertRedirect();
         $this->assertDatabaseMissing('course_user', [
             'course_id' => $course->id,
             'user_id' => $enrolledStudent->id,
@@ -157,6 +181,34 @@ class AdminWebAccessTest extends TestCase
         $this->assertDatabaseMissing('course_user', [
             'course_id' => $otherCourse->id,
             'user_id' => $enrolledStudent->id,
+        ]);
+    }
+
+    public function test_admin_can_change_course_lecturer_from_course_detail(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $oldLecturer = User::factory()->dosen()->create();
+        $newLecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->create([
+            'lecturer_id' => $oldLecturer->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.courses.show', $course))
+            ->assertOk()
+            ->assertSee('Dosen Pengampu')
+            ->assertSee('Simpan Dosen Pengampu');
+
+        $this->put(route('admin.courses.lecturer.update', $course), [
+            'lecturer_id' => $newLecturer->id,
+        ])->assertRedirect(route('admin.courses.show', [
+            'course' => $course,
+            'as' => 'admin',
+        ]));
+
+        $this->assertDatabaseHas('courses', [
+            'id' => $course->id,
+            'lecturer_id' => $newLecturer->id,
         ]);
     }
 

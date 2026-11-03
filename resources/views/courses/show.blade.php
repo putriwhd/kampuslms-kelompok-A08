@@ -1,4 +1,4 @@
-﻿<x-layout>
+<x-layout>
     <x-slot:title>{{ $course->name }}</x-slot:title>
 
     @php
@@ -122,138 +122,240 @@
             </div>
         </section>
 
-        {{-- ================= KARTU 2: PENDAFTARAN MAHASISWA ================= --}}
-        @if (in_array($role, ['admin', 'dosen'], true))
-            <section class="user-table-card" aria-labelledby="enrollment-heading">
-                <div class="user-table-header">
-                    <div class="user-table-header-icon" aria-hidden="true">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2"/><path d="M19 8v6"/><path d="M16 11h6"/></svg>
-                    </div>
-                    <div>
-                        <h2 id="enrollment-heading">Pendaftaran Mahasiswa</h2>
-                        <p>Centang mahasiswa yang boleh mengikuti mata kuliah ini. Menyimpan akan menggantikan daftar pendaftaran yang tersimpan.</p>
-                    </div>
-                </div>
-
-                <form action="{{ route($role . '.courses.students.update', ['course' => $course, 'as' => $role]) }}"
-                      method="POST" id="enrollmentForm">
+        @if ($role === 'admin')
+            <section class="content-card" style="margin-bottom: 24px;">
+                <h2>Dosen Pengampu</h2>
+                <p>Pilih dosen yang bertanggung jawab atas kelas ini.</p>
+                <form action="{{ route('admin.courses.lecturer.update', ['course' => $course, 'as' => 'admin']) }}"
+                      method="POST" class="course-create-form">
                     @csrf
                     @method('PUT')
-
-                    @if ($students->isEmpty())
-                        <div class="user-empty">
-                            <div class="empty-icon">🎓</div>
-                            <strong>Belum Ada Akun Mahasiswa</strong>
-                            <p>Tambahkan akun mahasiswa terlebih dahulu sebelum mendaftarkannya ke mata kuliah ini.</p>
-                        </div>
-                    @else
-                        @error('student_ids')
-                            <div class="global-alert global-alert-error" role="alert" style="margin: 20px 24px 0;">
-                                <span class="global-alert-icon">!</span> {{ $message }}
-                            </div>
+                    <div class="form-group">
+                        <label for="lecturer_id" class="form-label">Dosen pengampu</label>
+                        <select id="lecturer_id" name="lecturer_id" class="form-select" required>
+                            @foreach ($lecturers as $lecturer)
+                                <option value="{{ $lecturer->id }}" @selected((int) old('lecturer_id', $course->lecturer_id) === $lecturer->id)>
+                                    {{ $lecturer->name }} ({{ $lecturer->email }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('lecturer_id')
+                            <small class="course-field-error">{{ $message }}</small>
                         @enderror
-
-                        <div class="user-filter-form">
-                            <input type="search" id="studentSearch" class="form-input" placeholder="Cari nama, email, atau NIM...">
-                            <span class="enrollment-counter">
-                                <strong id="selectedCount">0</strong> dari {{ $students->count() }} dipilih
-                            </span>
-                        </div>
-
-                        <div class="user-table-wrapper">
-                            <table class="user-table enrollment-table">
-                                <thead>
-                                    <tr>
-                                        <th class="col-check">
-                                            <input type="checkbox" id="checkAll" aria-label="Pilih semua mahasiswa">
-                                        </th>
-                                        <th>Nama</th>
-                                        <th>Email</th>
-                                        <th>NIM</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($students as $student)
-                                        <tr data-search="{{ strtolower($student->name . ' ' . $student->email . ' ' . $student->nim_nip) }}">
-                                            <td class="col-check">
-                                                <input type="checkbox"
-                                                       name="student_ids[]"
-                                                       value="{{ $student->id }}"
-                                                       class="student-check"
-                                                       aria-label="Pilih {{ $student->name }}"
-                                                       @checked(in_array($student->id, old('student_ids', $enrolledStudentIds)))>
-                                            </td>
-                                            <td class="member-name">{{ $student->name }}</td>
-                                            <td class="user-email">{{ $student->email }}</td>
-                                            <td class="user-nim">{{ $student->nim_nip ?: '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                    <tr id="noResultRow" hidden>
-                                        <td colspan="4" class="user-empty">Tidak ada mahasiswa yang cocok.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="user-form-actions enrollment-actions">
-                            <button type="submit" class="btn-submit">Simpan Pendaftaran</button>
-                        </div>
-                    @endif
+                    </div>
+                    <button type="submit" class="primary-btn">Simpan Dosen Pengampu</button>
                 </form>
             </section>
         @endif
+
+        @if (in_array($role, ['admin', 'dosen'], true))
+            <section class="content-card" style="margin-bottom: 24px;">
+                <h2>Pendaftaran Mahasiswa</h2>
+                <p>Pilih mahasiswa yang akan terdaftar. Hilangkan pilihan untuk mengeluarkan mahasiswa dari kelas.</p>
+                <form action="{{ route($role.'.courses.students.update', ['course' => $course, 'as' => $role]) }}"
+                      method="POST" class="course-create-form">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-group">
+                        <label for="student-search" class="form-label">Cari mahasiswa</label>
+                        <input
+                            id="student-search"
+                            type="search"
+                            class="form-input"
+                            placeholder="Cari nama, NIM, atau email..."
+                            autocomplete="off"
+                            aria-controls="student-checkbox-list"
+                        >
+                        <span id="student-search-empty" class="form-help" role="status" hidden>
+                            Tidak ada mahasiswa yang cocok dengan pencarian.
+                        </span>
+                        <div
+                            id="student-checkbox-list"
+                            class="student-checkbox-list"
+                            style="max-height: 300px; overflow-y: auto; margin-top: 12px; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px;"
+                        >
+                            @foreach ($availableStudents as $studentOption)
+                                <label
+                                    class="student-checkbox-option"
+                                    data-search="{{ \Illuminate\Support\Str::lower($studentOption->name.' '.$studentOption->email.' '.$studentOption->nim_nip) }}"
+                                    for="student-{{ $studentOption->id }}"
+                                    style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #e2e8f0; cursor: pointer;"
+                                >
+                                    <input
+                                        id="student-{{ $studentOption->id }}"
+                                        type="checkbox"
+                                        name="student_ids[]"
+                                        value="{{ $studentOption->id }}"
+                                        @checked(in_array(
+                                            (int) $studentOption->id,
+                                            array_map('intval', old('student_ids', $studentIds)),
+                                            true
+                                        ))
+                                    >
+                                    <span>
+                                        <strong style="display: block;">{{ $studentOption->name }}</strong>
+                                        <small style="display: block; color: #64748b;">
+                                            Email: {{ $studentOption->email }} · NIM: {{ $studentOption->nim_nip ?: '-' }}
+                                        </small>
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                        @error('student_ids')
+                            <small class="course-field-error">{{ $message }}</small>
+                        @enderror
+                        @error('student_ids.*')
+                            <small class="course-field-error">{{ $message }}</small>
+                        @enderror
+                        <small class="form-help">Centang seluruh mahasiswa yang harus tetap terdaftar. Mahasiswa yang tidak dicentang akan dikeluarkan.</small>
+                    </div>
+                    <button type="submit" class="primary-btn">Simpan Pendaftaran Mahasiswa</button>
+                </form>
+            </section>
+
+            <script>
+                (() => {
+                    const search = document.getElementById('student-search');
+                    const options = Array.from(document.querySelectorAll('.student-checkbox-option'));
+                    const emptyMessage = document.getElementById('student-search-empty');
+
+                    if (!search || !emptyMessage) return;
+
+                    search.addEventListener('input', () => {
+                        const term = search.value.trim().toLocaleLowerCase();
+                        let visibleCount = 0;
+
+                        options.forEach((option) => {
+                            const matches = option.dataset.search.includes(term);
+                            option.hidden = !matches;
+                            if (matches) visibleCount++;
+                        });
+
+                        emptyMessage.hidden = visibleCount > 0;
+                    });
+                })();
+            </script>
+        @endif
+
+        {{-- ================= KARTU PERMINTAAN PENDAFTARAN MANDIRI (SELF-ENROLLMENT) ================= --}}
+        @if ($role === 'dosen' && isset($pendingRequests))
+            <section class="user-table-card" aria-labelledby="pending-enrollment-heading" style="margin-bottom: 24px;">
+                <div class="user-table-header">
+                    <div class="user-table-header-icon" aria-hidden="true" style="background: #e0e7ff; color: #4338ca;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div>
+                        <h2 id="pending-enrollment-heading">
+                            Permintaan Pendaftaran Mandiri
+                            @if ($pendingRequests->total() > 0)
+                                <span style="background: #ef4444; color: #fff; font-size: 0.75rem; padding: 2px 8px; border-radius: 999px; margin-left: 8px;">
+                                    {{ $pendingRequests->total() }} Permintaan
+                                </span>
+                            @endif
+                        </h2>
+                        <p>Mahasiswa yang mengajukan bergabung ke kelas ini melalui Daftar Kelas.</p>
+                    </div>
+                </div>
+
+                @if ($pendingRequests->isEmpty())
+                    <div style="padding: 24px; text-align: center; color: #64748b;">
+                        Tidak ada permintaan pendaftaran mahasiswa yang tertunda saat ini.
+                    </div>
+                @else
+                    <div class="user-table-wrapper">
+                        <table class="user-table enrollment-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama Mahasiswa</th>
+                                    <th>NIM</th>
+                                    <th>Email</th>
+                                    <th>Waktu Pengajuan</th>
+                                    <th class="text-center" style="width: 200px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($pendingRequests as $req)
+                                    <tr>
+                                        <td class="member-name">{{ $req->student?->name }}</td>
+                                        <td class="user-nim">{{ $req->student?->nim_nip ?: '-' }}</td>
+                                        <td class="user-email">{{ $req->student?->email }}</td>
+                                        <td style="font-size: 0.85rem; color: #64748b;">
+                                            {{ $req->created_at?->diffForHumans() }}
+                                        </td>
+                                        <td class="text-center">
+                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                <form action="{{ route('dosen.enrollment-requests.approve', $req) }}" method="POST">
+                                                    @csrf
+                                                    <button type="submit" class="primary-btn" style="padding: 6px 12px; font-size: 0.825rem; background: #059669; border-color: #059669;">
+                                                        ✓ Setujui
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('dosen.enrollment-requests.reject', $req) }}" method="POST" onsubmit="return confirm('Tolak pendaftaran mahasiswa ini?')">
+                                                    @csrf
+                                                    <button type="submit" class="danger-btn" style="padding: 6px 12px; font-size: 0.825rem;">
+                                                        ✕ Tolak
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="course-pagination">
+                        {{ $pendingRequests->links('vendor.pagination.kampuslms') }}
+                    </div>
+                @endif
+            </section>
+        @endif
+
+        <section class="user-table-card" aria-labelledby="enrolled-students-heading">
+            <div class="user-table-header">
+                <div class="user-table-header-icon" aria-hidden="true">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div>
+                    <h2 id="enrolled-students-heading">Mahasiswa Terdaftar</h2>
+                    <p>{{ $students->total() }} mahasiswa terdaftar di kelas ini.</p>
+                </div>
+            </div>
+
+            @if ($students->isEmpty())
+                <div class="user-empty">
+                    <div class="empty-icon">🎓</div>
+                    <strong>Belum Ada Mahasiswa Terdaftar</strong>
+                    <p>Mahasiswa dapat memilih kelas ini melalui Daftar Kelas dan menunggu persetujuan dosen.</p>
+                </div>
+            @else
+                <div class="user-table-wrapper">
+                    <table class="user-table enrollment-table">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                @if ($canViewStudentDetails)
+                                    <th>Email</th>
+                                    <th>NIM</th>
+                                @endif
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($students as $student)
+                                <tr>
+                                    <td class="member-name">{{ $student->name }}</td>
+                                    @if ($canViewStudentDetails)
+                                        <td class="user-email">{{ $student->email }}</td>
+                                        <td class="user-nim">{{ $student->nim_nip ?: '-' }}</td>
+                                    @endif
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <div class="course-pagination">
+                    {{ $students->links('vendor.pagination.kampuslms') }}
+                </div>
+            @endif
+        </section>
     </div>
-
-    <script>
-        (function () {
-            const form = document.getElementById('enrollmentForm');
-            if (!form) return;
-
-            const checks   = Array.from(form.querySelectorAll('.student-check'));
-            const checkAll = document.getElementById('checkAll');
-            const counter  = document.getElementById('selectedCount');
-            const search   = document.getElementById('studentSearch');
-            const rows     = Array.from(form.querySelectorAll('tbody tr[data-search]'));
-            const noResult = document.getElementById('noResultRow');
-
-            function refresh() {
-                const checked = checks.filter(c => c.checked).length;
-                counter.textContent = checked;
-                checkAll.checked = checked === checks.length && checks.length > 0;
-                checkAll.indeterminate = checked > 0 && checked < checks.length;
-                checks.forEach(c => c.closest('tr').classList.toggle('is-selected', c.checked));
-            }
-
-            checkAll.addEventListener('change', function () {
-                // hanya baris yang sedang terlihat (hasil pencarian)
-                checks.forEach(c => { if (!c.closest('tr').hidden) c.checked = checkAll.checked; });
-                refresh();
-            });
-
-            checks.forEach(c => c.addEventListener('change', refresh));
-
-            // klik di mana saja pada baris = centang
-            rows.forEach(function (row) {
-                row.addEventListener('click', function (e) {
-                    if (e.target.tagName === 'INPUT') return;
-                    const box = row.querySelector('.student-check');
-                    box.checked = !box.checked;
-                    refresh();
-                });
-            });
-
-            search.addEventListener('input', function () {
-                const q = search.value.trim().toLowerCase();
-                let visible = 0;
-                rows.forEach(function (row) {
-                    const show = q === '' || row.dataset.search.includes(q);
-                    row.hidden = !show;
-                    if (show) visible++;
-                });
-                noResult.hidden = visible !== 0;
-            });
-
-            refresh();
-        })();
-    </script>
 </x-layout>
