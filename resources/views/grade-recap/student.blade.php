@@ -145,8 +145,10 @@
             </div>
         @endforelse
 
+        {{-- PAGINATION --}}
         @if ($courses->hasPages())
-            <nav aria-label="Navigasi halaman rekap mata kuliah">
+            <nav class="mt-8 flex justify-center"
+                 aria-label="Navigasi halaman rekap mata kuliah">
                 {{ $courses->links() }}
             </nav>
         @endif
