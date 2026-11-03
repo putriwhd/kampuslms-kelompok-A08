@@ -62,6 +62,12 @@
                     @empty
                         <p>Belum ada mata kuliah yang dapat ditampilkan.</p>
                     @endforelse
+
+                    @if ($courses->hasPages())
+                        <div class="pagination-wrapper">
+                            {{ $courses->links('vendor.pagination.kampuslms') }}
+                        </div>
+                    @endif
                 </section>
             @endif
         @endif

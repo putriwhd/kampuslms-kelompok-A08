@@ -47,10 +47,11 @@ class DashboardController extends Controller
         $courses = $user->taughtCourses()
             ->withCount(['materials', 'assignments'])
             ->orderBy('name')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         $stats = $this->rememberStats("dosen:{$user->getKey()}", fn () => [
-            'Mata Kuliah Diampu' => $courses->count(),
+            'Mata Kuliah Diampu' => $user->taughtCourses()->count(),
             'Materi' => Material::query()
                 ->whereHas('course', fn ($query) => $query->where('lecturer_id', $user->getKey()))
                 ->count(),
@@ -77,10 +78,13 @@ class DashboardController extends Controller
                 'assignments' => fn ($query) => $query->where('status', 'published'),
             ])
             ->orderBy('name')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
         $stats = $this->rememberStats("mahasiswa:{$user->getKey()}", fn () => [
-            'Mata Kuliah Diikuti' => $courses->count(),
+            'Mata Kuliah Diikuti' => $user->courses()
+                ->where('courses.status', '!=', 'draft')
+                ->count(),
             'Tugas Published' => Assignment::query()
                 ->where('status', 'published')
                 ->whereHas('course', function ($query) use ($user) {

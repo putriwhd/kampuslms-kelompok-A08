@@ -186,11 +186,22 @@
                                         type="checkbox"
                                         name="student_ids[]"
                                         value="{{ $studentOption->id }}"
-                                        @checked(in_array(
-                                            (int) $studentOption->id,
-                                            array_map('intval', old('student_ids', $studentIds)),
-                                            true
-                                        ))
+                                        @checked(
+                                            in_array(
+                                                (int) $studentOption->id,
+                                                array_map(
+                                                    'intval',
+                                                    old(
+                                                        'student_ids',
+                                                        $availableStudents
+                                                            ->where('is_enrolled', 1)
+                                                            ->pluck('id')
+                                                            ->all()
+                                                    )
+                                                ),
+                                                true
+                                            )
+                                        )
                                     >
                                     <span>
                                         <strong style="display: block;">{{ $studentOption->name }}</strong>
@@ -237,7 +248,7 @@
             </script>
         @endif
 
-        {{-- ================= KARTU PERMINTAAN PENDAFTARAN MANDIRI (SELF-ENROLLMENT) ================= --}}
+        {{-- ================= KARTU PERMINTAAN PENDAFTARAN MANDIRI ================= --}}
         @if ($role === 'dosen' && isset($pendingRequests))
             <section class="user-table-card" aria-labelledby="pending-enrollment-heading" style="margin-bottom: 24px;">
                 <div class="user-table-header">

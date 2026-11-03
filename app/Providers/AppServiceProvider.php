@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Assignment;
 use App\Models\Course;
+use App\Models\EnrollmentRequest;
 use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Submission;
@@ -35,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Material::class, MaterialPolicy::class);
         Gate::policy(Submission::class, SubmissionPolicy::class);
 
-        foreach ([User::class, Course::class, Material::class, Assignment::class, Submission::class, Grade::class] as $model) {
+        foreach ([User::class, Course::class, EnrollmentRequest::class, Material::class, Assignment::class, Submission::class, Grade::class] as $model) {
             $model::saved(fn () => $this->invalidateDashboardCache());
             $model::deleted(fn () => $this->invalidateDashboardCache());
         }

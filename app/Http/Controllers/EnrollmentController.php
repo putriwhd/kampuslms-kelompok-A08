@@ -178,6 +178,8 @@ class EnrollmentController extends Controller
             return back()->with('error', $error);
         }
 
+        DashboardController::invalidateCache();
+
         // Picu Event untuk notifikasi asinkron ke mahasiswa
         $enrollmentRequest->refresh();
         EnrollmentApproved::dispatch($enrollmentRequest);
