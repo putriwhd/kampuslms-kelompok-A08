@@ -37,6 +37,8 @@ class SubmissionGradedNotification extends Notification implements ShouldQueue
     public function toDatabase(object $notifiable): array
     {
         return [
+            'title' => 'Tugas sudah dinilai',
+            'message' => 'Tugas "' . $this->submission->assignment->title . '" pada mata kuliah ' . $this->submission->assignment->course->name . ' sudah dinilai.',
             'submission_id' => $this->submission->id,
             'assignment_id' => $this->submission->assignment_id,
             'assignment_title' => $this->submission->assignment->title,

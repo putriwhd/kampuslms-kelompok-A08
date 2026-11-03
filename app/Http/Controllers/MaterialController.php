@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MaterialChanged;
 use App\Http\Requests\StoreMaterialRequest;
 use App\Http\Requests\UpdateMaterialRequest;
 use App\Models\Course;
@@ -78,7 +79,8 @@ class MaterialController extends Controller
             $data['mime_type'] = null;
         }
 
-        Material::create($data);
+        $material = Material::create($data);
+        MaterialChanged::dispatch($material, 'uploaded');
 
         return redirect()
             ->route($user->role . '.courses.materials.index', [
@@ -154,6 +156,8 @@ class MaterialController extends Controller
         }
 
         $material->update($data);
+
+        MaterialChanged::dispatch($material, 'updated');
 
         if (
             is_string($oldFilePath)

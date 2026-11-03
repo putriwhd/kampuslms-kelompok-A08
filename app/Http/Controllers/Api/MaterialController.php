@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MaterialChanged;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MaterialResource;
 use App\Models\Course;
@@ -36,6 +37,7 @@ class MaterialController extends Controller
                 : null,
             'uploaded_by' => $request->user()->getKey(),
         ]);
+        MaterialChanged::dispatch($material, 'uploaded');
 
         return (new MaterialResource(
             $material->load([
@@ -71,6 +73,7 @@ class MaterialController extends Controller
         }
 
         $material->update($validated);
+        MaterialChanged::dispatch($material, 'updated');
 
         return new MaterialResource(
             $material->load([

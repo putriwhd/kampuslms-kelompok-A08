@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Events\SubmissionGraded;
+use App\Events\SubmissionSubmitted;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSubmissionRequest;
 use App\Http\Resources\SubmissionResource;
@@ -74,6 +75,10 @@ class SubmissionController extends Controller
                 'is_late' => $isLate,
             ]
         );
+
+        if (! $existingSubmission) {
+            SubmissionSubmitted::dispatch($submission);
+        }
 
         if (
             is_string($oldFilePath)

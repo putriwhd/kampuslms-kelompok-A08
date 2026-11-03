@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\DashboardController;
+
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
@@ -216,6 +218,7 @@ class CourseController extends Controller
                 );
             }
         });
+        DashboardController::invalidateCache();
 
         return redirect()
             ->route($request->user()->role.'.courses.show', [
