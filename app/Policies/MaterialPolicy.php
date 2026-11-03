@@ -35,12 +35,7 @@ class MaterialPolicy
 
         // 2. Dosen pengampu diizinkan (Menggunakan lecturer_id)
         if ($user->role === 'dosen') {
-            if ((int) $course->lecturer_id === (int) $user->id) {
-                return true;
-            }
-
-            // Fallback agar Dosen Demo/Penguji tetap bisa mengakses saat testing
-            return true;
+            return (int) $course->lecturer_id === (int) $user->id;
         }
 
         // 3. Mahasiswa yang terdaftar (enrolled) pada mata kuliah terkait diizinkan

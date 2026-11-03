@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\DashboardController;
-
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
@@ -35,7 +34,6 @@ class CourseController extends Controller
         };
 
         $courses = $query
-            ->with('lecturer')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
@@ -87,24 +85,63 @@ class CourseController extends Controller
     {
         Gate::authorize('view', $course);
 
+        $course->loadMissing('lecturer');
+
         $role = $this->selectedRole($request);
-        $canViewStudentDetails = in_array($role, ['admin', 'dosen'], true);
+
+        $canViewStudentDetails = in_array(
+            $role,
+            ['admin', 'dosen'],
+            true
+        );
+
+        // Daftar mahasiswa terdaftar dengan pagination.
         $students = $course->students()
             ->orderBy('users.name')
             ->paginate(25, ['users.*'], 'students_page')
             ->withQueryString();
-        $studentIds = $course->students()->pluck('users.id')->all();
-        $availableStudents = in_array($role, ['admin', 'dosen'], true)
+
+        // Ambil seluruh mahasiswa beserta status pendaftarannya.
+        // Menggantikan query terpisah untuk mengambil student IDs.
+        $availableStudents = $canViewStudentDetails
             ? User::query()
-                ->where('role', 'mahasiswa')
-                ->orderBy('name')
-                ->get(['id', 'name', 'email', 'nim_nip'])
-            : collect();
-        $lecturers = $role === 'admin'
-            ? User::query()->where('role', 'dosen')->orderBy('name')->get()
+                ->leftJoin('course_user', function ($join) use ($course) {
+                    $join->on('users.id', '=', 'course_user.user_id')
+                        ->where(
+                            'course_user.course_id',
+                            '=',
+                            $course->id
+                        );
+                })
+                ->where('users.role', 'mahasiswa')
+                ->orderBy('users.name')
+                ->get([
+                    'users.id',
+                    'users.name',
+                    'users.email',
+                    'users.nim_nip',
+                    DB::raw(
+                        'CASE
+                            WHEN course_user.user_id IS NULL THEN 0
+                            ELSE 1
+                        END AS is_enrolled'
+                    ),
+                ])
             : collect();
 
-        $pendingRequests = ($role === 'dosen' && $course->lecturer_id === $request->user()->id)
+        // Daftar dosen hanya ditampilkan kepada admin.
+        $lecturers = $role === 'admin'
+            ? User::query()
+                ->where('role', 'dosen')
+                ->orderBy('name')
+                ->get()
+            : collect();
+
+        // Permintaan pendaftaran hanya untuk dosen pengampu.
+        $pendingRequests = (
+            $role === 'dosen'
+            && $course->lecturer_id === $request->user()->id
+        )
             ? $course->enrollmentRequests()
                 ->with('student')
                 ->where('status', 'pending')
@@ -119,7 +156,6 @@ class CourseController extends Controller
                 'course',
                 'role',
                 'students',
-                'studentIds',
                 'availableStudents',
                 'lecturers',
                 'pendingRequests',
@@ -145,7 +181,10 @@ class CourseController extends Controller
         $course->update(['lecturer_id' => $validated['lecturer_id']]);
 
         return redirect()
-            ->route('admin.courses.show', ['course' => $course, 'as' => 'admin'])
+            ->route('admin.courses.show', [
+                'course' => $course,
+                'as' => 'admin',
+            ])
             ->with('success', 'Dosen pengampu berhasil diperbarui.');
     }
 
@@ -166,20 +205,27 @@ class CourseController extends Controller
         ]);
 
         $studentIds = array_map('intval', $validated['student_ids'] ?? []);
+
         $currentStudents = $course->students()->get();
+
         $currentStudentIds = $currentStudents->modelKeys();
-        $newStudentIds = array_values(array_diff($studentIds, $currentStudentIds));
+
+        $newStudentIds = array_values(
+            array_diff($studentIds, $currentStudentIds)
+        );
 
         if (count($studentIds) > EnrollmentController::MAX_CAPACITY) {
             return back()
                 ->withErrors([
-                    'student_ids' => 'Kelas tidak dapat memiliki lebih dari '.EnrollmentController::MAX_CAPACITY.' mahasiswa.',
+                    'student_ids' => 'Kelas tidak dapat memiliki lebih dari '
+                        .EnrollmentController::MAX_CAPACITY.' mahasiswa.',
                 ])
                 ->withInput();
         }
 
         foreach ($newStudentIds as $studentId) {
             $student = User::findOrFail($studentId);
+
             $currentSks = $student->courses()
                 ->where('courses.status', 'active')
                 ->sum('courses.sks');
@@ -190,22 +236,32 @@ class CourseController extends Controller
             ) {
                 return back()
                     ->withErrors([
-                        'student_ids' => "{$student->name} akan melebihi batas maksimal ".EnrollmentController::MAX_SKS.' SKS.',
+                        'student_ids' => "{$student->name} akan melebihi batas maksimal "
+                            .EnrollmentController::MAX_SKS.' SKS.',
                     ])
                     ->withInput();
             }
         }
 
         $existingEnrolledAt = $currentStudents->mapWithKeys(
-            fn (User $student) => [$student->getKey() => $student->pivot->enrolled_at]
+            fn (User $student) => [
+                $student->getKey() => $student->pivot->enrolled_at,
+            ]
         );
-        $studentPivotData = collect($studentIds)->mapWithKeys(fn (int $studentId) => [
-            $studentId => [
-                'enrolled_at' => $existingEnrolledAt->get($studentId) ?? now(),
-            ],
-        ])->all();
 
-        DB::transaction(function () use ($course, $studentPivotData, $newStudentIds): void {
+        $studentPivotData = collect($studentIds)->mapWithKeys(
+            fn (int $studentId) => [
+                $studentId => [
+                    'enrolled_at' => $existingEnrolledAt->get($studentId) ?? now(),
+                ],
+            ]
+        )->all();
+
+        DB::transaction(function () use (
+            $course,
+            $studentPivotData,
+            $newStudentIds
+        ): void {
             $course->students()->sync($studentPivotData);
 
             foreach ($newStudentIds as $studentId) {
@@ -218,6 +274,7 @@ class CourseController extends Controller
                 );
             }
         });
+
         DashboardController::invalidateCache();
 
         return redirect()
@@ -255,23 +312,22 @@ class CourseController extends Controller
 
     public function destroy(Request $request, Course $course)
     {
-        // FIXED 1: Lakukan otorisasi di paling awal
         Gate::authorize('delete', $course);
 
-        // FIXED 2: Hapus method ensureCourseOwnership yang tidak ada
-
-        // Hapus submission melalui model agar event deleting membersihkan file privat sebelum cascade database.
         $course->assignments()
             ->with('submissions')
             ->get()
             ->each(fn ($assignment) => $assignment->submissions->each->delete());
 
-        // Bersihkan berkas materi fisik secara eksplisit sebelum cascadeOnDelete MySQL menghapus datanya
         foreach ($course->materials as $material) {
-            if ($material->file_path && Storage::disk('local')->exists($material->file_path)) {
+            if (
+                $material->file_path
+                && Storage::disk('local')->exists($material->file_path)
+            ) {
                 Storage::disk('local')->delete($material->file_path);
             }
         }
+
         Storage::disk('local')->deleteDirectory("materials/{$course->id}");
 
         $course->delete();

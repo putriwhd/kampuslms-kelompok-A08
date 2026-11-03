@@ -59,6 +59,7 @@ class MaterialController extends Controller
 
         if ($validated['type'] === 'file' && $request->hasFile('file')) {
             $file = $request->file('file');
+
             // Simpan berkas fisik ke disk privat 'local' dengan nama hash acak
             $path = $file->store("materials/{$course->id}", 'local');
 
@@ -92,7 +93,8 @@ class MaterialController extends Controller
 
     public function show(Request $request, Material $material)
     {
-        $material->load('course');
+        $material->loadMissing('course');
+
         Gate::authorize('view', $material);
 
         $role = $request->user()->role;
@@ -102,7 +104,8 @@ class MaterialController extends Controller
 
     public function edit(Request $request, Material $material)
     {
-        $material->load('course');
+        $material->loadMissing('course');
+
         Gate::authorize('update', $material);
 
         $role = $request->user()->role;
@@ -118,7 +121,9 @@ class MaterialController extends Controller
 
         $validated = $request->validated();
         $material->loadMissing('course');
+
         $oldFilePath = $material->file_path;
+
         $data = [
             'title' => $validated['title'],
             'description' => $validated['description'],
@@ -135,8 +140,10 @@ class MaterialController extends Controller
             ];
         } else {
             $data['external_url'] = null;
+
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
+
                 $filePath = $file->store(
                     "materials/{$material->course_id}",
                     'local'
@@ -184,7 +191,7 @@ class MaterialController extends Controller
 
         $course = $material->course;
         $role = $request->user()->role;
-        
+
         // Menghapus record (berkas fisik otomatis terhapus via event static::deleting di model Material)
         $material->delete();
 
@@ -201,13 +208,16 @@ class MaterialController extends Controller
         Course $course,
         Material $material
     ) {
-        abort_unless($material->course_id === $course->id, 404);
+        abort_unless(
+            (int) $material->course_id === (int) $course->id,
+            404
+        );
+
+        $material->loadMissing('course');
 
         Gate::authorize('view', $material);
 
         $role = $request->user()->role;
-
-        $material->load('course');
 
         return view('materials.show', compact('material', 'role'));
     }
@@ -217,18 +227,23 @@ class MaterialController extends Controller
      */
     public function download(Material $material): StreamedResponse
     {
-        $material->load('course');
+        $material->loadMissing('course');
 
         // Otorisasi: hanya mahasiswa terdaftar, dosen pengampu, dan Admin
         Gate::authorize('view', $material);
 
-        abort_unless($material->type === 'file' && $material->file_path, 404, 'Materi ini bukan berupa berkas.');
+        abort_unless(
+            $material->type === 'file' && $material->file_path,
+            404,
+            'Materi ini bukan berupa berkas.'
+        );
 
         $pathInDb = $material->file_path;
         $pathWithFolder = "materials/{$material->course_id}/{$material->file_path}";
 
         // Tentukan path mana yang benar-benar ada di storage fisik
         $finalPath = null;
+
         if (Storage::disk('local')->exists($pathInDb)) {
             $finalPath = $pathInDb;
         } elseif (Storage::disk('local')->exists($pathWithFolder)) {
@@ -236,7 +251,11 @@ class MaterialController extends Controller
         }
 
         // Jika berkas tidak ditemukan di kedua jalur tersebut, kembalikan 404
-        abort_unless($finalPath !== null, 404, 'Berkas materi tidak ditemukan di server.');
+        abort_unless(
+            $finalPath !== null,
+            404,
+            'Berkas materi tidak ditemukan di server.'
+        );
 
         // Unduh berkas dari disk privat menggunakan nama asli berkas
         return Storage::disk('local')->download(

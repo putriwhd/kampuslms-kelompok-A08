@@ -103,8 +103,8 @@ class AssignmentController extends Controller
                     ->where('assignment_id', $assignment->getKey()),
             ])
             ->orderBy('users.name')
-            ->get()
-            ->map(function ($student) {
+            ->paginate(15, ['users.*'], 'recap_page')
+            ->through(function ($student) {
                 $submission = $student->submissions->first();
 
                 return [
@@ -119,11 +119,17 @@ class AssignmentController extends Controller
         return response()->json([
             'data' => SubmissionResource::collection($submissions)
                 ->resolve($request),
-            'recap' => $recap,
+            'recap' => $recap->items(),
             'meta' => [
                 'current_page' => $submissions->currentPage(),
                 'last_page' => $submissions->lastPage(),
                 'total' => $submissions->total(),
+            ],
+            'recap_meta' => [
+                'current_page' => $recap->currentPage(),
+                'last_page' => $recap->lastPage(),
+                'per_page' => $recap->perPage(),
+                'total' => $recap->total(),
             ],
         ]);
     }
@@ -140,8 +146,8 @@ class AssignmentController extends Controller
                     ->where('assignment_id', $assignment->getKey()),
             ])
             ->orderBy('users.name')
-            ->get()
-            ->map(function ($student) {
+            ->paginate(15, ['users.*'], 'recap_page')
+            ->through(function ($student) {
                 $submission = $student->submissions->first();
 
                 return [
@@ -154,7 +160,13 @@ class AssignmentController extends Controller
             });
 
         return response()->json([
-            'data' => $recap,
+            'data' => $recap->items(),
+            'meta' => [
+                'current_page' => $recap->currentPage(),
+                'last_page' => $recap->lastPage(),
+                'per_page' => $recap->perPage(),
+                'total' => $recap->total(),
+            ],
         ]);
     }
 }

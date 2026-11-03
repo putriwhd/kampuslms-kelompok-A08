@@ -34,15 +34,7 @@
         @endif
 
         @php
-            $totalStudents = $submissionRecap->count();
-            $totalSubmitted = $submissionRecap
-                ->where('submission_status', 'submitted')
-                ->count();
             $totalNotSubmitted = $totalStudents - $totalSubmitted;
-            $totalLate = $submissionRecap
-                ->where('is_late', true)
-                ->count();
-
             $submissionMap = $submissions->keyBy('user_id');
         @endphp
 
@@ -220,6 +212,10 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4">
+                {{ $submissionRecap->links() }}
             </div>
         </section>
 

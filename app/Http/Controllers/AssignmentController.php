@@ -34,6 +34,7 @@ class AssignmentController extends Controller
         }
 
         $assignments = $query
+            ->with('course')
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -260,23 +261,22 @@ class AssignmentController extends Controller
         $submissions = collect();
         $submissionRecap = collect();
         $ownSubmission = null;
+        $submissionTotal = 0;
+        $submittedTotal = 0;
 
         if (in_array($role, ['admin', 'dosen'], true)) {
             Gate::authorize('viewSubmissions', $assignment);
-            $submissions = $assignment->submissions()
-                ->with(['student', 'grade.grader'])
-                ->orderBy('submitted_at')
-                ->get();
-
             $submissionRecap = $assignment->course
                 ->students()
                 ->with([
                     'submissions' => fn ($query) => $query
-                        ->where('assignment_id', $assignment->getKey()),
+                        ->where('assignment_id', $assignment->getKey())
+                        ->with(['student', 'grade.grader']),
                 ])
                 ->orderBy('users.name')
-                ->get()
-                ->map(function ($student) {
+                ->paginate(15, ['users.*'], 'submission_recap_page')
+                ->withQueryString()
+                ->through(function ($student) use ($assignment) {
                     $submission = $student->submissions->first();
 
                     return [
@@ -297,6 +297,13 @@ class AssignmentController extends Controller
                             : null,
                     ];
                 });
+
+            $submissions = $submissionRecap->getCollection()
+                ->pluck('submission')
+                ->filter()
+                ->values();
+            $submissionTotal = $submissionRecap->total();
+            $submittedTotal = $assignment->submissions()->count();
         } elseif ($role === 'mahasiswa') {
             $ownSubmission = $assignment->submissions()
                 ->where('user_id', $user->getKey())
@@ -311,7 +318,9 @@ class AssignmentController extends Controller
                 'role',
                 'submissions',
                 'submissionRecap',
-                'ownSubmission'
+                'ownSubmission',
+                'submissionTotal',
+                'submittedTotal'
             )
         );
     }
@@ -325,20 +334,17 @@ class AssignmentController extends Controller
         Gate::authorize('viewSubmissions', $assignment);
 
         $role = $request->user()->role;
-        $submissions = $assignment->submissions()
-            ->with(['student', 'grade.grader'])
-            ->orderBy('submitted_at')
-            ->get();
-
         $submissionRecap = $assignment->course
             ->students()
             ->with([
                 'submissions' => fn ($query) => $query
-                    ->where('assignment_id', $assignment->getKey()),
+                    ->where('assignment_id', $assignment->getKey())
+                    ->with(['student', 'grade.grader']),
             ])
             ->orderBy('users.name')
-            ->get()
-            ->map(function ($student) {
+            ->paginate(15, ['users.*'], 'submission_recap_page')
+            ->withQueryString()
+            ->through(function ($student) {
                 $submission = $student->submissions->first();
 
                 return [
@@ -360,9 +366,17 @@ class AssignmentController extends Controller
                 ];
             });
 
+        $submissions = $submissionRecap->getCollection()
+            ->pluck('submission')
+            ->filter()
+            ->values();
+        $totalStudents = $submissionRecap->total();
+        $totalSubmitted = $assignment->submissions()->count();
+        $totalLate = $assignment->submissions()->where('is_late', true)->count();
+
         return view(
             'assignments.submissions',
-            compact('assignment', 'course', 'role', 'submissions', 'submissionRecap')
+            compact('assignment', 'course', 'role', 'submissions', 'submissionRecap', 'totalStudents', 'totalSubmitted', 'totalLate')
         );
     }
 

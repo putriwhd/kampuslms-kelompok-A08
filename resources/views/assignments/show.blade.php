@@ -75,8 +75,8 @@
                 <div>
                     <h2>Pengumpulan Mahasiswa</h2>
                     <p>
-                        {{ $submissions->count() }} berkas dikumpulkan dari
-                        {{ $submissionRecap->count() }} mahasiswa terdaftar.
+                        {{ $submittedTotal }} berkas dikumpulkan dari
+                        {{ $submissionTotal }} mahasiswa terdaftar.
                     </p>
                 </div>
                 <a
@@ -194,6 +194,10 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            <div class="mt-4">
+                {{ $submissionRecap->links() }}
             </div>
         @endcan
 
