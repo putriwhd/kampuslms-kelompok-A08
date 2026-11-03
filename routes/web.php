@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GradeRecapController;
 use App\Http\Controllers\GradeRecapPageController;
 use App\Http\Controllers\MaterialController;
@@ -54,8 +55,14 @@ Route::prefix('admin')
 
         Route::resource('users', UserController::class);
         Route::resource('courses', CourseController::class);
-        Route::put('courses/{course}/students', [CourseController::class, 'updateStudents'])
-            ->name('courses.students.update');
+        Route::put(
+            'courses/{course}/lecturer',
+            [CourseController::class, 'updateLecturer']
+        )->name('courses.lecturer.update');
+        Route::put(
+            'courses/{course}/students',
+            [CourseController::class, 'updateStudents']
+        )->name('courses.students.update');
 
         Route::scopeBindings()->group(function () {
 
@@ -127,9 +134,13 @@ Route::prefix('dosen')
         Route::get('/grade-recap/overview', [GradeRecapPageController::class, 'lecturer'])
             ->name('grade-recap.page');
 
+        Route::post('enrollment-requests/{enrollmentRequest}/approve', [EnrollmentController::class, 'approve'])
+            ->name('enrollment-requests.approve');
+        Route::post('enrollment-requests/{enrollmentRequest}/reject', [EnrollmentController::class, 'reject'])
+            ->name('enrollment-requests.reject');
+
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show', 'edit', 'update']);
-
         Route::put(
             'courses/{course}/students',
             [CourseController::class, 'updateStudents']
@@ -209,6 +220,11 @@ Route::prefix('mahasiswa')
             ->name('grade-recap.index');
         Route::get('/grade-recap/overview', [GradeRecapPageController::class, 'student'])
             ->name('grade-recap.page');
+
+        Route::get('/catalog', [EnrollmentController::class, 'catalog'])
+            ->name('catalog.index');
+        Route::post('/courses/{course}/enroll', [EnrollmentController::class, 'requestEnrollment'])
+            ->name('courses.enroll');
 
         Route::resource('courses', CourseController::class)
             ->only(['index', 'show']);

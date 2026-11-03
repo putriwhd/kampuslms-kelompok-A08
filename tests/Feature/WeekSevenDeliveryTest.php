@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Grade;
+use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
@@ -111,12 +112,53 @@ class WeekSevenDeliveryTest extends TestCase
 
         $student = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
         $submission = Submission::where('user_id', $student->id)->firstOrFail();
+        $grade = Grade::where('submission_id', $submission->id)->firstOrFail();
 
         Storage::disk('local')->assertExists($submission->file_path);
+        $this->assertGreaterThanOrEqual(70, (float) $grade->score);
+        $this->assertLessThanOrEqual(100, (float) $grade->score);
         $this->assertStringStartsWith(
             '%PDF-1.4',
             Storage::disk('local')->get($submission->file_path)
         );
+
+        foreach (Course::query()->where('code', 'like', 'SI2514%')->get() as $demoCourse) {
+            $assignmentIds = $demoCourse->assignments()->pluck('id');
+            $studentIds = $demoCourse->students()->pluck('users.id');
+            $expectedRecords = $assignmentIds->count() * $studentIds->count();
+
+            $this->assertSame(
+                $expectedRecords,
+                Submission::query()
+                    ->whereIn('assignment_id', $assignmentIds)
+                    ->whereIn('user_id', $studentIds)
+                    ->count()
+            );
+            $this->assertSame(
+                $expectedRecords,
+                Grade::query()
+                    ->whereHas('submission', fn ($query) => $query
+                        ->whereIn('assignment_id', $assignmentIds)
+                        ->whereIn('user_id', $studentIds))
+                    ->count()
+            );
+            $this->assertGreaterThanOrEqual(
+                70,
+                (float) Grade::query()
+                    ->whereHas('submission', fn ($query) => $query
+                        ->whereIn('assignment_id', $assignmentIds)
+                        ->whereIn('user_id', $studentIds))
+                    ->min('score')
+            );
+            $this->assertLessThanOrEqual(
+                100,
+                (float) Grade::query()
+                    ->whereHas('submission', fn ($query) => $query
+                        ->whereIn('assignment_id', $assignmentIds)
+                        ->whereIn('user_id', $studentIds))
+                    ->max('score')
+            );
+        }
 
         Sanctum::actingAs($student);
         $this->getJson("/api/v1/submissions/{$submission->id}/download")
@@ -528,7 +570,7 @@ class WeekSevenDeliveryTest extends TestCase
             'status' => 'active',
         ]);
         $course->students()->attach($student, ['enrolled_at' => now()]);
-        $material = \App\Models\Material::factory()
+        $material = Material::factory()
             ->for($course)
             ->for($lecturer, 'uploader')
             ->create([
@@ -539,7 +581,7 @@ class WeekSevenDeliveryTest extends TestCase
                 'mime_type' => 'application/pdf',
             ]);
         Storage::disk('local')->put($material->file_path, 'private course handout');
-        $otherMaterial = \App\Models\Material::factory()
+        $otherMaterial = Material::factory()
             ->for($otherCourse)
             ->for($otherLecturer, 'uploader')
             ->create();

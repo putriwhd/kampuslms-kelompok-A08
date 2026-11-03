@@ -55,6 +55,16 @@
                     Mata Kuliah
                 </a>
 
+                @if ($role === 'mahasiswa')
+                    <a href="{{ route('mahasiswa.catalog.index', ['as' => 'mahasiswa']) }}"
+                       class="{{ request()->routeIs('*.catalog.*') ? 'is-active' : '' }}">
+                        <span class="nav-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg>
+                        </span>
+                        Daftar Kelas
+                    </a>
+                @endif
+
                 @if ($role === 'admin')
                     <a href="{{ route('admin.users.index') }}"
                        class="{{ request()->routeIs('admin.users.*') ? 'is-active' : '' }}">

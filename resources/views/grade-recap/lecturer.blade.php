@@ -22,7 +22,7 @@
             </div>
             <div>
                 <span class="grade-recap-summary-label">Total Mata Kuliah</span>
-                <strong class="grade-recap-summary-value">{{ count($courses) }}</strong>
+                <strong class="grade-recap-summary-value">{{ $courses->total() }}</strong>
                 <span class="grade-recap-summary-description">
                     Mata kuliah yang Anda ampu
                 </span>
@@ -142,5 +142,11 @@
                 <p>Anda belum memiliki mata kuliah yang diampu.</p>
             </div>
         @endforelse
+
+        @if ($courses->hasPages())
+            <nav aria-label="Navigasi halaman rekap mata kuliah">
+                {{ $courses->links() }}
+            </nav>
+        @endif
     </section>
 </x-layout>

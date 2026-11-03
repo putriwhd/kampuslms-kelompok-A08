@@ -104,3 +104,6 @@
     ![alt text](image.png)
 
     Berdasarkan hasil perintah `php artisan route:list --path=api` pada terminal, terdapat 10 rute API yang aktif dengan prefix `/api/v1`. Rute tersebut terbagi atas autentikasi publik (`POST api/v1/auth/login`), autentikasi terproteksi (`POST api/v1/auth/logout` dan GET `api/v1/me`), manajemen mata kuliah (`GET api/v1/courses` dan `GET api/v1/courses/{id}`), pengelolaan tugas (`POST, PUT|PATCH` dan `DELETE` pada `api/v1/assignments`), serta pengumpulan dan penilaian tugas (`POST api/v1/submissions` dan `PUT api/v1/submissions/{id}/grade`). Seluruh endpoint tersebut telah terhubung dengan controller masing-masing di dalam namespace `Api\`.
+
+### Break 
+

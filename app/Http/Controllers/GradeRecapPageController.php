@@ -17,8 +17,9 @@ class GradeRecapPageController extends Controller
                 'assignments.submissions.student',
                 'assignments.submissions.grade',
             ])
-            ->get()
-            ->map(function (Course $course): array {
+            ->orderBy('courses.id')
+            ->paginate(10)
+            ->through(function (Course $course): array {
                 $assignments = $course->assignments;
                 $students = $course->students->map(function ($student) use ($assignments): array {
                     $grades = $assignments->map(function ($assignment) use ($student): array {
@@ -70,8 +71,9 @@ class GradeRecapPageController extends Controller
                             ->with('grade'),
                     ]),
             ])
-            ->get()
-            ->map(fn (Course $course): array => [
+            ->orderBy('courses.id')
+            ->paginate(10)
+            ->through(fn (Course $course): array => [
                 'course_code' => $course->code,
                 'course_name' => $course->name,
                 'assignments' => $course->assignments->map(function ($assignment): array {

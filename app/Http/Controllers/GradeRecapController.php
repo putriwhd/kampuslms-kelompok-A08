@@ -17,43 +17,53 @@ class GradeRecapController extends Controller
                 'assignments.submissions.student',
                 'assignments.submissions.grade',
             ])
-            ->get()
-            ->map(function (Course $course) {
-                $assignments = $course->assignments;
+            ->orderBy('courses.id')
+            ->paginate(10);
 
-                $students = $course->students->map(function ($student) use ($assignments) {
-                    $grades = $assignments->map(function ($assignment) use ($student) {
-                        $submission = $assignment->submissions
-                            ->firstWhere('user_id', $student->getKey());
+        $courses->through(function (Course $course) {
+            $assignments = $course->assignments;
 
-                        return [
-                            'assignment_id' => $assignment->getKey(),
-                            'assignment_title' => $assignment->title,
-                            'score' => $submission?->grade?->score,
-                            'graded_at' => $submission?->grade?->graded_at,
-                        ];
-                    });
-                    $scoredGrades = $grades->whereNotNull('score');
+            $students = $course->students->map(function ($student) use ($assignments) {
+                $grades = $assignments->map(function ($assignment) use ($student) {
+                    $submission = $assignment->submissions
+                        ->firstWhere('user_id', $student->getKey());
 
                     return [
-                        'student_id' => $student->getKey(),
-                        'student_name' => $student->name,
-                        'grades' => $grades->values(),
-                        'average_score' => $scoredGrades->isNotEmpty()
-                            ? round((float) $scoredGrades->avg('score'), 2)
-                            : null,
+                        'assignment_id' => $assignment->getKey(),
+                        'assignment_title' => $assignment->title,
+                        'score' => $submission?->grade?->score,
+                        'graded_at' => $submission?->grade?->graded_at,
                     ];
                 });
+                $scoredGrades = $grades->whereNotNull('score');
 
                 return [
-                    'course_id' => $course->getKey(),
-                    'course_code' => $course->code,
-                    'course_name' => $course->name,
-                    'students' => $students->values(),
+                    'student_id' => $student->getKey(),
+                    'student_name' => $student->name,
+                    'grades' => $grades->values(),
+                    'average_score' => $scoredGrades->isNotEmpty()
+                        ? round((float) $scoredGrades->avg('score'), 2)
+                        : null,
                 ];
             });
 
-        return response()->json(['data' => $courses->values()]);
+            return [
+                'course_id' => $course->getKey(),
+                'course_code' => $course->code,
+                'course_name' => $course->name,
+                'students' => $students->values(),
+            ];
+        });
+
+        return response()->json([
+            'data' => $courses->items(),
+            'meta' => [
+                'current_page' => $courses->currentPage(),
+                'last_page' => $courses->lastPage(),
+                'per_page' => $courses->perPage(),
+                'total' => $courses->total(),
+            ],
+        ]);
     }
 
     public function student(Request $request): JsonResponse
@@ -70,29 +80,39 @@ class GradeRecapController extends Controller
                             ->with('grade'),
                     ]),
             ])
-            ->get()
-            ->map(function (Course $course) {
-                return [
-                    'course_id' => $course->getKey(),
-                    'course_code' => $course->code,
-                    'course_name' => $course->name,
-                    'assignments' => $course->assignments->map(function ($assignment) {
-                        $submission = $assignment->submissions->first();
+            ->orderBy('courses.id')
+            ->paginate(10);
 
-                        return [
-                            'assignment_id' => $assignment->getKey(),
-                            'assignment_title' => $assignment->title,
-                            'max_score' => $assignment->max_score,
-                            'due_at' => $assignment->due_at,
-                            'submitted_at' => $submission?->submitted_at,
-                            'score' => $submission?->grade?->score,
-                            'feedback' => $submission?->grade?->feedback,
-                            'graded_at' => $submission?->grade?->graded_at,
-                        ];
-                    })->values(),
-                ];
-            });
+        $courses->through(function (Course $course) {
+            return [
+                'course_id' => $course->getKey(),
+                'course_code' => $course->code,
+                'course_name' => $course->name,
+                'assignments' => $course->assignments->map(function ($assignment) {
+                    $submission = $assignment->submissions->first();
 
-        return response()->json(['data' => $courses->values()]);
+                    return [
+                        'assignment_id' => $assignment->getKey(),
+                        'assignment_title' => $assignment->title,
+                        'max_score' => $assignment->max_score,
+                        'due_at' => $assignment->due_at,
+                        'submitted_at' => $submission?->submitted_at,
+                        'score' => $submission?->grade?->score,
+                        'feedback' => $submission?->grade?->feedback,
+                        'graded_at' => $submission?->grade?->graded_at,
+                    ];
+                })->values(),
+            ];
+        });
+
+        return response()->json([
+            'data' => $courses->items(),
+            'meta' => [
+                'current_page' => $courses->currentPage(),
+                'last_page' => $courses->lastPage(),
+                'per_page' => $courses->perPage(),
+                'total' => $courses->total(),
+            ],
+        ]);
     }
 }

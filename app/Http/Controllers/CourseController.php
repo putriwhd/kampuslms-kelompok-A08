@@ -7,8 +7,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
+use App\Models\EnrollmentRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -77,7 +79,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil ditambahkan.');
     }
 
@@ -86,24 +88,70 @@ class CourseController extends Controller
         Gate::authorize('view', $course);
 
         $role = $this->selectedRole($request);
-
-        $canManageStudents = in_array($role, ['admin', 'dosen'], true);
-        $students = $canManageStudents
-            ? User::query()->where('role', 'mahasiswa')->orderBy('name')->get()
+        $canViewStudentDetails = in_array($role, ['admin', 'dosen'], true);
+        $students = $course->students()
+            ->orderBy('users.name')
+            ->paginate(25, ['users.*'], 'students_page')
+            ->withQueryString();
+        $studentIds = $course->students()->pluck('users.id')->all();
+        $availableStudents = in_array($role, ['admin', 'dosen'], true)
+            ? User::query()
+                ->where('role', 'mahasiswa')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'nim_nip'])
             : collect();
-        $enrolledStudentIds = $canManageStudents
-            ? $course->students()->pluck('users.id')->all()
-            : [];
+        $lecturers = $role === 'admin'
+            ? User::query()->where('role', 'dosen')->orderBy('name')->get()
+            : collect();
+
+        $pendingRequests = ($role === 'dosen' && $course->lecturer_id === $request->user()->id)
+            ? $course->enrollmentRequests()
+                ->with('student')
+                ->where('status', 'pending')
+                ->latest()
+                ->paginate(15, ['*'], 'pending_page')
+                ->withQueryString()
+            : collect();
 
         return view(
             'courses.show',
-            compact('course', 'role', 'students', 'enrolledStudentIds')
+            compact(
+                'course',
+                'role',
+                'students',
+                'studentIds',
+                'availableStudents',
+                'lecturers',
+                'pendingRequests',
+                'canViewStudentDetails'
+            )
         );
+    }
+
+    public function updateLecturer(Request $request, Course $course)
+    {
+        Gate::authorize('manage', $course);
+
+        $validated = $request->validate([
+            'lecturer_id' => [
+                'required',
+                'integer',
+                Rule::exists('users', 'id')->where(
+                    fn ($query) => $query->where('role', 'dosen')
+                ),
+            ],
+        ]);
+
+        $course->update(['lecturer_id' => $validated['lecturer_id']]);
+
+        return redirect()
+            ->route('admin.courses.show', ['course' => $course, 'as' => 'admin'])
+            ->with('success', 'Dosen pengampu berhasil diperbarui.');
     }
 
     public function updateStudents(Request $request, Course $course)
     {
-        Gate::authorize('manageStudents', $course);
+        Gate::authorize('manageEnrollment', $course);
 
         $validated = $request->validate([
             'student_ids' => ['sometimes', 'array'],
@@ -117,27 +165,67 @@ class CourseController extends Controller
             ],
         ]);
 
-        $studentIds = $validated['student_ids'] ?? [];
-        $role = $request->user()->role;
-        $syncData = collect($studentIds)
-            ->mapWithKeys(fn (int $studentId) => [
-                $studentId => ['enrolled_at' => now()],
-            ])
-            ->all();
+        $studentIds = array_map('intval', $validated['student_ids'] ?? []);
+        $currentStudents = $course->students()->get();
+        $currentStudentIds = $currentStudents->modelKeys();
+        $newStudentIds = array_values(array_diff($studentIds, $currentStudentIds));
 
-        $currentlyEnrolledIds = $course->students()->pluck('users.id')->all();
-        $course->students()->syncWithoutDetaching($syncData);
-        $course->students()->detach(
-            array_diff($currentlyEnrolledIds, $studentIds)
+        if (count($studentIds) > EnrollmentController::MAX_CAPACITY) {
+            return back()
+                ->withErrors([
+                    'student_ids' => 'Kelas tidak dapat memiliki lebih dari '.EnrollmentController::MAX_CAPACITY.' mahasiswa.',
+                ])
+                ->withInput();
+        }
+
+        foreach ($newStudentIds as $studentId) {
+            $student = User::findOrFail($studentId);
+            $currentSks = $student->courses()
+                ->where('courses.status', 'active')
+                ->sum('courses.sks');
+
+            if (
+                $course->status === 'active'
+                && $currentSks + $course->sks > EnrollmentController::MAX_SKS
+            ) {
+                return back()
+                    ->withErrors([
+                        'student_ids' => "{$student->name} akan melebihi batas maksimal ".EnrollmentController::MAX_SKS.' SKS.',
+                    ])
+                    ->withInput();
+            }
+        }
+
+        $existingEnrolledAt = $currentStudents->mapWithKeys(
+            fn (User $student) => [$student->getKey() => $student->pivot->enrolled_at]
         );
+        $studentPivotData = collect($studentIds)->mapWithKeys(fn (int $studentId) => [
+            $studentId => [
+                'enrolled_at' => $existingEnrolledAt->get($studentId) ?? now(),
+            ],
+        ])->all();
+
+        DB::transaction(function () use ($course, $studentPivotData, $newStudentIds): void {
+            $course->students()->sync($studentPivotData);
+
+            foreach ($newStudentIds as $studentId) {
+                EnrollmentRequest::updateOrCreate(
+                    [
+                        'course_id' => $course->getKey(),
+                        'user_id' => $studentId,
+                    ],
+                    ['status' => 'approved']
+                );
+            }
+        });
         DashboardController::invalidateCache();
 
         return redirect()
-            ->route($role . '.courses.show', [
+            ->route($request->user()->role.'.courses.show', [
                 'course' => $course,
-                'as' => $role,
+                'as' => $request->user()->role,
             ])
-            ->with('success', 'Pendaftaran mahasiswa pada mata kuliah berhasil diperbarui.');
+            ->with('success', 'Daftar mahasiswa kelas berhasil diperbarui.');
     }
 
     public function edit(Request $request, Course $course)
@@ -161,7 +249,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil diperbarui.');
     }
 
@@ -191,7 +279,7 @@ class CourseController extends Controller
         $role = $this->selectedRole($request);
 
         return redirect()
-            ->route($role . '.courses.index', ['as' => $role])
+            ->route($role.'.courses.index', ['as' => $role])
             ->with('success', 'Mata kuliah berhasil dihapus.');
     }
 

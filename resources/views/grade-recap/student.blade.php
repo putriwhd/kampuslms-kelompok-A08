@@ -26,7 +26,7 @@
             </div>
             <div>
                 <span class="grade-student-summary-label">Mata Kuliah Diikuti</span>
-                <strong class="grade-student-summary-value">{{ count($courses) }}</strong>
+                <strong class="grade-student-summary-value">{{ $courses->total() }}</strong>
                 <span class="grade-student-summary-description">
                     Mata kuliah dalam rekap nilai Anda
                 </span>
@@ -144,5 +144,11 @@
                 <p>Anda belum terdaftar pada mata kuliah aktif.</p>
             </div>
         @endforelse
+
+        @if ($courses->hasPages())
+            <nav aria-label="Navigasi halaman rekap mata kuliah">
+                {{ $courses->links() }}
+            </nav>
+        @endif
     </section>
 </x-layout>
