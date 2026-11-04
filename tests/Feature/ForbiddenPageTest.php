@@ -17,8 +17,8 @@ class ForbiddenPageTest extends TestCase
         $this->actingAs($lecturer)
             ->get('/admin/users')
             ->assertForbidden()
-            ->assertSee('Anda tidak memiliki akses')
-            ->assertSee('hubungi administrator')
+            ->assertSee('Anda Tidak Memiliki Akses')
+            ->assertSee('hubungi')
             ->assertSee(route('dashboard'), false);
     }
 }

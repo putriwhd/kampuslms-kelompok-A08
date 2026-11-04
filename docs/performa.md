@@ -14,6 +14,34 @@ Angka pada tabel berikut dibaca langsung dari pasangan screenshot berakhiran `1`
 | Rekap nilai dosen | 51 query / 411 ms | 10 query / 176 ms | -41 query; -235 ms (-57,18%) | Eager loading bertingkat menggantikan pola N+1 dan membatasi hasil dengan pagination 10. Halaman memenuhi target kurang dari 15 query. |
 | Rekap pengumpulan tugas dosen | 21 query / 192 ms | 18 query / 162 ms | -3 query; -30 ms (-15,63%) | Submission dan grade pada mahasiswa dimuat lebih terarah, serta daftar siswa menggunakan pagination 15. Query relasi berkurang tiga pada screenshot. |
 
+### Cakupan Pengukuran Halaman Utama
+
+Tabel di atas memuat seluruh pasangan screenshot yang saat ini memiliki angka. Matriks berikut mencatat halaman utama lain agar cakupannya terlihat; tanda "Belum diukur" berarti belum ada angka sebelum/sesudah yang dapat dibandingkan pada dataset dan kondisi yang sama. Jangan mengganti nilai tersebut dengan estimasi.
+
+| Halaman utama | Sebelum: query/waktu | Sesudah: query/waktu | Bukti/status |
+|---|---:|---:|---|
+| Dashboard admin | Belum diukur | Belum diukur | Perlu benchmark terpisah untuk role admin. |
+| Dashboard dosen | Belum diukur | Belum diukur | Perlu benchmark terpisah untuk role dosen. |
+| Dashboard mahasiswa | Belum diukur | Belum diukur | Perlu benchmark terpisah untuk role mahasiswa. |
+| Daftar mata kuliah | 9 query / 125 ms | 8 query / 95,13 ms | Angka screenshot tersedia; role dan ukuran dataset perlu dicatat saat pengukuran ulang. |
+| Detail mata kuliah | 10 query / 136 ms | 11 query / 195 ms | Angka screenshot tersedia; hasil tunggal sesudah lebih tinggi dan perlu diulang. |
+| Form tambah/edit mata kuliah | Belum diukur | Belum diukur | Termasuk alur daftar pilihan dosen. |
+| Pengelolaan pendaftaran mahasiswa pada detail mata kuliah | Belum diukur | Belum diukur | Termasuk pencarian dan pagination mahasiswa. |
+| Daftar materi | Belum diukur | Belum diukur | Belum ada pasangan hasil pada tabel bukti saat ini. |
+| Detail materi | 8 query / 116 ms | 8 query / 122 ms | Angka screenshot tersedia. |
+| Daftar tugas | Belum diukur | Belum diukur | Belum ada pasangan hasil pada tabel bukti saat ini. |
+| Detail tugas | Belum diukur | Belum diukur | Pisahkan pengukuran halaman detail dari daftar pengumpulan. |
+| Rekap pengumpulan tugas dosen | 21 query / 192 ms | 18 query / 162 ms | Angka screenshot tersedia. |
+| Rekap nilai dosen (halaman) | 51 query / 411 ms | 10 query / 176 ms | Angka screenshot tersedia; test query budget juga memverifikasi `< 15`. |
+| Rekap nilai mahasiswa (halaman) | Belum diukur | Belum diukur | Query budget teruji `< 15`, tetapi pasangan waktu/query sebelum-sesudah belum dicatat. |
+| API rekap nilai dosen | Belum diukur | Belum diukur | Query budget teruji `< 15`; belum ada baseline screenshot/benchmark sebelum-sesudah. |
+| API rekap nilai mahasiswa | Belum diukur | Belum diukur | Query budget teruji `< 15`; belum ada baseline screenshot/benchmark sebelum-sesudah. |
+| Daftar pengguna admin | Belum diukur | Belum diukur | Belum ada pasangan hasil pada tabel bukti saat ini. |
+| Katalog/enrollment mata kuliah | Belum diukur | Belum diukur | Belum ada pasangan hasil pada tabel bukti saat ini. |
+| Daftar notifikasi | Belum diukur | Belum diukur | Belum ada pasangan hasil pada tabel bukti saat ini. |
+
+Untuk melengkapi angka yang belum tersedia, ukur halaman sebelum dan sesudah pada database dengan isi identik, catat role, jumlah baris relevan, jumlah query, serta waktu respons. Gunakan sedikitnya lima pengukuran untuk waktu respons dan laporkan rata-ratanya; jangan membandingkan request pertama yang mengisi cache dengan request yang memakai cache.
+
 ## Bukti Screenshot dari Folder `Hasil Optimasi`
 
 Aturan pembacaan bukti:
@@ -440,3 +468,18 @@ rg -n "env\\(" app routes resources database
 10. Ulangi hasil `EXPLAIN`, screenshot terminal, dan masukkan angka aktual ke tabel ini.
 
 Jangan mengisi angka hasil bukan pengukuran yang sama dengan angka hipotetis atau hasil dari dataset berbeda.
+
+## 10. Verifikasi Automated Test Suite & Scaling Proof
+
+Untuk memastikan optimasi N+1 dan pencegahan Lazy Loading terbukti secara empiris di seluruh aplikasi (bukan sekadar asumsi manual), telah ditambahkan dan dijalankan automated feature test suite berikut:
+
+### A. Pembuktian Lazy Loading Guard (`LazyLoadingGuardCoverageTest.php`)
+- **Tujuan:** Memastikan seluruh route utama aplikasi bebas dari *Lazy Loading Violation Exception* saat dipanggil oleh pengguna dengan peran yang sesuai.
+- **Mekanisme:** 
+  1. Mengaktifkan `Model::preventLazyLoading(true)` pada metode `setUp()`.
+  2. Menyiapkan fixture data relasi komprehensif (User, Course, Material, Assignment, Submission, Notification).
+  3. Menguji respons HTTP GET pada route utama untuk Admin, Dosen, dan Mahasiswa.
+- **Hasil Pengujian:**
+  ```powershell
+  php artisan test --filter=LazyLoadingGuardCoverageTest
+  # PASS: 1 passed (29 assertions)

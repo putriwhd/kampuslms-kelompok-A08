@@ -126,6 +126,22 @@
             <section class="content-card" style="margin-bottom: 24px;">
                 <h2>Dosen Pengampu</h2>
                 <p>Pilih dosen yang bertanggung jawab atas kelas ini.</p>
+                <form action="{{ route('admin.courses.show', ['course' => $course, 'as' => 'admin']) }}" method="GET">
+                    <input type="hidden" name="as" value="admin">
+                    <label for="lecturer-search" class="form-label">Cari dosen</label>
+                    <div class="form-actions">
+                        <input
+                            id="lecturer-search"
+                            name="lecturer_search"
+                            type="search"
+                            class="form-input"
+                            value="{{ request('lecturer_search') }}"
+                            placeholder="Cari nama atau email dosen"
+                        >
+                        <button type="submit" class="secondary-btn">Cari</button>
+                    </div>
+                    {{ $lecturers->links('vendor.pagination.kampuslms') }}
+                </form>
                 <form action="{{ route('admin.courses.lecturer.update', ['course' => $course, 'as' => 'admin']) }}"
                       method="POST" class="course-create-form">
                     @csrf
@@ -152,20 +168,29 @@
             <section class="content-card" style="margin-bottom: 24px;">
                 <h2>Pendaftaran Mahasiswa</h2>
                 <p>Pilih mahasiswa yang akan terdaftar. Hilangkan pilihan untuk mengeluarkan mahasiswa dari kelas.</p>
+                <form action="{{ route($role.'.courses.show', ['course' => $course, 'as' => $role]) }}"
+                      method="GET" class="course-create-form">
+                    <input type="hidden" name="as" value="{{ $role }}">
+                    <div class="form-group">
+                        <label for="student-search" class="form-label">Cari mahasiswa</label>
+                        <input
+                            id="student-search"
+                            name="student_search"
+                            type="search"
+                            class="form-input"
+                            value="{{ request('student_search') }}"
+                            placeholder="Cari nama, NIM, atau email..."
+                            autocomplete="off"
+                            aria-controls="student-checkbox-list"
+                        >
+                        <button type="submit" class="secondary-btn">Cari</button>
+                    </div>
+                </form>
                 <form action="{{ route($role.'.courses.students.update', ['course' => $course, 'as' => $role]) }}"
                       method="POST" class="course-create-form">
                     @csrf
                     @method('PUT')
                     <div class="form-group">
-                        <label for="student-search" class="form-label">Cari mahasiswa</label>
-                        <input
-                            id="student-search"
-                            type="search"
-                            class="form-input"
-                            placeholder="Cari nama, NIM, atau email..."
-                            autocomplete="off"
-                            aria-controls="student-checkbox-list"
-                        >
                         <span id="student-search-empty" class="form-help" role="status" hidden>
                             Tidak ada mahasiswa yang cocok dengan pencarian.
                         </span>
@@ -174,6 +199,29 @@
                             class="student-checkbox-list"
                             style="max-height: 300px; overflow-y: auto; margin-top: 12px; padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px;"
                         >
+                            @foreach ($selectedStudents as $studentOption)
+                                <label
+                                    class="student-checkbox-option"
+                                    data-search="{{ \Illuminate\Support\Str::lower($studentOption->name.' '.$studentOption->email.' '.$studentOption->nim_nip) }}"
+                                    for="student-{{ $studentOption->id }}"
+                                    style="display: flex; align-items: flex-start; gap: 10px; padding: 10px 4px; border-bottom: 1px solid #e2e8f0; cursor: pointer;"
+                                >
+                                    <input
+                                        id="student-{{ $studentOption->id }}"
+                                        type="checkbox"
+                                        name="student_ids[]"
+                                        value="{{ $studentOption->id }}"
+                                        checked
+                                    >
+                                    <span>
+                                        <strong style="display: block;">{{ $studentOption->name }}</strong>
+                                        <small style="display: block; color: #64748b;">
+                                            Email: {{ $studentOption->email }} · NIM: {{ $studentOption->nim_nip ?: '-' }}
+                                        </small>
+                                    </span>
+                                </label>
+                            @endforeach
+
                             @foreach ($availableStudents as $studentOption)
                                 <label
                                     class="student-checkbox-option"
@@ -186,22 +234,6 @@
                                         type="checkbox"
                                         name="student_ids[]"
                                         value="{{ $studentOption->id }}"
-                                        @checked(
-                                            in_array(
-                                                (int) $studentOption->id,
-                                                array_map(
-                                                    'intval',
-                                                    old(
-                                                        'student_ids',
-                                                        $availableStudents
-                                                            ->where('is_enrolled', 1)
-                                                            ->pluck('id')
-                                                            ->all()
-                                                    )
-                                                ),
-                                                true
-                                            )
-                                        )
                                     >
                                     <span>
                                         <strong style="display: block;">{{ $studentOption->name }}</strong>
@@ -212,13 +244,14 @@
                                 </label>
                             @endforeach
                         </div>
+                        {{ $availableStudents->links('vendor.pagination.kampuslms') }}
                         @error('student_ids')
                             <small class="course-field-error">{{ $message }}</small>
                         @enderror
                         @error('student_ids.*')
                             <small class="course-field-error">{{ $message }}</small>
                         @enderror
-                        <small class="form-help">Centang seluruh mahasiswa yang harus tetap terdaftar. Mahasiswa yang tidak dicentang akan dikeluarkan.</small>
+                        <small class="form-help">Mahasiswa terdaftar selalu ditampilkan di atas dan dicentang. Pilih mahasiswa tambahan dari hasil pencarian/halaman; mahasiswa terdaftar yang tidak dicentang akan dikeluarkan.</small>
                     </div>
                     <button type="submit" class="primary-btn">Simpan Pendaftaran Mahasiswa</button>
                 </form>

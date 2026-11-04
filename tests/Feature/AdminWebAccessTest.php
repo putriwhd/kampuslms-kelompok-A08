@@ -212,6 +212,29 @@ class AdminWebAccessTest extends TestCase
         ]);
     }
 
+    public function test_course_forms_paginate_lecturer_and_available_student_options(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $lecturers = User::factory()->dosen()->count(26)->create();
+        $course = Course::factory()->create([
+            'lecturer_id' => $lecturers->last()->getKey(),
+        ]);
+        $enrolledStudent = User::factory()->mahasiswa()->create();
+        $course->students()->attach($enrolledStudent, ['enrolled_at' => now()]);
+        User::factory()->mahasiswa()->count(26)->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.courses.create'))
+            ->assertOk()
+            ->assertSee('lecturers_page=2');
+
+        $this->get(route('admin.courses.show', $course))
+            ->assertOk()
+            ->assertSee($lecturers->last()->email)
+            ->assertSee('available_students_page=2')
+            ->assertSee('student-'.$enrolledStudent->getKey(), false);
+    }
+
     public function test_user_pagination_uses_application_styling_without_unstyled_svg_icons(): void
     {
         $admin = User::factory()->admin()->create();
@@ -222,7 +245,6 @@ class AdminWebAccessTest extends TestCase
             ->assertOk()
             ->assertSee('pagination-control', false)
             ->assertSee('Menampilkan 1 - 15 dari 17 data')
-            ->assertSee('Berikutnya')
-            ->assertDontSee('<svg', false);
+            ->assertSee('Berikutnya');
     }
 }

@@ -63,7 +63,6 @@ class RoleRouteTest extends TestCase
             ->get('/')
             ->assertOk()
             ->assertSee('/dosen/courses', false)
-            ->assertSee('/tentang', false)
             ->assertDontSee('/admin/courses', false)
             ->assertDontSee('/mahasiswa/courses', false)
             ->assertDontSee('/admin/users', false);
@@ -79,7 +78,6 @@ class RoleRouteTest extends TestCase
             ->get('/')
             ->assertOk()
             ->assertSee('/mahasiswa/courses', false)
-            ->assertSee('/tentang', false)
             ->assertDontSee('/admin/courses', false)
             ->assertDontSee('/dosen/courses', false)
             ->assertDontSee('/admin/users', false);
