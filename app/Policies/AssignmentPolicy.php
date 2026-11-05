@@ -47,7 +47,7 @@ class AssignmentPolicy
         }
 
         if ($user->role === 'dosen') {
-            return $user->taughtCourses()->whereKey($course->getKey())->exists();
+            return $course->lecturer_id === $user->getKey();
         }
 
         if ($user->role === 'mahasiswa') {
@@ -76,7 +76,7 @@ class AssignmentPolicy
 
         if ($user->role === 'dosen') {
             return $course !== null
-                && $user->taughtCourses()->whereKey($course->getKey())->exists();
+                && $course->lecturer_id === $user->getKey();
         }
 
         return false;
@@ -93,9 +93,7 @@ class AssignmentPolicy
         }
 
         if ($user->role === 'dosen') {
-            return $user->taughtCourses()
-                ->whereHas('assignments', fn ($query) => $query->whereKey($assignment->getKey()))
-                ->exists();
+            return $assignment->course?->lecturer_id === $user->getKey();
         }
 
         return false;
@@ -112,9 +110,7 @@ class AssignmentPolicy
         }
 
         if ($user->role === 'dosen') {
-            return $user->taughtCourses()
-                ->whereHas('assignments', fn ($query) => $query->whereKey($assignment->getKey()))
-                ->exists();
+            return $assignment->course?->lecturer_id === $user->getKey();
         }
 
         return false;
@@ -131,9 +127,7 @@ class AssignmentPolicy
         }
 
         if ($user->role === 'dosen') {
-            return $user->taughtCourses()
-                ->whereHas('assignments', fn ($query) => $query->whereKey($assignment->getKey()))
-                ->exists();
+            return $assignment->course?->lecturer_id === $user->getKey();
         }
 
         return false;
