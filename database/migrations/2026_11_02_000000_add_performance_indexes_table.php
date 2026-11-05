@@ -26,6 +26,11 @@ return new class extends Migration
         Schema::table('submissions', function (Blueprint $table) {
             // Mempercepat pengambilan submission milik user dan pengurutan submitted_at.
             $table->index(['user_id', 'submitted_at'], 'submissions_user_submitted_at_index');
+            // Mempercepat rekap pengumpulan dan filter tugas yang terlambat.
+            $table->index(
+                ['assignment_id', 'is_late', 'submitted_at'],
+                'submissions_assignment_late_submitted_at_index'
+            );
         });
 
         Schema::table('grades', function (Blueprint $table) {
@@ -50,6 +55,7 @@ return new class extends Migration
         });
 
         Schema::table('submissions', function (Blueprint $table) {
+            $table->dropIndex('submissions_assignment_late_submitted_at_index');
             $table->dropIndex('submissions_user_submitted_at_index');
         });
 

@@ -34,6 +34,7 @@ class CourseController extends Controller
         };
 
         $courses = $query
+            ->with('lecturer')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
