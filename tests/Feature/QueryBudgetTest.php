@@ -91,6 +91,66 @@ class QueryBudgetTest extends TestCase
         });
     }
 
+    public function test_assignment_detail_uses_fewer_than_fifteen_queries(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $assignment = Assignment::factory()->for($course)->create([
+            'created_by' => $lecturer->getKey(),
+            'status' => 'published',
+        ]);
+        $students = User::factory()->mahasiswa()->count(25)->create();
+        $course->students()->attach(
+            $students->pluck('id')->mapWithKeys(
+                fn (int $studentId) => [$studentId => ['enrolled_at' => now()]]
+            )->all()
+        );
+        foreach ($students as $student) {
+            Submission::factory()->for($assignment)->create([
+                'user_id' => $student->getKey(),
+            ]);
+        }
+
+        $this->assertUnderQueryBudget(function () use ($lecturer, $course, $assignment): void {
+            $this->actingAs($lecturer)
+                ->get(route('dosen.courses.assignments.scoped-show', [
+                    'course' => $course,
+                    'assignment' => $assignment,
+                ]))
+                ->assertOk();
+        });
+    }
+
+    public function test_assignment_submission_recap_uses_fewer_than_fifteen_queries(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $assignment = Assignment::factory()->for($course)->create([
+            'created_by' => $lecturer->getKey(),
+            'status' => 'published',
+        ]);
+        $students = User::factory()->mahasiswa()->count(25)->create();
+        $course->students()->attach(
+            $students->pluck('id')->mapWithKeys(
+                fn (int $studentId) => [$studentId => ['enrolled_at' => now()]]
+            )->all()
+        );
+        foreach ($students as $student) {
+            Submission::factory()->for($assignment)->create([
+                'user_id' => $student->getKey(),
+            ]);
+        }
+
+        $this->assertUnderQueryBudget(function () use ($lecturer, $course, $assignment): void {
+            $this->actingAs($lecturer)
+                ->get(route('dosen.courses.assignments.submissions.index', [
+                    'course' => $course,
+                    'assignment' => $assignment,
+                ]))
+                ->assertOk();
+        });
+    }
+
     /**
      * @return array{User, User}
      */

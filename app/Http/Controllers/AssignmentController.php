@@ -13,6 +13,7 @@ use App\Models\Course;
 use App\Models\Grade;
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -83,7 +84,9 @@ class AssignmentController extends Controller
 
     public function show(Request $request, Assignment $assignment)
     {
-        $assignment->load('course');
+        $assignment->load([
+            'course',
+        ]);
 
         return $this->showAssignment($request, $assignment);
     }
@@ -191,7 +194,9 @@ class AssignmentController extends Controller
 
         Gate::authorize('view', $assignment);
 
-        $assignment->load('course');
+        $assignment->load([
+            'course',
+        ]);
 
         return $this->showAssignment($request, $assignment);
     }
@@ -271,9 +276,16 @@ class AssignmentController extends Controller
                 ->with([
                     'submissions' => fn ($query) => $query
                         ->where('assignment_id', $assignment->getKey())
-                        ->with(['student', 'grade.grader']),
+                        ->with('grade'),
                 ])
                 ->orderBy('users.name')
+                ->select([
+                    'users.*',
+                    DB::raw(
+                        '(SELECT COUNT(*) FROM submissions WHERE submissions.assignment_id = '
+                        .$assignment->getKey().') AS assignment_submitted_count'
+                    ),
+                ])
                 ->paginate(15, ['users.*'], 'submission_recap_page')
                 ->withQueryString()
                 ->through(function ($student) use ($assignment) {
@@ -284,6 +296,7 @@ class AssignmentController extends Controller
                         'student_id' => $student->getKey(),
                         'student_name' => $student->name,
                         'student_nim_nip' => $student->nim_nip,
+                        'submitted_total' => (int) ($student->assignment_submitted_count ?? 0),
                         'submission_status' => $submission ? 'submitted' : 'not_submitted',
                         'submitted_at' => $submission?->submitted_at,
                         'is_late' => (bool) ($submission?->is_late ?? false),
@@ -303,7 +316,9 @@ class AssignmentController extends Controller
                 ->filter()
                 ->values();
             $submissionTotal = $submissionRecap->total();
-            $submittedTotal = $assignment->submissions()->count();
+            $submittedTotal = (int) (
+                $submissionRecap->getCollection()->first()['submitted_total'] ?? 0
+            );
         } elseif ($role === 'mahasiswa') {
             $ownSubmission = $assignment->submissions()
                 ->where('user_id', $user->getKey())
@@ -331,15 +346,28 @@ class AssignmentController extends Controller
         Assignment $assignment
     ) {
         abort_unless($assignment->course_id === $course->getKey(), 404);
+        $assignment->setRelation('course', $course);
         Gate::authorize('viewSubmissions', $assignment);
 
         $role = $request->user()->role;
+        $assignment->load([
+            'course',
+        ]);
         $submissionRecap = $assignment->course
             ->students()
             ->with([
                 'submissions' => fn ($query) => $query
                     ->where('assignment_id', $assignment->getKey())
-                    ->with(['student', 'grade.grader']),
+                    ->select([
+                        'id',
+                        'assignment_id',
+                        'user_id',
+                        'file_path',
+                        'original_name',
+                        'file_size',
+                        'submitted_at',
+                        'is_late',
+                    ]),
             ])
             ->orderBy('users.name')
             ->paginate(15, ['users.*'], 'submission_recap_page')
@@ -371,8 +399,13 @@ class AssignmentController extends Controller
             ->filter()
             ->values();
         $totalStudents = $submissionRecap->total();
-        $totalSubmitted = $assignment->submissions()->count();
-        $totalLate = $assignment->submissions()->where('is_late', true)->count();
+        $submissionTotals = DB::table('submissions')
+            ->where('assignment_id', $assignment->getKey())
+            ->selectRaw('COUNT(*) AS total_submitted')
+            ->selectRaw('SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) AS total_late')
+            ->first();
+        $totalSubmitted = (int) ($submissionTotals->total_submitted ?? 0);
+        $totalLate = (int) ($submissionTotals->total_late ?? 0);
 
         return view(
             'assignments.submissions',
