@@ -79,6 +79,25 @@
                         Dosen Pengampu
                     </label>
 
+                    <form
+                        action="{{ route($role . '.courses.edit', ['course' => $course, 'as' => $role]) }}"
+                        method="GET"
+                    >
+                        <label for="lecturer-search" class="form-label">Cari dosen</label>
+                        <div class="form-actions">
+                            <input
+                                id="lecturer-search"
+                                name="lecturer_search"
+                                type="search"
+                                class="form-input"
+                                value="{{ request('lecturer_search') }}"
+                                placeholder="Cari nama atau email dosen"
+                            >
+                            <button type="submit" class="secondary-btn">Cari</button>
+                        </div>
+                        {{ $lecturers->links('vendor.pagination.kampuslms') }}
+                    </form>
+
                     <select
                         id="lecturer_id"
                         name="lecturer_id"

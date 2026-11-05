@@ -26,6 +26,22 @@
             </div>
         @endif
 
+        <form action="{{ route($role . '.courses.create', ['as' => $role]) }}" method="GET">
+            <label for="lecturer-search" class="form-label">Cari dosen pengampu</label>
+            <div class="form-actions">
+                <input
+                    id="lecturer-search"
+                    name="lecturer_search"
+                    type="search"
+                    class="form-input"
+                    value="{{ request('lecturer_search') }}"
+                    placeholder="Cari nama atau email dosen"
+                >
+                <button type="submit" class="secondary-btn">Cari</button>
+            </div>
+            {{ $lecturers->links('vendor.pagination.kampuslms') }}
+        </form>
+
         <form
             action="{{ route($role . '.courses.store', ['as' => $role]) }}"
             method="POST"
