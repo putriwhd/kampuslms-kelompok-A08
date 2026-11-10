@@ -7,9 +7,11 @@ use App\Events\EnrollmentRequested;
 use App\Models\Course;
 use App\Models\EnrollmentRequest;
 use App\Models\User;
+use App\Notifications\EnrollmentRejectedNotification;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class SelfEnrollmentTest extends TestCase
@@ -69,6 +71,37 @@ class SelfEnrollmentTest extends TestCase
             ->assertSee('0 / 24 SKS');
     }
 
+    public function test_authenticated_user_can_get_only_public_student_fields_for_a_course(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create([
+            'name' => 'Mahasiswa Terdaftar',
+            'nim_nip' => '20260001',
+            'email' => 'privat@example.test',
+        ]);
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+
+        $this->actingAs($lecturer)
+            ->getJson(route('courses.students.index', $course))
+            ->assertOk()
+            ->assertExactJson([
+                [
+                    'name' => 'Mahasiswa Terdaftar',
+                    'nim_nip' => '20260001',
+                ],
+            ])
+            ->assertDontSee('privat@example.test');
+    }
+
+    public function test_guest_cannot_get_course_students(): void
+    {
+        $course = Course::factory()->create();
+
+        $this->get(route('courses.students.index', $course))
+            ->assertRedirect(route('login'));
+    }
+
     public function test_student_can_request_enrollment_and_event_is_dispatched(): void
     {
         Event::fake([EnrollmentRequested::class]);
@@ -100,7 +133,7 @@ class SelfEnrollmentTest extends TestCase
             ->assertSessionHas('error');
     }
 
-    public function test_student_cannot_request_self_enrollment_into_a_prepopulated_course(): void
+    public function test_student_can_request_self_enrollment_into_a_prepopulated_course(): void
     {
         $lecturer = User::factory()->dosen()->create();
         $student = User::factory()->mahasiswa()->create();
@@ -114,12 +147,72 @@ class SelfEnrollmentTest extends TestCase
         $this->actingAs($student)
             ->post(route('mahasiswa.courses.enroll', $course))
             ->assertRedirect()
-            ->assertSessionHas('error', 'Pendaftaran mandiri hanya tersedia untuk kelas yang belum memiliki mahasiswa terdaftar. Hubungi admin atau dosen untuk pendaftaran langsung.');
+            ->assertSessionHas('success');
 
-        $this->assertDatabaseMissing('enrollment_requests', [
+        $this->assertDatabaseHas('enrollment_requests', [
             'course_id' => $course->id,
             'user_id' => $student->id,
+            'status' => 'pending',
         ]);
+    }
+
+    public function test_student_can_reapply_after_rejection_and_old_reason_is_cleared(): void
+    {
+        Event::fake([EnrollmentRequested::class]);
+
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create([
+            'status' => 'active',
+            'sks' => 3,
+        ]);
+        $enrollmentRequest = EnrollmentRequest::create([
+            'course_id' => $course->id,
+            'user_id' => $student->id,
+            'status' => 'rejected',
+            'rejection_reason' => 'Perlu melengkapi prasyarat.',
+        ]);
+
+        $this->actingAs($student)
+            ->post(route('mahasiswa.courses.enroll', $course))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('enrollment_requests', [
+            'id' => $enrollmentRequest->id,
+            'status' => 'pending',
+            'rejection_reason' => null,
+        ]);
+        Event::assertDispatched(EnrollmentRequested::class);
+    }
+
+    public function test_lecturer_can_reject_pending_request_with_reason_and_notify_student(): void
+    {
+        Notification::fake();
+
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create();
+        $enrollmentRequest = EnrollmentRequest::create([
+            'course_id' => $course->id,
+            'user_id' => $student->id,
+            'status' => 'pending',
+        ]);
+
+        $this->actingAs($lecturer)
+            ->post(route('dosen.enrollment-requests.reject', $enrollmentRequest), [
+                'rejection_reason' => 'Mohon lengkapi prasyarat terlebih dahulu.',
+            ])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('enrollment_requests', [
+            'id' => $enrollmentRequest->id,
+            'status' => 'rejected',
+            'rejection_reason' => 'Mohon lengkapi prasyarat terlebih dahulu.',
+        ]);
+
+        Notification::assertSentTo($student, EnrollmentRejectedNotification::class);
     }
 
     public function test_student_cannot_enroll_if_exceeding_max_24_sks(): void

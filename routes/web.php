@@ -22,6 +22,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 Route::view('/tentang', 'tentang')->name('tentang');
 
+Route::get('/courses/{course}/students', [EnrollmentController::class, 'students'])
+    ->middleware('auth')
+    ->name('courses.students.index');
+
 Route::get('/login', [WebAuthController::class, 'create'])->name('login');
 Route::post('/login', [WebAuthController::class, 'store'])->name('login.store');
 Route::middleware('guest')->group(function () {

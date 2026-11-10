@@ -13,10 +13,10 @@ class GradeRecapPageController extends Controller
         $courses = $request->user()
             ->taughtCourses()
             ->with([
-                'students',
-                'assignments.submissions.student',
-                'assignments.submissions.grade',
-            ])
+              'students',
+              'assignments.submissions.student',
+              'assignments.submissions.grade',
+          ])
             ->orderBy('courses.id')
             ->paginate(10)
             ->through(function (Course $course): array {
