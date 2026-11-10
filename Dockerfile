@@ -1,4 +1,3 @@
-
 # ==========================================
 # TAHAP 1: BUILD FRONTEND VITE
 # ==========================================
@@ -43,8 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Konfigurasi Apache
-RUN a2enmod rewrite \
+# 2. Konfigurasi Apache & Perbaikan MPM Error (AH00534)
+RUN a2dismod mpm_event mpm_worker || true \
+    && a2enmod mpm_prefork rewrite \
     && sed -ri \
     's/AllowOverride None/AllowOverride All/g' \
     /etc/apache2/apache2.conf
