@@ -27,8 +27,11 @@ class MaterialPolicy
             return true;
         }
 
-        // Pastikan relasi course selalu terambil
-        $course = $material->course ?? Course::find($material->course_id);
+        // Ambil data course tanpa memicu LazyLoadingViolationException
+        $course = $material->relationLoaded('course') 
+            ? $material->course 
+            : Course::find($material->course_id);
+
         if (! $course) {
             return false;
         }
@@ -71,7 +74,10 @@ class MaterialPolicy
             return true;
         }
 
-        $course = $material->course ?? Course::find($material->course_id);
+        $course = $material->relationLoaded('course') 
+            ? $material->course 
+            : Course::find($material->course_id);
+
         if ($course && (int) $course->lecturer_id === (int) $user->id) {
             return true;
         }
@@ -88,7 +94,10 @@ class MaterialPolicy
             return true;
         }
 
-        $course = $material->course ?? Course::find($material->course_id);
+        $course = $material->relationLoaded('course') 
+            ? $material->course 
+            : Course::find($material->course_id);
+
         if ($course && (int) $course->lecturer_id === (int) $user->id) {
             return true;
         }

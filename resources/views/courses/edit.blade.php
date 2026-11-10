@@ -26,6 +26,14 @@
             </div>
         @endif
 
+        @if ($role === 'admin')
+            <form
+                id="lecturer-search-form"
+                action="{{ route($role . '.courses.edit', ['course' => $course, 'as' => $role]) }}"
+                method="GET"
+            ></form>
+        @endif
+
         <form
             action="{{ route($role . '.courses.update', [
                 'course' => $course,
@@ -79,24 +87,22 @@
                         Dosen Pengampu
                     </label>
 
-                    <form
-                        action="{{ route($role . '.courses.edit', ['course' => $course, 'as' => $role]) }}"
-                        method="GET"
-                    >
+                    <div>
                         <label for="lecturer-search" class="form-label">Cari dosen</label>
                         <div class="form-actions">
                             <input
                                 id="lecturer-search"
                                 name="lecturer_search"
+                                form="lecturer-search-form"
                                 type="search"
                                 class="form-input"
                                 value="{{ request('lecturer_search') }}"
                                 placeholder="Cari nama atau email dosen"
                             >
-                            <button type="submit" class="secondary-btn">Cari</button>
+                            <button type="submit" form="lecturer-search-form" class="secondary-btn">Cari</button>
                         </div>
                         {{ $lecturers->links('vendor.pagination.kampuslms') }}
-                    </form>
+                    </div>
 
                     <select
                         id="lecturer_id"
