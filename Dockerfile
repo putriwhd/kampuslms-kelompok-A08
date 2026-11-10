@@ -42,8 +42,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. Konfigurasi Apache rewrite
-RUN a2enmod rewrite \
+# 2. Konfigurasi Apache & Hapus Total Modul MPM Konflik
+RUN rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
+    && a2enmod mpm_prefork rewrite \
     && sed -ri \
     's/AllowOverride None/AllowOverride All/g' \
     /etc/apache2/apache2.conf
@@ -93,5 +94,5 @@ RUN mkdir -p \
 # 10. Port aplikasi
 EXPOSE 8080
 
-# 11. Jalankan Apache (Paksa matikan mpm_event & mpm_worker saat startup)
-CMD ["sh", "-c", "a2dismod mpm_event mpm_worker || true; a2enmod mpm_prefork; PORT=${PORT:-8080}; sed -i \"s/Listen 80/Listen ${PORT}/\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost *:${PORT}>/\" /etc/apache2/sites-available/000-default.conf; exec apache2-foreground"]
+# 11. Jalankan Apache (Pembersihan ekstra saat kontainer menyala)
+CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.*; a2enmod mpm_prefork || true; PORT=${PORT:-8080}; sed -i \"s/Listen 80/Listen ${PORT}/\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost *:${PORT}>/\" /etc/apache2/sites-available/000-default.conf; exec apache2-foreground"]
