@@ -55,6 +55,11 @@ class EnrollmentController extends Controller
             ->pluck('course_id')
             ->all();
 
+        $enrollmentRequests = EnrollmentRequest::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'rejected')
+            ->pluck('rejection_reason', 'course_id');
+
         $maxSks = self::MAX_SKS;
         $maxCapacity = self::MAX_CAPACITY;
 
@@ -64,6 +69,7 @@ class EnrollmentController extends Controller
             'enrolledCourseIds',
             'pendingCourseIds',
             'rejectedCourseIds',
+            'enrollmentRequests',
             'maxSks',
             'maxCapacity'
         ));
