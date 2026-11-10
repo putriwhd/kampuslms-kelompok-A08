@@ -8,6 +8,7 @@ use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
+use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -19,12 +20,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        /*
-         * Membuat hasil Faker dapat direproduksi.
-         * Semua anggota yang menggunakan kode Seeder yang sama
-         * akan mendapatkan urutan data Faker yang sama.
-         */
-        fake()->seed(12345);
+        $faker = Faker::create('id_ID');
+        $faker->seed(12345);
 
         $this->call(DemoAccountSeeder::class);
 
@@ -75,15 +72,10 @@ class DatabaseSeeder extends Seeder
                     'SI2514%02d',
                     $courseNumber
                 ),
-
                 'name' => 'Mata Kuliah Demo '.$courseNumber,
-
                 'description' => 'Mata kuliah contoh untuk demonstrasi KampusLMS.',
-
                 'sks' => 3,
-
                 'lecturer_id' => $lecturer->id,
-
                 'status' => 'active',
             ]);
 
@@ -106,9 +98,7 @@ class DatabaseSeeder extends Seeder
              */
             Material::factory()->create([
                 'course_id' => $course->id,
-
                 'uploaded_by' => $lecturer->id,
-
                 'description' => 'Materi pengantar '.$course->name,
             ]);
 
@@ -171,7 +161,7 @@ class DatabaseSeeder extends Seeder
                         ['submission_id' => $submission->id],
                         [
                             'graded_by' => $lecturer->id,
-                            'score' => fake()->numberBetween(70, 100),
+                            'score' => $faker->numberBetween(70, 100),
                             'feedback' => 'Nilai tugas contoh.',
                             'graded_at' => now(),
                         ]
