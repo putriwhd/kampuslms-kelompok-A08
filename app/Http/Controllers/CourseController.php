@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\DashboardController;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\EnrollmentRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -64,7 +64,10 @@ class CourseController extends Controller
         Gate::authorize('create', Course::class);
 
         $role = $this->selectedRole($request);
-        $lecturers = User::where('role', 'dosen')->get();
+        $lecturers = $this->lecturerOptions(
+            $request,
+            (int) old('lecturer_id')
+        );
 
         return view('courses.create', compact('role', 'lecturers'));
     }
@@ -102,40 +105,55 @@ class CourseController extends Controller
             ->paginate(25, ['users.*'], 'students_page')
             ->withQueryString();
 
-        // Ambil seluruh mahasiswa beserta status pendaftarannya.
-        // Menggantikan query terpisah untuk mengambil student IDs.
+        $selectedStudentIds = old('student_ids');
+        if (! is_array($selectedStudentIds)) {
+            $selectedStudentIds = $course->students()->pluck('users.id')->all();
+        }
+        $selectedStudentIds = array_values(array_unique(array_filter(
+            array_map('intval', $selectedStudentIds),
+            fn (int $studentId): bool => $studentId > 0
+        )));
+
+        $selectedStudents = $canViewStudentDetails
+            ? User::query()
+                ->where('role', 'mahasiswa')
+                ->whereKey($selectedStudentIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'email', 'nim_nip'])
+            : collect();
+
+        $studentSearch = $request->query('student_search');
+        $studentSearch = is_string($studentSearch) ? trim($studentSearch) : '';
         $availableStudents = $canViewStudentDetails
             ? User::query()
-                ->leftJoin('course_user', function ($join) use ($course) {
-                    $join->on('users.id', '=', 'course_user.user_id')
-                        ->where(
-                            'course_user.course_id',
-                            '=',
-                            $course->id
-                        );
-                })
                 ->where('users.role', 'mahasiswa')
+                ->when(
+                    $selectedStudentIds !== [],
+                    fn ($query) => $query->whereNotIn('users.id', $selectedStudentIds)
+                )
+                ->when($studentSearch !== '', function ($query) use ($studentSearch) {
+                    $query->where(function ($searchQuery) use ($studentSearch) {
+                        $searchQuery->where('users.name', 'like', "%{$studentSearch}%")
+                            ->orWhere('users.email', 'like', "%{$studentSearch}%")
+                            ->orWhere('users.nim_nip', 'like', "%{$studentSearch}%");
+                    });
+                })
                 ->orderBy('users.name')
-                ->get([
+                ->paginate(25, [
                     'users.id',
                     'users.name',
                     'users.email',
                     'users.nim_nip',
-                    DB::raw(
-                        'CASE
-                            WHEN course_user.user_id IS NULL THEN 0
-                            ELSE 1
-                        END AS is_enrolled'
-                    ),
-                ])
+                ], 'available_students_page')
+                ->withQueryString()
             : collect();
 
         // Daftar dosen hanya ditampilkan kepada admin.
         $lecturers = $role === 'admin'
-            ? User::query()
-                ->where('role', 'dosen')
-                ->orderBy('name')
-                ->get()
+            ? $this->lecturerOptions(
+                $request,
+                (int) old('lecturer_id', $course->lecturer_id)
+            )
             : collect();
 
         // Permintaan pendaftaran hanya untuk dosen pengampu.
@@ -157,6 +175,7 @@ class CourseController extends Controller
                 'course',
                 'role',
                 'students',
+                'selectedStudents',
                 'availableStudents',
                 'lecturers',
                 'pendingRequests',
@@ -291,7 +310,10 @@ class CourseController extends Controller
         Gate::authorize('update', $course);
 
         $role = $this->selectedRole($request);
-        $lecturers = User::where('role', 'dosen')->get();
+        $lecturers = $this->lecturerOptions(
+            $request,
+            (int) old('lecturer_id', $course->lecturer_id)
+        );
 
         return view('courses.edit', compact('course', 'role', 'lecturers'));
     }
@@ -315,19 +337,24 @@ class CourseController extends Controller
     {
         Gate::authorize('delete', $course);
 
-        $course->assignments()
-            ->with('submissions')
-            ->get()
-            ->each(fn ($assignment) => $assignment->submissions->each->delete());
-
-        foreach ($course->materials as $material) {
-            if (
-                $material->file_path
-                && Storage::disk('local')->exists($material->file_path)
-            ) {
-                Storage::disk('local')->delete($material->file_path);
+        $course->assignments()->chunkById(100, function ($assignments): void {
+            foreach ($assignments as $assignment) {
+                $assignment->submissions()->chunkById(100, function ($submissions): void {
+                    $submissions->each->delete();
+                });
             }
-        }
+        });
+
+        $course->materials()->chunkById(100, function ($materials): void {
+            foreach ($materials as $material) {
+                if (
+                    $material->file_path
+                    && Storage::disk('local')->exists($material->file_path)
+                ) {
+                    Storage::disk('local')->delete($material->file_path);
+                }
+            }
+        });
 
         Storage::disk('local')->deleteDirectory("materials/{$course->id}");
 
@@ -343,5 +370,41 @@ class CourseController extends Controller
     private function selectedRole(Request $request): string
     {
         return $request->user()->role;
+    }
+
+    private function lecturerOptions(
+        Request $request,
+        ?int $selectedLecturerId = null
+    ): LengthAwarePaginator {
+        $search = $request->query('lecturer_search');
+        $search = is_string($search) ? trim($search) : '';
+
+        $lecturers = User::query()
+            ->where('role', 'dosen')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($searchQuery) use ($search) {
+                    $searchQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->orderBy('name')
+            ->paginate(25, ['*'], 'lecturers_page')
+            ->withQueryString();
+
+        if (
+            $selectedLecturerId
+            && ! $lecturers->getCollection()->contains('id', $selectedLecturerId)
+        ) {
+            $selectedLecturer = User::query()
+                ->whereKey($selectedLecturerId)
+                ->where('role', 'dosen')
+                ->first();
+
+            if ($selectedLecturer) {
+                $lecturers->getCollection()->prepend($selectedLecturer);
+            }
+        }
+
+        return $lecturers;
     }
 }
