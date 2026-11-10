@@ -14,6 +14,7 @@ class EnrollmentRequest extends Model
         'course_id',
         'user_id',
         'status',
+        'rejection_reason',
     ];
 
     public function course(): BelongsTo
@@ -26,4 +27,3 @@ class EnrollmentRequest extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 }
-

@@ -336,6 +336,20 @@
                                                 </form>
                                                 <form action="{{ route('dosen.enrollment-requests.reject', $req) }}" method="POST" onsubmit="return confirm('Tolak pendaftaran mahasiswa ini?')">
                                                     @csrf
+                                                    <label for="rejection-reason-{{ $req->id }}" class="sr-only">Alasan penolakan</label>
+                                                    <textarea
+                                                        id="rejection-reason-{{ $req->id }}"
+                                                        name="rejection_reason"
+                                                        rows="2"
+                                                        maxlength="1000"
+                                                        required
+                                                        placeholder="Alasan penolakan"
+                                                        aria-label="Alasan penolakan"
+                                                        style="width: 180px; max-width: 100%; margin-bottom: 6px;"
+                                                    >{{ old('rejection_reason') }}</textarea>
+                                                    @error('rejection_reason')
+                                                        <p role="alert" style="color: #b91c1c; font-size: 0.8rem; margin: 0 0 6px;">{{ $message }}</p>
+                                                    @enderror
                                                     <button type="submit" class="danger-btn" style="padding: 6px 12px; font-size: 0.825rem;">
                                                         ✕ Tolak
                                                     </button>
