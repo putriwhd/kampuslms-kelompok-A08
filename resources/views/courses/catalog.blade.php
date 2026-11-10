@@ -330,8 +330,9 @@
                 $isFull = $course->students_count >= $maxCapacity;
                 $isSksExceeded = ($currentSks + $course->sks) > $maxSks;
 
-                // Nilai default jika controller belum mengirim alasan penolakan.
-                $rejectionReason = $rejectionReasons[$course->id] ?? null;
+                // Mengambil alasan penolakan dari controller.
+                $rejectionReason = $enrollmentRequests[$course->id]
+                    ?? 'Alasan penolakan belum tersedia.';
             @endphp
 
             <article class="content-card catalog-card">
@@ -405,13 +406,15 @@
                                 ✕ Ditolak
                             </div>
 
+                            {{-- Alert Alasan Penolakan --}}
                             <div class="rejection-info">
                                 <strong>Alasan Penolakan:</strong>
                                 <p style="margin:6px 0 0;">
-                                    {{ $rejectionReason ?: 'Alasan penolakan belum tersedia.' }}
+                                    {{ $rejectionReason }}
                                 </p>
                             </div>
 
+                            {{-- Form Daftar Ulang --}}
                             <form action="{{ route('mahasiswa.courses.enroll', $course) }}"
                                   method="POST">
                                 @csrf
