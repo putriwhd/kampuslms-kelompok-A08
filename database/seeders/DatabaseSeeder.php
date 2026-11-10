@@ -8,7 +8,6 @@ use App\Models\Grade;
 use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
-use Faker\Factory as Faker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -20,8 +19,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
-        $faker->seed(12345);
+        // Seed angka acak native PHP agar hasil dapat direproduksi
+        mt_srand(12345);
 
         $this->call(DemoAccountSeeder::class);
 
@@ -38,12 +37,12 @@ class DatabaseSeeder extends Seeder
         )->first();
 
         $lecturers = collect([$demoLecturer, $secondDemoLecturer])
-            ->filter()
-            ->merge(
-                User::factory(1)
-                    ->dosen()
-                    ->create()
-            );
+            ->filter();
+
+        // Jika tidak ada user dosen bawaan dari factory, buat secara manual
+        if ($lecturers->isEmpty()) {
+            $lecturers = User::where('role', 'dosen')->get();
+        }
 
         $demoStudents = User::query()
             ->where('role', 'mahasiswa')
@@ -54,30 +53,25 @@ class DatabaseSeeder extends Seeder
             ->orderBy('id')
             ->get();
 
-        $students = $demoStudents->merge(
-            User::factory(29)
-                ->mahasiswa()
-                ->create()
-        );
+        $students = $demoStudents;
 
         $courses = collect();
 
         for ($courseNumber = 1; $courseNumber <= 5; $courseNumber++) {
             $lecturer = $lecturers[
-                ($courseNumber - 1) % $lecturers->count()
-            ];
+                ($courseNumber - 1) % max(1, $lecturers->count())
+            ] ?? $demoLecturer;
 
-            $course = Course::factory()->create([
-                'code' => sprintf(
-                    'SI2514%02d',
-                    $courseNumber
-                ),
-                'name' => 'Mata Kuliah Demo '.$courseNumber,
-                'description' => 'Mata kuliah contoh untuk demonstrasi KampusLMS.',
-                'sks' => 3,
-                'lecturer_id' => $lecturer->id,
-                'status' => 'active',
-            ]);
+            $course = Course::firstOrCreate(
+                ['code' => sprintf('SI2514%02d', $courseNumber)],
+                [
+                    'name' => 'Mata Kuliah Demo '.$courseNumber,
+                    'description' => 'Mata kuliah contoh untuk demonstrasi KampusLMS.',
+                    'sks' => 3,
+                    'lecturer_id' => $lecturer ? $lecturer->id : null,
+                    'status' => 'active',
+                ]
+            );
 
             $courseStudentSlice = $students->slice(($courseNumber - 1) * 6, 6);
             if ($courseNumber === 1) {
@@ -91,16 +85,23 @@ class DatabaseSeeder extends Seeder
                     $student->getKey() => ['enrolled_at' => now()],
                 ]);
 
-            $course->students()->syncWithoutDetaching($courseStudents);
+            if ($courseStudents->isNotEmpty()) {
+                $course->students()->syncWithoutDetaching($courseStudents);
+            }
 
             /*
              * Membuat materi.
              */
-            Material::factory()->create([
-                'course_id' => $course->id,
-                'uploaded_by' => $lecturer->id,
-                'description' => 'Materi pengantar '.$course->name,
-            ]);
+            Material::firstOrCreate(
+                [
+                    'course_id' => $course->id,
+                    'description' => 'Materi pengantar '.$course->name,
+                ],
+                [
+                    'title' => 'Materi 1 - '.$course->name,
+                    'uploaded_by' => $lecturer ? $lecturer->id : null,
+                ]
+            );
 
             /*
              * Membuat 3 tugas.
@@ -120,13 +121,17 @@ class DatabaseSeeder extends Seeder
                 ],
             ])->map(
                 function (array $state, int $index) use ($course, $lecturer): Assignment {
-                    return Assignment::factory()->create([
-                        'course_id' => $course->id,
-                        'created_by' => $lecturer->id,
-                        'title' => 'Tugas '.($index + 1).' - '.$course->name,
-                        'instructions' => 'Kerjakan tugas sesuai materi perkuliahan.',
-                        ...$state,
-                    ]);
+                    return Assignment::firstOrCreate(
+                        [
+                            'course_id' => $course->id,
+                            'title' => 'Tugas '.($index + 1).' - '.$course->name,
+                        ],
+                        [
+                            'created_by' => $lecturer ? $lecturer->id : null,
+                            'instructions' => 'Kerjakan tugas sesuai materi perkuliahan.',
+                            ...$state,
+                        ]
+                    );
                 }
             );
 
@@ -160,8 +165,8 @@ class DatabaseSeeder extends Seeder
                     Grade::updateOrCreate(
                         ['submission_id' => $submission->id],
                         [
-                            'graded_by' => $lecturer->id,
-                            'score' => $faker->numberBetween(70, 100),
+                            'graded_by' => $lecturer ? $lecturer->id : null,
+                            'score' => mt_rand(70, 100), // Menggunakan mt_rand bawaan PHP
                             'feedback' => 'Nilai tugas contoh.',
                             'graded_at' => now(),
                         ]
