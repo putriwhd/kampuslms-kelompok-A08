@@ -36,7 +36,6 @@ class DatabaseSeeder extends Seeder
 
         $demoStudentEmails = [
             'mahasiswa@kampuslms.test',
-            'mahasiswa2@kampuslms.test',
         ];
         foreach (range(3, 30) as $studentNumber) {
             $demoStudentEmails[] = sprintf('mahasiswa%02d@kampuslms.test', $studentNumber);
