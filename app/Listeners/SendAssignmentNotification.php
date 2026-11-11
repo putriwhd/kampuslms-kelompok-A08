@@ -6,26 +6,10 @@ use App\Events\AssignmentPublished;
 use App\Notifications\NewAssignmentNotification;
 use App\Notifications\AdminActivityNotification;
 use App\Models\User;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Throwable;
 
-class SendAssignmentNotification implements ShouldQueue
+class SendAssignmentNotification
 {
-    use InteractsWithQueue;
-
-    /**
-     * Jumlah percobaan sebelum job dianggap gagal permanen.
-     */
-    public int $tries = 3;
-
-    /**
-     * Jeda detik antar percobaan ulang.
-     */
-    public int $backoff = 10;
-
     /**
      * Tangani event AssignmentPublished.
      *
@@ -63,19 +47,4 @@ class SendAssignmentNotification implements ShouldQueue
         }
     }
 
-    /**
-     * Tangani kegagalan setelah seluruh percobaan ($tries) habis.
-     *
-     * Job yang gagal 3 kali akan masuk tabel failed_jobs dan
-     * dicatat ke storage/logs/laravel.log untuk keperluan debugging.
-     */
-    public function failed(AssignmentPublished $event, Throwable $exception): void
-    {
-        Log::error('SendAssignmentNotification gagal setelah seluruh percobaan.', [
-            'assignment_id' => $event->assignment->id,
-            'error'         => $exception->getMessage(),
-            'trace'         => $exception->getTraceAsString(),
-        ]);
-    }
 }
-
