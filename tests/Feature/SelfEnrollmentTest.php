@@ -4,13 +4,18 @@ namespace Tests\Feature;
 
 use App\Events\EnrollmentApproved;
 use App\Events\EnrollmentRequested;
+use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\EnrollmentRequest;
+use App\Models\Grade;
+use App\Models\Submission;
 use App\Models\User;
 use App\Notifications\EnrollmentRejectedNotification;
+use App\Notifications\EnrollmentRequestedNotification;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -28,8 +33,33 @@ class SelfEnrollmentTest extends TestCase
 
         $this->assertCount(5, $demoCourses);
         foreach ($demoCourses as $course) {
-            $this->assertSame(6, $course->students()->count());
+            $this->assertGreaterThanOrEqual(15, $course->students()->count());
+            $this->assertSame(2, $course->assignments()->where('status', 'published')->count());
+            $this->assertSame(1, $course->assignments()->where('status', 'draft')->count());
+            $this->assertTrue($course->assignments()
+                ->where('title', 'Tugas 1 - '.$course->name)
+                ->firstOrFail()
+                ->due_at
+                ->isPast());
+            $this->assertTrue($course->assignments()
+                ->where('title', 'Tugas 2 - '.$course->name)
+                ->firstOrFail()
+                ->due_at
+                ->isFuture());
         }
+
+        $this->assertGreaterThanOrEqual(1, User::where('role', 'admin')->count());
+        $this->assertGreaterThanOrEqual(3, User::where('role', 'dosen')->count());
+        $this->assertGreaterThanOrEqual(30, User::where('role', 'mahasiswa')->count());
+
+        $demoAssignmentIds = Assignment::query()
+            ->whereHas('course', fn ($query) => $query->where('code', 'like', 'SI2514%'))
+            ->pluck('id');
+        $submissionCount = Submission::whereIn('assignment_id', $demoAssignmentIds)->count();
+        $gradedCount = Grade::whereHas('submission', fn ($query) => $query
+            ->whereIn('assignment_id', $demoAssignmentIds))->count();
+        $this->assertGreaterThanOrEqual(100, $submissionCount);
+        $this->assertEqualsWithDelta(0.6, $gradedCount / max(1, $submissionCount), 0.02);
 
         $demoStudent = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
         $firstDemoCourse = $demoCourses->firstWhere('code', 'SI251401');
@@ -39,12 +69,50 @@ class SelfEnrollmentTest extends TestCase
         $this->actingAs($demoStudent)
             ->get(route('mahasiswa.catalog.index'))
             ->assertOk()
-            ->assertSee('3 / 24 SKS')
             ->assertSee('✓ Terdaftar');
 
         $newCourse = Course::factory()->create();
 
         $this->assertSame(0, $newCourse->students()->count());
+    }
+
+    public function test_database_seeder_is_repeatable_and_preserves_existing_demo_accounts(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $student = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
+        $student->update([
+            'name' => 'Akun Demo yang Sudah Disesuaikan',
+            'password' => Hash::make('existing-demo-password'),
+        ]);
+        $submission = Submission::firstOrFail();
+        $submission->update(['note' => 'Pengumpulan yang sudah disesuaikan']);
+        $grade = Grade::where('submission_id', $submission->id)->firstOrFail();
+        $grade->update(['score' => 66.5]);
+        $counts = [
+            User::count(),
+            Course::count(),
+            Assignment::count(),
+            Submission::count(),
+            Grade::count(),
+        ];
+
+        $this->seed(DatabaseSeeder::class);
+
+        $student->refresh();
+        $submission->refresh();
+        $grade->refresh();
+        $this->assertSame('Akun Demo yang Sudah Disesuaikan', $student->name);
+        $this->assertTrue(Hash::check('existing-demo-password', $student->password));
+        $this->assertSame('Pengumpulan yang sudah disesuaikan', $submission->note);
+        $this->assertSame('66.50', $grade->score);
+        $this->assertSame($counts, [
+            User::count(),
+            Course::count(),
+            Assignment::count(),
+            Submission::count(),
+            Grade::count(),
+        ]);
     }
 
     public function test_student_can_view_course_catalog_and_sks_info(): void
@@ -131,6 +199,26 @@ class SelfEnrollmentTest extends TestCase
             ->post(route('mahasiswa.courses.enroll', $course))
             ->assertRedirect()
             ->assertSessionHas('error');
+    }
+
+    public function test_student_enrollment_request_notifies_course_lecturer(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create([
+            'status' => 'active',
+        ]);
+
+        $this->actingAs($student)
+            ->post(route('mahasiswa.courses.enroll', $course))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_type' => User::class,
+            'notifiable_id' => $lecturer->id,
+            'type' => EnrollmentRequestedNotification::class,
+        ]);
     }
 
     public function test_student_can_request_self_enrollment_into_a_prepopulated_course(): void

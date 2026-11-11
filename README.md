@@ -101,7 +101,7 @@ Aplikasi sekarang dapat diakses melalui browser pada alamat:
 
 ## Menjalankan Queue Worker (Wajib untuk Notifikasi)
 
-KampusLMS menggunakan **antrean database** (`QUEUE_CONNECTION=database`) untuk memproses notifikasi secara asinkron. Tanpa worker yang aktif, notifikasi **tidak akan pernah terkirim** — dan tidak ada pesan error yang muncul (silent failure).
+KampusLMS menggunakan **antrean database** (`QUEUE_CONNECTION=database`) untuk notifikasi asinkron, seperti pemberitahuan nilai dan persetujuan pendaftaran. Notifikasi tugas baru ke mahasiswa dan permintaan pendaftaran mandiri ke dosen dikirim langsung sehingga tidak bergantung pada queue worker. Tanpa worker aktif, notifikasi asinkron akan menumpuk di tabel `jobs` sampai worker dijalankan.
 
 ### Menyalakan Worker
 
@@ -111,7 +111,7 @@ Buka terminal **terpisah** (jangan ditutup) dan jalankan:
 php artisan queue:work
 ```
 
-> **Penting:** Worker harus tetap berjalan selama aplikasi digunakan. Jika terminal ditutup atau worker mati, job hanya menumpuk di tabel `jobs` dan tidak ada notifikasi yang dikirim. Ini bukan bug — ini memang cara kerja queue.
+> **Penting:** Worker harus tetap berjalan selama aplikasi digunakan. Jika worker mati, job notifikasi asinkron hanya menumpuk di tabel `jobs`; notifikasi yang dikirim langsung tetap berjalan.
 
 ### Memeriksa dan Mengelola Job Gagal (Failed Jobs)
 

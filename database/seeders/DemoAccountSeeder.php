@@ -39,6 +39,12 @@ class DemoAccountSeeder extends Seeder
                 'role' => 'dosen',
             ],
             [
+                'name' => 'Dosen Ketiga',
+                'email' => 'dosen3@kampuslms.test',
+                'nim_nip' => 'NIP003',
+                'role' => 'dosen',
+            ],
+            [
                 'name' => 'Mahasiswa Demo',
                 'email' => 'mahasiswa@kampuslms.test',
                 'nim_nip' => 'MHS0001',
@@ -52,17 +58,34 @@ class DemoAccountSeeder extends Seeder
             ],
         ];
 
+        foreach (range(3, 30) as $studentNumber) {
+            $accounts[] = [
+                'name' => sprintf('Mahasiswa Demo %02d', $studentNumber),
+                'email' => sprintf('mahasiswa%02d@kampuslms.test', $studentNumber),
+                'nim_nip' => sprintf('MHS%04d', $studentNumber),
+                'role' => 'mahasiswa',
+            ];
+        }
+
         foreach ($accounts as $account) {
             $user = User::firstOrNew([
                 'email' => $account['email'],
             ]);
 
-            $user->name = $account['name'];
-            $user->nim_nip = $account['nim_nip'];
-            $user->password = Hash::make('password');
-            $user->email_verified_at = now();
-            $user->role = $account['role'];
-            $user->save();
+            if (! $user->exists) {
+                $nimNip = $account['nim_nip'];
+                $suffix = 1;
+                while (User::where('nim_nip', $nimNip)->exists()) {
+                    $nimNip = $account['nim_nip'].'-'.$suffix++;
+                }
+
+                $user->name = $account['name'];
+                $user->nim_nip = $nimNip;
+                $user->password = Hash::make('password');
+                $user->email_verified_at = now();
+                $user->role = $account['role'];
+                $user->save();
+            }
         }
     }
 }
