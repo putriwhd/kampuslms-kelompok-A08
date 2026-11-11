@@ -3,14 +3,10 @@
 namespace App\Notifications;
 
 use App\Models\EnrollmentRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
-class EnrollmentRequestedNotification extends Notification implements ShouldQueue
+class EnrollmentRequestedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(public EnrollmentRequest $enrollmentRequest)
     {
     }
@@ -34,4 +30,3 @@ class EnrollmentRequestedNotification extends Notification implements ShouldQueu
         ];
     }
 }
-

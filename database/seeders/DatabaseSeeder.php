@@ -24,43 +24,35 @@ class DatabaseSeeder extends Seeder
 
         $this->call(DemoAccountSeeder::class);
 
-        $admin = User::where('email', 'admin@kampuslms.test')->first();
+        $lecturers = User::query()
+            ->where('role', 'dosen')
+            ->whereIn('email', [
+                'dosen@kampuslms.test',
+                'dosen2@kampuslms.test',
+                'dosen3@kampuslms.test',
+            ])
+            ->orderBy('id')
+            ->get();
 
-        $demoLecturer = User::where(
-            'email',
-            'dosen@kampuslms.test'
-        )->first();
-
-        $secondDemoLecturer = User::where(
-            'email',
-            'dosen2@kampuslms.test'
-        )->first();
-
-        $lecturers = collect([$demoLecturer, $secondDemoLecturer])
-            ->filter();
-
-        // Jika tidak ada user dosen bawaan dari factory, buat secara manual
-        if ($lecturers->isEmpty()) {
-            $lecturers = User::where('role', 'dosen')->get();
+        $demoStudentEmails = [
+            'mahasiswa@kampuslms.test',
+            'mahasiswa2@kampuslms.test',
+        ];
+        foreach (range(3, 30) as $studentNumber) {
+            $demoStudentEmails[] = sprintf('mahasiswa%02d@kampuslms.test', $studentNumber);
         }
-
         $demoStudents = User::query()
             ->where('role', 'mahasiswa')
-            ->whereIn('email', [
-                'mahasiswa@kampuslms.test',
-                'mahasiswa2@kampuslms.test',
-            ])
+            ->whereIn('email', $demoStudentEmails)
             ->orderBy('id')
             ->get();
 
         $students = $demoStudents;
 
-        $courses = collect();
-
         for ($courseNumber = 1; $courseNumber <= 5; $courseNumber++) {
             $lecturer = $lecturers[
                 ($courseNumber - 1) % max(1, $lecturers->count())
-            ] ?? $demoLecturer;
+            ] ?? null;
 
             $course = Course::firstOrCreate(
                 ['code' => sprintf('SI2514%02d', $courseNumber)],
@@ -73,12 +65,13 @@ class DatabaseSeeder extends Seeder
                 ]
             );
 
-            $courseStudentSlice = $students->slice(($courseNumber - 1) * 6, 6);
-            if ($courseNumber === 1) {
-                $courseStudentSlice = $courseStudentSlice
-                    ->merge($demoStudents)
-                    ->unique('id');
+            $courseStudentSlice = $students->slice(($courseNumber - 1) * 6, 15);
+            if ($courseStudentSlice->count() < 15) {
+                $courseStudentSlice = $courseStudentSlice->concat(
+                    $students->take(15 - $courseStudentSlice->count())
+                );
             }
+            $courseStudentSlice = $courseStudentSlice->values();
 
             $courseStudents = $courseStudentSlice
                 ->mapWithKeys(fn (User $student) => [
@@ -121,7 +114,7 @@ class DatabaseSeeder extends Seeder
                 ],
             ])->map(
                 function (array $state, int $index) use ($course, $lecturer): Assignment {
-                    return Assignment::firstOrCreate(
+                    $assignment = Assignment::firstOrCreate(
                         [
                             'course_id' => $course->id,
                             'title' => 'Tugas '.($index + 1).' - '.$course->name,
@@ -132,13 +125,35 @@ class DatabaseSeeder extends Seeder
                             ...$state,
                         ]
                     );
+
+                    if ($assignment->status !== $state['status']) {
+                        $assignment->status = $state['status'];
+                    }
+
+                    if (
+                        ($index === 0 && $assignment->due_at->isFuture())
+                        || ($index === 1 && $assignment->due_at->isPast())
+                    ) {
+                        $assignment->due_at = $state['due_at'];
+                    }
+
+                    if ($assignment->isDirty()) {
+                        $assignment->save();
+                    }
+
+                    return $assignment;
                 }
             );
 
             $demoPdf = "%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n";
 
-            foreach ($courseStudents as $studentId => $_pivot) {
-                foreach ($assignments as $assignment) {
+            foreach ($courseStudentSlice as $studentIndex => $student) {
+                foreach ($assignments->values() as $assignmentIndex => $assignment) {
+                    if ($assignment->status !== 'published') {
+                        continue;
+                    }
+
+                    $studentId = $student->getKey();
                     $filePath = sprintf(
                         'submissions/demo/course-%d/assignment-%d/student-%d.pdf',
                         $course->id,
@@ -147,7 +162,7 @@ class DatabaseSeeder extends Seeder
                     );
                     Storage::disk('local')->put($filePath, $demoPdf);
 
-                    $submission = Submission::updateOrCreate(
+                    $submission = Submission::firstOrCreate(
                         [
                             'assignment_id' => $assignment->id,
                             'user_id' => $studentId,
@@ -158,23 +173,23 @@ class DatabaseSeeder extends Seeder
                             'file_size' => strlen($demoPdf),
                             'note' => 'Pengumpulan tugas contoh.',
                             'submitted_at' => now(),
-                            'is_late' => false,
+                            'is_late' => $assignment->due_at->isPast(),
                         ]
                     );
 
-                    Grade::updateOrCreate(
-                        ['submission_id' => $submission->id],
-                        [
-                            'graded_by' => $lecturer ? $lecturer->id : null,
-                            'score' => mt_rand(70, 100), // Menggunakan mt_rand bawaan PHP
-                            'feedback' => 'Nilai tugas contoh.',
-                            'graded_at' => now(),
-                        ]
-                    );
+                    if (($studentIndex + $assignmentIndex + $courseNumber) % 5 < 3) {
+                        Grade::firstOrCreate(
+                            ['submission_id' => $submission->id],
+                            [
+                                'graded_by' => $lecturer?->id,
+                                'score' => mt_rand(70, 100),
+                                'feedback' => 'Nilai tugas contoh.',
+                                'graded_at' => now(),
+                            ]
+                        );
+                    }
                 }
             }
-
-            $courses->push($course);
         }
     }
 }
