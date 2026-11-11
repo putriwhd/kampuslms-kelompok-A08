@@ -58,9 +58,8 @@ class DatabaseSeeder extends Seeder
         $courses = collect();
 
         for ($courseNumber = 1; $courseNumber <= 5; $courseNumber++) {
-            $lecturer = $lecturers[
-                ($courseNumber - 1) % max(1, $lecturers->count())
-            ] ?? $demoLecturer;
+            $lecturerIndex = ($courseNumber - 1) % max(1, $lecturers->count());
+            $lecturer = $lecturers->values()->get($lecturerIndex) ?? $demoLecturer;
 
             $course = Course::firstOrCreate(
                 ['code' => sprintf('SI2514%02d', $courseNumber)],
@@ -166,7 +165,7 @@ class DatabaseSeeder extends Seeder
                         ['submission_id' => $submission->id],
                         [
                             'graded_by' => $lecturer ? $lecturer->id : null,
-                            'score' => mt_rand(70, 100), // Menggunakan mt_rand bawaan PHP
+                            'score' => mt_rand(70, 100),
                             'feedback' => 'Nilai tugas contoh.',
                             'graded_at' => now(),
                         ]
