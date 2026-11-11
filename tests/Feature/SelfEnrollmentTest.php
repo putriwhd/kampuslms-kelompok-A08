@@ -76,6 +76,24 @@ class SelfEnrollmentTest extends TestCase
         $this->assertSame(0, $newCourse->students()->count());
     }
 
+    public function test_second_demo_student_is_not_enrolled_in_demo_courses(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $student = User::where('email', 'mahasiswa2@kampuslms.test')->firstOrFail();
+        $demoCourses = Course::query()
+            ->where('code', 'like', 'SI2514%')
+            ->get();
+
+        $this->assertCount(5, $demoCourses);
+        foreach ($demoCourses as $course) {
+            $this->assertDatabaseMissing('course_user', [
+                'course_id' => $course->id,
+                'user_id' => $student->id,
+            ]);
+        }
+    }
+
     public function test_database_seeder_is_repeatable_and_preserves_existing_demo_accounts(): void
     {
         $this->seed(DatabaseSeeder::class);
