@@ -14,6 +14,7 @@ use App\Policies\SubmissionPolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,6 +32,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Force HTTPS di production / Railway agar asset CSS & JS tidak terblokir Mixed Content
+        if ($this->app->isProduction() || isset($_SERVER['HTTP_X_FORWARDED_PROTO'])) {
+            URL::forceScheme('https');
+        }
+
         Model::preventLazyLoading(! $this->app->isProduction());
 
         Gate::policy(Material::class, MaterialPolicy::class);
