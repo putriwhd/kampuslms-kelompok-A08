@@ -50,6 +50,8 @@ class DatabaseSeeder extends Seeder
         $students = $demoStudents;
 
         for ($courseNumber = 1; $courseNumber <= 5; $courseNumber++) {
+            $lecturerIndex = ($courseNumber - 1) % max(1, $lecturers->count());
+            $lecturer = $lecturers->values()->get($lecturerIndex) ?? $demoLecturer;
             $lecturer = $lecturers[
                 ($courseNumber - 1) % max(1, $lecturers->count())
             ] ?? null;
@@ -177,6 +179,15 @@ class DatabaseSeeder extends Seeder
                         ]
                     );
 
+                    Grade::updateOrCreate(
+                        ['submission_id' => $submission->id],
+                        [
+                            'graded_by' => $lecturer ? $lecturer->id : null,
+                            'score' => mt_rand(70, 100),
+                            'feedback' => 'Nilai tugas contoh.',
+                            'graded_at' => now(),
+                        ]
+                    );
                     if (($studentIndex + $assignmentIndex + $courseNumber) % 5 < 3) {
                         Grade::firstOrCreate(
                             ['submission_id' => $submission->id],
