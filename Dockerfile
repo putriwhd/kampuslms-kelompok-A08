@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
     zip \
+    supervisor \
     libpng-dev \
     libjpeg62-turbo-dev \
     libfreetype6-dev \
@@ -91,8 +92,12 @@ RUN mkdir -p \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# 10. Port aplikasi
+# 10. Konfigurasi Supervisor untuk Apache dan Laravel queue worker
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord.conf /etc/supervisor/supervisord.conf
+
+# 11. Port aplikasi
 EXPOSE 8080
 
-# 11. Jalankan Apache (Pembersihan ekstra saat kontainer menyala)
-CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.*; a2enmod mpm_prefork || true; PORT=${PORT:-8080}; sed -i \"s/Listen 80/Listen ${PORT}/\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost *:${PORT}>/\" /etc/apache2/sites-available/000-default.conf; exec apache2-foreground"]
+# 12. Siapkan Apache untuk port Railway, lalu jalankan kedua program via Supervisor
+CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.*; a2enmod mpm_prefork || true; PORT=${PORT:-8080}; sed -i \"s/Listen 80/Listen ${PORT}/\" /etc/apache2/ports.conf; sed -i \"s/<VirtualHost \\*:80>/<VirtualHost *:${PORT}>/\" /etc/apache2/sites-available/000-default.conf; exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"]
