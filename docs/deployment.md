@@ -479,26 +479,37 @@ Semua skenario uji otorisasi API lulus.
 Kesimpulan: Seluruh 20 pengecekan dalam skrip uji otorisasi API (test-authz.sh) lulus 100% langsung di server produksi Railway.
 
 
-### 9.4 Endpoint Submission yang Perlu Ditindaklanjuti
+### 9.4 Validasi Status Tugas Draft pada Endpoint Submission
+Berdasarkan dokumentasi `keamanan.md`, terdapat dua endpoint yang perlu dipastikan validasi status publikasi tugasnya:
 
-Berdasarkan dokumentasi `keamanan.md`, terdapat dua endpoint yang masih perlu diperiksa terkait validasi status publikasi tugas:
-
+```
 POST /api/v1/assignments/{id}/submissions
 POST /api/v1/submissions
+```
 
-Kedua endpoint tersebut perlu diperiksa untuk memastikan mahasiswa tidak dapat mengirimkan submission secara langsung pada tugas yang masih berstatus `draft`.
+Hasil Verifikasi Kode (12 November 2026):
 
-Perilaku endpoint tersebut pada server produksi belum diverifikasi.
+Setelah dilakukan pemeriksaan langsung pada `app/Http/Controllers/Api/SubmissionController.php` dan `app/Policies/SubmissionPolicy.php`, kedua endpoint di atas memanggil `saveSubmission()` yang dilindungi oleh `Gate::authorize('create', [Submission::class, $assignment])`.
+
+Pada method `SubmissionPolicy::create()`, sistem telah menerapkan validasi berikut:
+
+Memastikan peran pengguna adalah mahasiswa ( `$user->role === 'mahasiswa'`).
+
+Memastikan tugas berstatus published (`$assignment->status === 'published`').
+
+Memastikan mata kuliah terkait tidak berstatus draft dan mahasiswa terdaftar pada mata kuliah tersebut.
+
+Dengan demikian, mahasiswa otomatis ditolak (HTTP 403 Forbidden) apabila mencoba mengirimkan submission secara langsung pada tugas yang masih berstatus draft.
 
 ### 9.5 Kesimpulan Pemeriksaan Keamanan
 
 Berdasarkan pemeriksaan keamanan produksi:
 
-Tiga path berkas sensitif (/.env, /storage/logs/laravel.log, /composer.json) menghasilkan HTTP 404 Not Found.
+Tiga path berkas sensitif (`/.env, /storage/logs/laravel.log, /composer.json`) menghasilkan HTTP 404 Not Found.
 
 Pengujian otorisasi API berhasil pada lingkungan lokal maupun server produksi Railway (seluruh 20 pengecekan berstatus PASS).
 
-Endpoint submission terkait tugas berstatus draft masih perlu ditindaklanjuti sesuai catatan pada keamanan.md.
+Endpoint submission (`POST /api/v1/assignments/{id}/submissions` dan `POST /api/v1/submissions`) telah terverifikasi menolak pengiriman ke tugas berstatus draft melalui `SubmissionPolicy::create`.
 
 ## 10. Pengujian Akun Demo pada Server Live
 
@@ -565,7 +576,7 @@ Catatan: Kata sandi akun demo tidak dicantumkan dalam dokumentasi.
 
 ## 11. Pengujian Aplikasi Melalui Perangkat HP
 
-Pengujian melalui perangkat HP dilakukan oleh Syarifah untuk memastikan aplikasi dapat diakses melalui perangkat mobile.
+Pengujian melalui perangkat HP dilakukan oleh anggota kelompok untuk memastikan aplikasi dapat diakses melalui perangkat mobile.
 
 ### 11.1 Identitas Pengujian
 
