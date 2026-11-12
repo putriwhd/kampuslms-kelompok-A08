@@ -188,7 +188,8 @@ Hasil tersebut menunjukkan bahwa:
 
 **Kesimpulan:** Kedua proses utama aplikasi berhasil berjalan melalui Supervisor.
 
-**Bukti:** Tangkapan layar hasil `supervisorctl status` dari console Railway dilampirkan pada dokumentasi.
+**Bukti:** 
+![alt text](<WhatsApp Image 2026-11-12 at 12.35.21.jpeg>)
 
 ## 7. Cara Membaca Log
 
@@ -285,8 +286,6 @@ Setelah aplikasi berhasil di-deploy, tampilan web belum rapi dan antarmuka pengg
 
 Tampilan aplikasi perlu diperiksa kembali dengan mencocokkan konfigurasi frontend, aset CSS dan JavaScript, serta proses build frontend pada lingkungan produksi.
 
-**Catatan:** Pemeriksaan dan perbaikan frontend perlu dipastikan kembali sebelum dinyatakan selesai.
-
 ### 8.4 Notifikasi Tugas untuk Mahasiswa Tidak Masuk
 
 **Kendala:**
@@ -298,8 +297,6 @@ Notifikasi kepada mahasiswa ketika dosen memberikan tugas belum masuk sebagaiman
 Perlu dilakukan pemeriksaan terhadap proses pembuatan notifikasi ketika dosen memberikan tugas, termasuk pemanggilan fungsi notifikasi, penerima notifikasi, dan proses penyimpanan notifikasi.
 
 Perlu dipastikan bahwa mekanisme notifikasi saat dosen memberikan tugas berjalan sebagaimana mekanisme notifikasi saat mahasiswa mengumpulkan tugas.
-
-**Status:** Belum ada keterangan bahwa perbaikan notifikasi ini sudah selesai dilakukan.
 
 ### 8.5 Notifikasi Pendaftaran Mahasiswa Tidak Masuk
 
@@ -327,7 +324,6 @@ Perlu dilakukan pemeriksaan terhadap data awal yang dimasukkan melalui seeder ma
 
 Data pengguna dapat dilengkapi melalui proses pengelolaan data sesuai peran dan kebutuhan pengujian. Penambahan data harus dilakukan dengan tetap memperhatikan validitas dan keamanan data.
 
-**Status:** Jumlah mahasiswa dan data pengguna perlu disesuaikan kembali dengan kebutuhan pengujian.
 
 ### 8.7 Ringkasan Kendala Deployment
 
@@ -400,11 +396,11 @@ Connection: keep-alive
 ```
 ### Keluaran Perintah curl -I Sesungguhnya
 
-User@LAPTOP-1IEHET2V MINGW64 ~/Downloads/kampuslms-kelompok-A08-2/kampuslms-kelompok-A08 (putri-perbaikan-deploy.sh)
 $ for path in .env storage/logs/laravel.log composer.json; do
   echo "=== Cek /$path ==="
   curl -I -s "[https://kampuslms-kelompok-a08-production-66912567.up.railway.app/$path]" | head -n 5
 done
+```
 === Cek /.env ===
 HTTP/1.1 404 Not Found
 Cache-Control: no-cache, private
@@ -423,6 +419,7 @@ Cache-Control: no-cache, private
 Content-Type: text/html; charset=utf-8
 Date: Thu, 12 Nov 2026 03:46:36 GMT
 Server: railway-hikari
+```
 
 ### 9.2 Pengujian Otorisasi API Lokal
 
@@ -454,7 +451,7 @@ API_BASE_URL="[https://kampuslms-kelompok-a08-production-66912567.up.railway.app
 
 ### Keluaran sesungguhnya pada terminal produksi:
 
-User@LAPTOP-1IEHET2V MINGW64 ~/Downloads/kampuslms-kelompok-A08-2/kampuslms-kelompok-A08 (putri-perbaikan-deploy.sh)
+```
 $ API_BASE_URL="[https://kampuslms-kelompok-a08-production-66912567.up.railway.app/api/v1](https://kampuslms-kelompok-a08-production-66912567.up.railway.app/api/v1)" bash scripts/test-authz.sh
 PASS Daftar course tanpa token ditolak: HTTP 401
 PASS Admin dapat melihat daftar seluruh course: HTTP 200
@@ -477,6 +474,7 @@ PASS filter draft tidak membocorkan tugas draft kepada mahasiswa
 PASS Dosen lain tidak dapat melihat tugas draft course asing: HTTP 403
 PASS Dosen lain tidak dapat membuka submission course asing: HTTP 403
 Semua skenario uji otorisasi API lulus.
+```
 
 Kesimpulan: Seluruh 20 pengecekan dalam skrip uji otorisasi API (test-authz.sh) lulus 100% langsung di server produksi Railway.
 
@@ -588,22 +586,19 @@ Pengujian melalui perangkat HP dilakukan oleh Syarifah untuk memastikan aplikasi
 ### 11.3 Bukti Pengujian
 
 Dosen
-[![alt text](<WhatsApp Image 2026-11-12 at 07.27.14 (2).jpeg>)]
-[![alt text](<WhatsApp Image 2026-11-12 at 07.27.14 (1)-1.jpeg>)]
-[![alt text](<WhatsApp Image 2026-11-12 at 07.27.15.jpeg>)]
+![alt text](<WhatsApp Image 2026-11-12 at 07.27.14 (2).jpeg>)
+![alt text](<WhatsApp Image 2026-11-12 at 07.27.14 (1)-1.jpeg>)
+![alt text](<WhatsApp Image 2026-11-12 at 07.27.15.jpeg>)
 
 Mahasiswa
-[![alt text](<WhatsApp Image 2026-11-12 at 11.41.32.jpeg>)]
-[![alt text](<WhatsApp Image 2026-11-12 at 11.46.21.jpeg>)]
-[![alt text](<WhatsApp Image 2026-11-12 at 11.46.21 (1).jpeg>)]
+![alt text](<WhatsApp Image 2026-11-12 at 11.41.32.jpeg>)
+![alt text](<WhatsApp Image 2026-11-12 at 11.46.21.jpeg>)
+![alt text](<WhatsApp Image 2026-11-12 at 11.46.21 (1).jpeg>)
 
 Admin
-[![alt text](<WhatsApp Image 2026-11-12 at 11.43.23.jpeg>)]
-[![alt text](<WhatsApp Image 2026-11-12 at 11.43.24.jpeg>)]
+![alt text](<WhatsApp Image 2026-11-12 at 11.43.23.jpeg>)
+![alt text](<WhatsApp Image 2026-11-12 at 11.43.24.jpeg>)
 
-### 11.4 Kesimpulan Pengujian Mobile
-
-[Isi kesimpulan berdasarkan hasil pengujian langsung melalui perangkat HP.]
 
 ## 12. Kesimpulan Akhir
 
