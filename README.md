@@ -8,14 +8,15 @@ Platform *Learning Management System* (LMS) berbasis web yang dikembangkan mengg
 
 ## Tim Pengembang & Pembagian Tugas (Kelompok A-08)
 
-Proyek ini dikembangkan oleh **Kelompok A-08** (Kelas Pemrograman Web):
 
-| No. | Nama Anggota | NIM | Peran / Anggota | Tugas |
-| :---: | :--- | :---: | :---: | :--- |
-| 1 | **Putri Nurwahid** | 10241063 | Anggota 1 | Backend |
-| 2 | **Sarah Adelia W** | 10241065 | Anggota 2 | Backend |
-| 3 | **Siti Fatimah** | 10241067 | Anggota 3 | Frontend |
-| 4 | **Syarifah Nazwa Aulia H** | 10241069 | Anggota 4 | Frontend |
+Pembagian peran disusun berdasarkan riwayat kontribusi aktual pada repositori (`git shortlog`):
+
+| No. | Nama Anggota | NIM | Akun Git | Peran & Kontribusi Utama |
+|---|---|---|---|---|
+| 1 | Putri Nurwahid | 10241063 | `putri` (53 commit) | **Backend & DevOps:** Autentikasi, otorisasi, sistem notifikasi/queue, pendaftaran mandiri, serta konfigurasi Docker, Supervisor & deployment Railway. |
+| 2 | Syarifah Nazwa Aulia H | 10241069 | `syarifah-nazwa` / `Syarifah Nazwa Aulia Hikmah` (34 commit) | **Frontend & Dokumentasi:** API Resources, tampilan dashboard & akademik, pengujian mobile, serta penyusunan `docs/deployment.md`. |
+| 3 | Sarah Adelia W | 10241065 | `sarahadelia123` (29 commit) | **Backend & Security QA:** Model Eloquent, API controller, Policy anti-IDOR, validasi deadline, serta skrip audit keamanan produksi. |
+| 4 | Siti Fatimah | 10241067 | `21ftmah-gif` (21 commit) | **Fullstack & Functional QA:** CRUD Course/User, optimasi query database & seeder, konfigurasi awal `Dockerfile`, serta pengujian akun demo. |
 
 
 ---
@@ -147,4 +148,5 @@ php artisan migrate
 ## 🌐 Tautan Proyek
 
 - **URL Repositori GitHub:** [https://github.com/putriwhd/kampuslms-kelompok-A08.git](https://github.com/putriwhd/kampuslms-kelompok-A08.git)
-- **URL Aplikasi Live:** `[Belum Tersedia — Aplikasi masih dalam tahap pengembangan lokal]`
+- **URL Aplikasi Live:** 
+[https://kampuslms-kelompok-a08-production-66912567.up.railway.app/api/v1](https://kampuslms-kelompok-a08-production-66912567.up.railway.app/api/v1)
