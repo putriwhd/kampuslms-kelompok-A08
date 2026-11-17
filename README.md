@@ -12,11 +12,12 @@ Platform *Learning Management System* (LMS) berbasis web yang dikembangkan mengg
 Pembagian peran disusun berdasarkan riwayat kontribusi aktual pada repositori (`git shortlog`):
 
 | No. | Nama Anggota | NIM | Akun Git | Peran & Kontribusi Utama |
-|---|---|---|---|---|
-| 1 | Putri Nurwahid | 10241063 | `putri` (53 commit) | **Backend & DevOps:** Autentikasi, otorisasi, sistem notifikasi/queue, pendaftaran mandiri, serta konfigurasi Docker, Supervisor & deployment Railway. |
-| 2 | Syarifah Nazwa Aulia H | 10241069 | `syarifah-nazwa` / `Syarifah Nazwa Aulia Hikmah` (34 commit) | **Frontend & Dokumentasi:** API Resources, tampilan dashboard & akademik, pengujian mobile, serta penyusunan `docs/deployment.md`. |
-| 3 | Sarah Adelia W | 10241065 | `sarahadelia123` (29 commit) | **Backend & Security QA:** Model Eloquent, API controller, Policy anti-IDOR, validasi deadline, serta skrip audit keamanan produksi. |
-| 4 | Siti Fatimah | 10241067 | `21ftmah-gif` (21 commit) | **Fullstack & Functional QA:** CRUD Course/User, optimasi query database & seeder, konfigurasi awal `Dockerfile`, serta pengujian akun demo. |
+| :-: | :--- | :---: | :--- | :--- |
+| 1 | Putri Nurwahid | 10241063 | `putri` | **Backend**: Autentikasi, otorisasi, sistem notifikasi/queue, pendaftaran mandiri, serta konfigurasi Docker, Supervisor & deployment Railway. |
+| 2 | Syarifah Nazwa Aulia H | 10241069 | `syarifah-nazwa` / `Syarifah Nazwa Aulia Hikmah` | **Frontend**: Tampilan antarmuka dashboard & akademik, integrasi API Resources, pengujian tampilan mobile, serta penyusunan `docs/deployment.md`. |
+| 3 | Sarah Adelia W | 10241065 | `sarahadelia123` | **Backend**: Model Eloquent, API controller, Policy anti-IDOR, validasi deadline, serta audit keamanan produksi. |
+| 4 | Siti Fatimah | 10241067 | `21ftmah-gif` | **Frontend**: Antarmuka & alur CRUD Course/User, pengujian fungsional akun demo, optimasi query database & seeder, serta konfigurasi awal `Dockerfile`. |
+
 
 
 ---
