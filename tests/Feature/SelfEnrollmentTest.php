@@ -221,6 +221,8 @@ class SelfEnrollmentTest extends TestCase
 
     public function test_student_enrollment_request_notifies_course_lecturer(): void
     {
+        Notification::fake();
+
         $lecturer = User::factory()->dosen()->create();
         $student = User::factory()->mahasiswa()->create();
         $course = Course::factory()->for($lecturer, 'lecturer')->create([
@@ -232,11 +234,8 @@ class SelfEnrollmentTest extends TestCase
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        $this->assertDatabaseHas('notifications', [
-            'notifiable_type' => User::class,
-            'notifiable_id' => $lecturer->id,
-            'type' => EnrollmentRequestedNotification::class,
-        ]);
+        Notification::assertSentTo($lecturer, EnrollmentRequestedNotification::class);
+        Notification::assertNotSentTo($student, EnrollmentRequestedNotification::class);
     }
 
     public function test_student_can_request_self_enrollment_into_a_prepopulated_course(): void

@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
+use App\Notifications\NewAssignmentNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -16,6 +18,8 @@ class AssignmentPublicationNotificationTest extends TestCase
 
     public function test_publishing_an_assignment_notifies_only_enrolled_students_and_links_to_its_detail(): void
     {
+        Notification::fake();
+
         $lecturer = User::factory()->dosen()->create();
         $student = User::factory()->mahasiswa()->create();
         $otherStudent = User::factory()->mahasiswa()->create();
@@ -35,22 +39,22 @@ class AssignmentPublicationNotificationTest extends TestCase
             ->assertRedirect();
 
         $assignment = $course->assignments()->firstOrFail();
-        $notification = $student->notifications()->firstOrFail();
+        $notification = Notification::sent($student, NewAssignmentNotification::class)->first();
+        $this->assertNotNull($notification);
+        $data = $notification->toDatabase($student);
 
-        $this->assertSame('Tugas Notifikasi', $notification->data['title']);
+        $this->assertSame('Tugas Notifikasi', $data['title']);
         $this->assertSame(
             route('mahasiswa.assignments.show', $assignment, false),
-            $notification->data['url']
+            $data['url']
         );
-        $this->assertDatabaseCount('notifications', 1);
+        Notification::assertNotSentTo($otherStudent, NewAssignmentNotification::class);
 
         $this->actingAs($student)
-            ->get($notification->data['url'])
+            ->get($data['url'])
             ->assertOk()
             ->assertSeeText('Tugas Notifikasi')
             ->assertSeeText('Kerjakan soal yang diberikan.');
-
-        $this->assertCount(0, $otherStudent->notifications);
     }
 
     public function test_assignment_detail_page_renders_for_admin_and_course_lecturer(): void

@@ -36,6 +36,9 @@ class SubmissionController extends Controller
         Assignment $assignment
     ) {
         $user = $request->user();
+
+        abort_if($assignment->status === 'draft', 403);
+
         Gate::authorize('create', [Submission::class, $assignment]);
 
         $submittedAt = now('Asia/Makassar');
