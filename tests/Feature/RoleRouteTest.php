@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class RoleRouteTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_query_parameter_cannot_grant_access_to_a_role_route(): void
     {
         $response = $this->get('/admin/users?as=admin');

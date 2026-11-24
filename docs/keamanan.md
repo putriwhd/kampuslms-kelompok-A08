@@ -33,7 +33,7 @@ mahasiswa yang tidak terdaftar.
 | Mendaftarkan mahasiswa ke course atau mengubah ID pengguna | Web `PUT /admin/courses/{course}/students` | `CoursePolicy::manageStudents` hanya mengizinkan Admin; setiap ID divalidasi agar merupakan akun mahasiswa. |
 | Mengganti ID materi atau pasangan course/materi | Web dan API `/courses/{id}/materials`, `/materials/{id}` | Route web memakai `scopeBindings()`; `MaterialController::showInCourse` memastikan `course_id` cocok; `MaterialPolicy::create`, `update`, dan `delete` hanya mengizinkan Admin atau dosen pengampu, sedangkan `view` mengizinkan Admin, dosen pengampu, dan mahasiswa terdaftar. API memanggil Gate/Policy sebelum operasi tulis, hanya mengelola metadata, dan tidak melayani unggahan berkas fisik via API. |
 | Mengganti ID tugas atau pasangan course/tugas | Web `/.../courses/{course}/assignments/{assignment}` dan API course assignments | `scopeBindings()` serta pemeriksaan course pada controller web; `AssignmentPolicy::create`, `view`, `update`, `delete`, dan `viewSubmissions` memeriksa role dan pengampu/keikutsertaan. API memanggil Gate/Policy; daftar mahasiswa hanya berisi tugas `published`. |
-| Membaca atau mengubah submission milik mahasiswa lain | Web submission/nilai dan API submission | `SubmissionPolicy::view` membatasi akses baca ke admin, dosen pengampu, atau mahasiswa pemilik; `delete` membatasi ke admin/pengampu dan `grade` ke dosen pengampu. Endpoint yang tersedia di web/API saat ini hanya melayani pembuatan submission baru (belum ada rute aktif untuk update submission meskipun policy telah disiapkan). Pemeriksaan role, enrollment, dan pengampu dijalankan langsung di controller dan policy. |
+| Membaca atau mengubah submission milik mahasiswa lain | Web submission/nilai dan API submission | `SubmissionPolicy::view` membatasi akses baca ke admin, dosen pengampu, atau mahasiswa pemilik; `delete` membatasi ke admin/pengampu dan `grade` ke dosen pengampu. Endpoint yang tersedia di web/API saat ini hanya melayani pembuatan submission baru (belum ada rute aktif untuk update submission meskipun policy telah disiapkan). Pemeriksaan role, enrollment, pengampu, dan status tugas `published` dijalankan di controller dan policy. |
 | Mengubah nilai dengan ID submission/grade milik course lain | Policy Grade dan `PUT /api/v1/submissions/{id}/grade` | `GradePolicy` mendefinisikan hak kelola dosen pengampu; endpoint API memeriksa langsung bahwa dosen adalah pengampu course submission. |
 | Membaca atau menandai notifikasi pengguna lain | `GET /api/v1/notifications` dan `POST /api/v1/notifications/{id}/read` | `Api\NotificationController` mengambil notifikasi melalui relasi notifikasi pengguna yang sedang login; ID asing tidak dapat digunakan untuk menandai notifikasi. |
 | Membuka route admin/dosen/mahasiswa dengan mengganti URL atau query `as` | Route web dan API | Middleware `auth`, `role:*`, dan `auth:sanctum`; parameter query `as` tidak memberikan hak akses. |
@@ -53,16 +53,12 @@ mahasiswa yang tidak terdaftar.
   Admin dan dosen; Gate/Policy tetap membatasi dosen pada course yang diampu.
 - Route `/test-leak` tidak didaftarkan.
 
-## Celah yang perlu ditangani di luar cakupan Anggota 4
+## Pengumpulan tugas draft
 
-Kedua endpoint pengumpulan berikut belum menolak tugas berstatus `draft`:
-`POST /api/v1/assignments/{id}/submissions` dan `POST /api/v1/submissions`.
-Controller API saat ini memeriksa role mahasiswa dan enrollment, tetapi belum
-memeriksa status tugas `published`. Blade dan daftar API mahasiswa menyembunyikan
-tugas draft, namun itu tidak mencegah request langsung. Perbaikannya memerlukan
-perubahan controller API anggota lain; skrip Anggota 4 memeriksa visibilitas
-daftar draft dan tidak mengklaim bahwa submit langsung untuk tugas draft sudah
-aman.
+Controller submission dan `SubmissionPolicy::create` menolak tugas berstatus
+`draft` dengan HTTP 403 sebelum berkas disimpan. Penolakan berlaku pada kedua
+endpoint API (`POST /api/v1/assignments/{id}/submissions` dan
+`POST /api/v1/submissions`) serta form web.
 
 ## Menjalankan uji otorisasi API
 

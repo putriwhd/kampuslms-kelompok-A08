@@ -234,6 +234,36 @@ class SubmissionBackendTest extends TestCase
         ]);
     }
 
+    public function test_draft_assignment_rejects_submission_with_forbidden_response(): void
+    {
+        Storage::fake('local');
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->for($lecturer, 'lecturer')->create(['status' => 'active']);
+        $course->students()->attach($student, ['enrolled_at' => now()]);
+        $assignment = Assignment::factory()->for($course)->create([
+            'status' => 'draft',
+            'due_at' => now()->addDays(2),
+        ]);
+
+        Sanctum::actingAs($student);
+
+        $this->postJson("/api/v1/assignments/{$assignment->id}/submissions", [
+            'file' => UploadedFile::fake()->create('draft-answer.pdf', 100, 'application/pdf'),
+        ])->assertForbidden();
+
+        $this->postJson('/api/v1/submissions', [
+            'assignment_id' => $assignment->id,
+            'file' => UploadedFile::fake()->create('draft-answer.pdf', 100, 'application/pdf'),
+        ])->assertForbidden();
+
+        $this->assertDatabaseMissing('submissions', [
+            'assignment_id' => $assignment->id,
+            'user_id' => $student->id,
+        ]);
+        $this->assertEmpty(Storage::disk('local')->allFiles());
+    }
+
     public function test_submission_policy_view_restricts_download_to_owner_lecturer_and_admin(): void
     {
         Storage::fake('local');
