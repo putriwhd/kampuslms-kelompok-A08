@@ -9,6 +9,8 @@ Platform *Learning Management System* (LMS) berbasis web yang dikembangkan mengg
 ## Tim Pengembang & Pembagian Tugas (Kelompok A-08)
 
 
+## Tim Pengembang & Pembagian Tugas (Kelompok A-08)
+
 Pembagian peran disusun berdasarkan riwayat kontribusi aktual pada repositori (`git shortlog`):
 
 | No. | Nama Anggota | NIM | Akun Git | Peran & Kontribusi Utama |
