@@ -257,6 +257,15 @@ class SubmissionBackendTest extends TestCase
             'file' => UploadedFile::fake()->create('draft-answer.pdf', 100, 'application/pdf'),
         ])->assertForbidden();
 
+        $this->actingAs($student)
+            ->post(route('mahasiswa.courses.assignments.submissions.store', [
+                'course' => $course,
+                'assignment' => $assignment,
+            ]), [
+                'file' => UploadedFile::fake()->create('web-draft-answer.pdf', 100, 'application/pdf'),
+            ])
+            ->assertForbidden();
+
         $this->assertDatabaseMissing('submissions', [
             'assignment_id' => $assignment->id,
             'user_id' => $student->id,
@@ -554,6 +563,26 @@ class SubmissionBackendTest extends TestCase
             ->assertSee('Pengumpulan Saya')
             ->assertSee('web_answer.pdf')
             ->assertDontSee('Kirim Ulang Tugas')
+            ->assertDontSee('name="file"', false);
+
+        $submission = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $student->id)
+            ->firstOrFail();
+        $submission->grade()->create([
+            'graded_by' => $lecturer->id,
+            'score' => 80,
+            'feedback' => 'Pekerjaan sudah dinilai.',
+            'graded_at' => now(),
+        ]);
+
+        $this->get(route('mahasiswa.courses.assignments.scoped-show', [
+            'course' => $course,
+            'assignment' => $assignment,
+        ]))
+            ->assertOk()
+            ->assertSeeText('Hasil Penilaian')
+            ->assertSeeText('80.00 / 100')
+            ->assertSeeText('Pekerjaan sudah dinilai.')
             ->assertDontSee('name="file"', false);
 
         $this->actingAs($student)

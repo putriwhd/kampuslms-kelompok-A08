@@ -18,7 +18,7 @@ Dokumen ini merangkum 3 *bug* nyata yang pernah ditemui selama pengembangan Kamp
 
 ### 3. Perbaikan & Regression Test
 * **Perbaikan:** Menjalankan proses `php artisan queue:work` pada sesi pengembangan dan mendokumentasikan kebutuhan *worker* pada alur eksekusi aplikasi.
-* **Regression Test:** Menggunakan `Notification::fake()` serta `Event::fake()` pada `AssignmentPublicationNotificationTest::test_publishing_an_assignment_notifies_only_enrolled_students_and_links_to_its_detail`, `CriticalAccessControlTest::test_notification_sent_to_enrolled_students_when_new_assignment_published`, dan `WeekTenBackendTest::test_web_assignment_publication_and_grading_dispatch_events` untuk memastikan *event* dan notifikasi benar-benar ter-dispatch.
+* **Regression Test:** `AssignmentPublicationNotificationTest::test_publishing_an_assignment_notifies_only_enrolled_students_and_links_to_its_detail` serta `CriticalAccessControlTest::test_notification_sent_to_enrolled_students_when_new_assignment_published` menggunakan `Notification::fake()` untuk memeriksa penerima notifikasi. `WeekTenBackendTest::test_web_assignment_publication_and_grading_dispatch_events` menggunakan `Event::fake()` untuk memeriksa dispatch event. Pemeriksaan otomatis ini tidak menjalankan atau membuktikan bahwa proses queue worker aktif; implementasi notifikasi ber-queue juga perlu diverifikasi terpisah di lingkungan lokal terisolasi.
 
 ---
 
@@ -31,11 +31,11 @@ Dokumen ini merangkum 3 *bug* nyata yang pernah ditemui selama pengembangan Kamp
 ### 2. Langkah Investigasi & Penyebab
 1. Memeriksa tampilan DOM pada `resources/views/assignments/show.blade.php` menggunakan akun mahasiswa yang sudah memiliki data *submission* dan nilai.
 2. Menelusuri logika kondisional Blade yang merender komponen formulir pengumpulan tugas.
-3. **Penyebab Utama:** Blok rendering komponen formulir pengumpulan tugas pada `resources/views/assignments/show.blade.php` belum memeriksa keberadaan data `$submission` maupun status penilaian (`grade`), sehingga formulir unggah tetap dirender selama tugas berstatus `published`.
+3. **Penyebab Utama:** Blok rendering pada `resources/views/assignments/show.blade.php` perlu membedakan mahasiswa yang sudah memiliki submission dari yang belum. Form hanya boleh ditampilkan jika mahasiswa belum mengumpulkan dan masih diizinkan membuat submission; status `published` saja tidak cukup.
 
 ### 3. Perbaikan & Regression Test
-* **Perbaikan:** Memperbarui kondisi Blade pada `resources/views/assignments/show.blade.php` agar menyembunyikan formulir pengumpulan ulang apabila *submission* sudah dinilai atau tidak lagi memenuhi syarat pengumpulan ulang, serta menampilkan ringkasan *submission* dan nilai mahasiswa.
-* **Regression Test:** Diverifikasi melalui *feature test* pada `SubmissionBackendTest::test_web_submission_and_resubmission_for_mahasiswa` dan `WeekSevenDeliveryTest::test_lecturer_can_grade_submissions_and_student_can_only_see_own_grade` yang memastikan halaman detail tugas merender status *submission* dan nilai sesuai kondisi pengumpulan mahasiswa.
+* **Perbaikan:** Tampilan saat ini merender ringkasan submission jika `$ownSubmission` tersedia, termasuk status penilaian; form hanya dirender jika belum ada submission dan Policy mengizinkan pengumpulan.
+* **Regression Test:** `SubmissionBackendTest::test_web_submission_and_resubmission_for_mahasiswa` memastikan form tidak muncul setelah pengumpulan, baik saat menunggu penilaian maupun setelah nilai dan feedback tersimpan. `WeekSevenDeliveryTest::test_lecturer_can_grade_submissions_and_student_can_only_see_own_grade` menguji batas akses nilai.
 
 ---
 
